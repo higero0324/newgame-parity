@@ -64,12 +64,6 @@ export function applyMove(board: number[], pos: number, player: Player): ApplyMo
     while (inBounds(r, c)) {
       const i = idx(r, c);
       const v = newBoard[i];
-      if (v === 5) {
-        // 5（ロック）が間にある場合は、その方向では取り込み不可
-        captured.length = 0;
-        break;
-      }
-
       const o = ownerOf(v);
 
       // 空マスで終了
@@ -78,7 +72,7 @@ export function applyMove(board: number[], pos: number, player: Player): ApplyMo
         break;
       }
 
-      // 自分の石で挟めた
+      // 自分の石で挟めた（5でもOK）
       if (o === player) {
         // 1つ以上挟んでいれば取り込み
         if (captured.length > 0) {
@@ -92,6 +86,12 @@ export function applyMove(board: number[], pos: number, player: Player): ApplyMo
             }
           }
         }
+        break;
+      }
+
+      // 相手のロック(5)は壁扱い
+      if (isLocked(v)) {
+        captured.length = 0;
         break;
       }
 

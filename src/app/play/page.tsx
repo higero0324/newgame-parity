@@ -96,8 +96,23 @@ export default function PlayPage() {
       <h1 style={{ fontSize: 24, fontWeight: 800 }}>一正（ホットシート対戦）</h1>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>
-          現在: {winner ? "勝者" : "手番"} {winner ? (winner === "p1" ? "先手" : "後手") : turnLabel}
+        <div
+          style={{
+            fontSize: 18,
+            fontWeight: 800,
+            padding: "6px 12px",
+            borderRadius: 999,
+            border: "2px solid var(--line)",
+            background: winner
+              ? "linear-gradient(180deg, #f9ecd4 0%, #e8c89a 100%)"
+              : current.turn === "p1"
+                ? "rgba(70, 110, 160, 0.18)"
+                : "rgba(160, 80, 60, 0.18)",
+          }}
+        >
+          {winner
+            ? `勝者: ${winner === "p1" ? "先手" : "後手"}`
+            : `手番: ${current.turn === "p1" ? "先手（2/4）" : "後手（1/3/5）"}`}
         </div>
         <Link href="/" style={btnStyle}>
           ホームへ戻る
