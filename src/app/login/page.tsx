@@ -64,10 +64,7 @@ export default function LoginPage() {
     setLoading(true);
     setStatus("");
     try {
-      const redirectTo =
-        process.env.NEXT_PUBLIC_SITE_URL
-          ? `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/login`
-          : `${window.location.origin}/login`;
+      const redirectTo = "https://hisei.vercel.app/login";
 
       const { data, error } = await supabase.auth.signUp({
         email,
