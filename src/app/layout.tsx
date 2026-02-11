@@ -21,7 +21,12 @@ const hiseiMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "一正 (hisei)",
-  description: "将棋を意識した和風テイストのボードゲーム",
+  description: "紙ゲーに革命を起こす神ゲー。",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
