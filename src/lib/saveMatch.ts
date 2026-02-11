@@ -80,8 +80,8 @@ export async function saveMatchToSupabase(args: {
     const overflow = allMatches.length - MAX_MATCHES;
     if (overflow > 0) {
       const protectedSet = new Set(args.protectedMatchIds ?? []);
-      const deletableIds = allMatches
-        .map(m => m.id)
+      const deletableIds = (allMatches as Array<{ id: string; created_at: string }>)
+        .map((m: { id: string }) => m.id)
         .filter(id => !protectedSet.has(id))
         .slice(0, overflow);
 
