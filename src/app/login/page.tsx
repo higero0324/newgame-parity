@@ -4,6 +4,16 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+function formatAuthError(err: unknown, fallback: string): string {
+  const e = err as { message?: string; status?: number; code?: string };
+  const raw = e?.message ?? "";
+  if (!raw) return fallback;
+  if (raw.includes("Invalid login credentials")) return "メールアドレスまたはパスワードが正しくありません。";
+  if (raw.includes("Email not confirmed")) return "メール確認が未完了です。確認メールのリンクを開いてください。";
+  if (raw.includes("signup is disabled")) return "現在、新規登録は無効化されています。";
+  return `エラー: ${raw}`;
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,15 +21,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
+  const refreshUser = async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      setCurrentUser(null);
+      setStatus(formatAuthError(error, "ログイン状態の確認に失敗しました。"));
+      return;
+    }
+    setCurrentUser(data.user?.email ?? null);
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        setCurrentUser(data.user?.email ?? null);
-      } catch {
-        setStatus("ログイン機能は現在利用できません。");
-      }
-    })();
+    refreshUser().catch(err => {
+      setStatus(formatAuthError(err, "ログイン機能は現在利用できません。"));
+    });
   }, []);
 
   const signIn = async () => {
@@ -30,12 +45,12 @@ export default function LoginPage() {
     setLoading(true);
     setStatus("");
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      setCurrentUser(data.user?.email ?? null);
+      await refreshUser();
       setStatus("ログインしました。");
-    } catch {
-      setStatus("ログインに失敗しました。");
+    } catch (err) {
+      setStatus(formatAuthError(err, "ログインに失敗しました。"));
     } finally {
       setLoading(false);
     }
@@ -51,10 +66,14 @@ export default function LoginPage() {
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      setCurrentUser(data.user?.email ?? null);
-      setStatus("登録しました。確認メールが届く場合は確認してください。");
-    } catch {
-      setStatus("登録に失敗しました。");
+      if (!data.session) {
+        setStatus("登録しました。確認メールを開いて認証を完了してください。");
+      } else {
+        await refreshUser();
+        setStatus("登録してログインしました。");
+      }
+    } catch (err) {
+      setStatus(formatAuthError(err, "登録に失敗しました。"));
     } finally {
       setLoading(false);
     }
@@ -68,8 +87,8 @@ export default function LoginPage() {
       if (error) throw error;
       setCurrentUser(null);
       setStatus("ログアウトしました。");
-    } catch {
-      setStatus("ログアウトに失敗しました。");
+    } catch (err) {
+      setStatus(formatAuthError(err, "ログアウトに失敗しました。"));
     } finally {
       setLoading(false);
     }

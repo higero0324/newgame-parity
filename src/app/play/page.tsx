@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Board from "@/components/Board";
 import { applyMove, emptyBoard, type Player } from "@/lib/gameLogic";
@@ -23,23 +23,28 @@ function posToLabel(pos: number): string {
 }
 
 export default function PlayPage() {
+  const [isMobile, setIsMobile] = useState(false);
   const [history, setHistory] = useState<Snapshot[]>([{ board: emptyBoard(), turn: "p1" }]);
   const current = history[history.length - 1];
 
   const [lastChanged, setLastChanged] = useState<Set<number>>(new Set());
   const [winner, setWinner] = useState<Player | null>(null);
-
   const [moves, setMoves] = useState<MoveRecord[]>([]);
-  const [msg, setMsg] = useState<string>("");
+  const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const turnLabel = current.turn === "p1" ? "先手（2/4）" : "後手（1/3/5）";
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   const canPlay = winner === null;
 
   const onClickCell = (pos: number) => {
     if (!canPlay) return;
-
     const res = applyMove(current.board, pos, current.turn);
     if (!res.ok) {
       setMsg(res.reason);
@@ -48,21 +53,11 @@ export default function PlayPage() {
 
     const nextTurn: Player = current.turn === "p1" ? "p2" : "p1";
     setHistory(prev => [...prev, { board: res.newBoard, turn: nextTurn }]);
-
     setLastChanged(new Set(res.changed.map(x => x.i)));
     setMsg("");
 
     const ply = moves.length + 1;
-    setMoves(prev => [
-      ...prev,
-      {
-        ply,
-        player: current.turn,
-        pos,
-        diff: res.changed,
-        board_after: res.newBoard,
-      },
-    ]);
+    setMoves(prev => [...prev, { ply, player: current.turn, pos, diff: res.changed, board_after: res.newBoard }]);
 
     if (res.winner) {
       setWinner(res.winner);
@@ -92,62 +87,97 @@ export default function PlayPage() {
       setMsg("勝敗が決まってから保存できます。");
       return;
     }
+
     setSaving(true);
+    let protectedMatchIds: string[] = [];
+    try {
+      const raw = window.localStorage.getItem("hisei_starred_matches");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) protectedMatchIds = parsed.filter(x => typeof x === "string");
+      }
+    } catch {
+      // ignore localStorage parse error
+    }
+
     const res = await saveMatchToSupabase({
       winner,
       final_board: current.board,
       moves,
+      protectedMatchIds,
     });
     setSaving(false);
-    setMsg(res.ok ? `保存しました（棋譜ID: ${res.matchId}）` : "保存に失敗しました。");
+
+    if (!res.ok) {
+      setMsg(res.reason);
+      return;
+    }
+    setMsg(res.warning ? `保存しました（棋譜ID: ${res.matchId}）。${res.warning}` : `保存しました（棋譜ID: ${res.matchId}）`);
+  };
+
+  const statusStyle: React.CSSProperties = {
+    fontSize: 18,
+    fontWeight: 800,
+    padding: "6px 12px",
+    borderRadius: 999,
+    border: "2px solid var(--line)",
+    textAlign: "center",
+    background: winner
+      ? "linear-gradient(180deg, #f9ecd4 0%, #e8c89a 100%)"
+      : current.turn === "p1"
+        ? "rgba(70, 110, 160, 0.18)"
+        : "rgba(160, 80, 60, 0.18)",
   };
 
   return (
-    <main style={{ padding: 24, display: "grid", gap: 16, justifyItems: "center" }}>
+    <main style={{ padding: isMobile ? 12 : 24, display: "grid", gap: 16, justifyItems: "center" }}>
       <h1 style={{ fontSize: 24, fontWeight: 800 }}>一正（ホットシート対戦）</h1>
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
-        <div
-          style={{
-            fontSize: 18,
-            fontWeight: 800,
-            padding: "6px 12px",
-            borderRadius: 999,
-            border: "2px solid var(--line)",
-            background: winner
-              ? "linear-gradient(180deg, #f9ecd4 0%, #e8c89a 100%)"
-              : current.turn === "p1"
-                ? "rgba(70, 110, 160, 0.18)"
-                : "rgba(160, 80, 60, 0.18)",
-          }}
-        >
-          {winner
-            ? `勝者: ${winner === "p1" ? "先手" : "後手"}`
-            : `手番: ${current.turn === "p1" ? "先手（2/4）" : "後手（1/3/5）"}`}
+      {!isMobile && (
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={statusStyle}>
+            {winner
+              ? `勝者: ${winner === "p1" ? "先手" : "後手"}`
+              : `手番: ${current.turn === "p1" ? "先手（2/4）" : "後手（1/3/5）"}`}
+          </div>
+          <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
+          <button onClick={save} disabled={!winner || saving} style={btnStyle}>
+            {saving ? "保存中..." : "棋譜を保存"}
+          </button>
+          <button onClick={reset} style={btnStyle}>リセット</button>
+          <Link href="/" style={btnStyle}>ホームへ戻る</Link>
         </div>
-        <Link href="/" style={btnStyle}>
-          ホームへ戻る
-        </Link>
-        <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>
-          1手戻す
-        </button>
-        <button onClick={reset} style={btnStyle}>
-          リセット
-        </button>
-        <button onClick={save} disabled={!winner || saving} style={btnStyle}>
-          {saving ? "保存中…" : "棋譜を保存（ログイン時のみ）"}
-        </button>
-      </div>
+      )}
+
+      {isMobile && (
+        <div style={{ width: "100%", maxWidth: 760, display: "grid", gap: 8 }}>
+          <div style={statusStyle}>
+            {winner
+              ? `勝者: ${winner === "p1" ? "先手" : "後手"}`
+              : `手番: ${current.turn === "p1" ? "先手（2/4）" : "後手（1/3/5）"}`}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
+            <button onClick={save} disabled={!winner || saving} style={btnStyle}>
+              {saving ? "保存中..." : "棋譜を保存"}
+            </button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <button onClick={reset} style={btnStyle}>リセット</button>
+            <Link href="/" style={{ ...btnStyle, textAlign: "center" }}>ホームへ戻る</Link>
+          </div>
+        </div>
+      )}
 
       {msg && (
-        <div style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 12, background: "rgba(255,255,255,0.6)", width: "100%", maxWidth: 720 }}>
+        <div style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 12, background: "rgba(255,255,255,0.6)", width: "100%", maxWidth: 760 }}>
           {msg}
         </div>
       )}
 
       <Board board={current.board} onClickCell={onClickCell} lastChanged={lastChanged} disabled={!canPlay} />
 
-      <details style={{ width: "100%", maxWidth: 720 }}>
+      <details style={{ width: "100%", maxWidth: 760 }} open={!isMobile ? undefined : false}>
         <summary style={{ cursor: "pointer", fontWeight: 700 }}>棋譜（手順）</summary>
         <ol>
           {moves.map(m => (

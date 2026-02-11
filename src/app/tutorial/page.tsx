@@ -4,7 +4,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Board from "@/components/Board";
 import { applyMove, emptyBoard, type Player } from "@/lib/gameLogic";
 
+type StepId = "rules" | "place" | "ritual" | "capture" | "lock" | "win";
+
 type Step = {
+  id: StepId;
   title: string;
   description: string;
   init: () => { board: number[]; turn: Player };
@@ -12,6 +15,11 @@ type Step = {
   isSuccess: (res: ReturnType<typeof applyMove>) => boolean;
   successMessage: string;
 };
+
+const WIN_INTERVAL_MS = 4000;
+const CAPTURE_INTERVAL_MS = 1000;
+const RITUAL_DELAY_MS = 500;
+const CORNERS = [0, 4, 20, 24] as const;
 
 function makeBoard(values: Record<number, number>) {
   const b = emptyBoard();
@@ -21,37 +29,61 @@ function makeBoard(values: Record<number, number>) {
   return b;
 }
 
+function diagonalCorner(pos: number): number {
+  if (pos === 0) return 24;
+  if (pos === 4) return 20;
+  if (pos === 20) return 4;
+  return 0;
+}
+
+function isCorner(pos: number): boolean {
+  return CORNERS.includes(pos as (typeof CORNERS)[number]);
+}
+
+function pickNonDiagonalCorner(senteFirst: number): number {
+  const banned = new Set([senteFirst, diagonalCorner(senteFirst)]);
+  for (const c of CORNERS) {
+    if (!banned.has(c)) return c;
+  }
+  return 4;
+}
+
 export default function TutorialPage() {
-  const WIN_INTERVAL_MS = 4000;
-  const CAPTURE_INTERVAL_MS = 1000;
-  const steps: Step[] = useMemo(() => {
-    return [
+  const steps: Step[] = useMemo(
+    () => [
       {
+        id: "rules",
         title: "1. ルールを確認する",
-        description: "下のボタンをすべてクリックしてルールを確認しましょう。",
+        description: "下のボタンをすべてクリックして、基本ルールを確認してください。",
         init: () => ({ board: emptyBoard(), turn: "p1" }),
         allowed: [],
         isSuccess: () => true,
         successMessage: "OK！ ルールを確認しました。",
       },
       {
+        id: "place",
         title: "2. まずは置いてみる",
-        description: "空マスに自分の石を置いてみましょう。中央のマスをクリックしてください。",
+        description: "中央のマスをクリックして、石を1つ置いてください。",
         init: () => ({ board: emptyBoard(), turn: "p1" }),
         allowed: [12],
         isSuccess: res => res.ok,
         successMessage: "OK！ 石が置けました。",
       },
       {
-        title: "3. 取り込み（挟み）",
-        description: "相手の石を挟むと +1 されて取り込まれます。左端の空きマスをクリックしてください。",
+        id: "ritual",
+        title: "3. 公式採用: 儀式的な対角交換ルール",
+        description: "初手で角を1つ置いてください。そこから公式の開始手順を体験します。",
+        init: () => ({ board: emptyBoard(), turn: "p1" }),
+        allowed: [],
+        isSuccess: () => false,
+        successMessage: "初め方は完璧です。",
+      },
+      {
+        id: "capture",
+        title: "4. 取り込み（挟み）",
+        description: "左端の空きマスをクリックして、挟み取りを確認してください。",
         init: () => ({
-          board: makeBoard({
-            11: 1,
-            12: 1,
-            13: 1,
-            14: 2,
-          }),
+          board: makeBoard({ 11: 1, 12: 1, 13: 1, 14: 2 }),
           turn: "p1",
         }),
         allowed: [10],
@@ -59,48 +91,46 @@ export default function TutorialPage() {
         successMessage: "OK！ 挟んだ石が取り込まれました。",
       },
       {
-        title: "4. 5（ロック）は壁",
-        description: "相手の5が間にあると、その方向の取り込みは起きません。左端の空きマスをクリックしてください。",
+        id: "lock",
+        title: "5. 5（ロック）は壁",
+        description: "左端の空きマスをクリックしてください。相手の5が間にある方向は取り込みできません。",
         init: () => ({
-          board: makeBoard({
-            11: 5,
-            12: 1,
-            13: 2,
-          }),
+          board: makeBoard({ 11: 5, 12: 1, 13: 2 }),
           turn: "p1",
         }),
         allowed: [10],
         isSuccess: res => res.ok && res.changed.length === 1,
-        successMessage: "OK！ 5が壁になり、取り込みは起きませんでした。",
+        successMessage: "OK！ 5が壁として働きました。",
       },
       {
-        title: "5. 勝利条件",
-        description: "縦・横・斜めの1列が自分の数字で揃うと勝利です。右端をクリックしてください。",
+        id: "win",
+        title: "6. 勝利条件",
+        description: "四夏に置いてください。",
         init: () => ({
-          board: makeBoard({
-            0: 2,
-            1: 2,
-            2: 2,
-            3: 2,
-          }),
+          // 対角交換ルール後でも成立する、現実的な勝ち筋
+          board: makeBoard({ 0: 2, 4: 1, 5: 2, 7: 2, 8: 2, 9: 2, 20: 1, 24: 2 }),
           turn: "p1",
         }),
-        allowed: [4],
+        allowed: [6], // 四夏
         isSuccess: res => res.ok && "winner" in res && res.winner === "p1",
-        successMessage: "OK！ 先手の勝ちです。",
+        successMessage: "OK！ 四夏で1列が完成し、先手の勝ちです。",
       },
-    ];
-  }, []);
+    ],
+    []
+  );
 
   const [stepIndex, setStepIndex] = useState(0);
   const step = steps[stepIndex];
   const [board, setBoard] = useState(step.init().board);
   const [turn, setTurn] = useState<Player>(step.init().turn);
   const [msg, setMsg] = useState("");
+  const [doneMsg, setDoneMsg] = useState("");
   const [completed, setCompleted] = useState(false);
   const [lastChanged, setLastChanged] = useState<Set<number>>(new Set());
   const [ruleClicks, setRuleClicks] = useState<Set<string>>(new Set());
-  const [doneMsg, setDoneMsg] = useState<string>("");
+  const [ritualPhase, setRitualPhase] = useState<"first" | "wait1" | "takeDiag" | "wait2" | "done">("first");
+  const [ritualSenteFirst, setRitualSenteFirst] = useState<number | null>(null);
+  const [ritualGoteFirst, setRitualGoteFirst] = useState<number | null>(null);
   const timersRef = useRef<number[]>([]);
 
   useEffect(() => {
@@ -108,17 +138,158 @@ export default function TutorialPage() {
     setBoard(init.board);
     setTurn(init.turn);
     setMsg("");
+    setDoneMsg("");
     setCompleted(false);
     setLastChanged(new Set());
     setRuleClicks(new Set());
-    setDoneMsg("");
+    setRitualPhase("first");
+    setRitualSenteFirst(null);
+    setRitualGoteFirst(null);
     timersRef.current.forEach(t => window.clearTimeout(t));
     timersRef.current = [];
   }, [step]);
 
+  const runCaptureDemo = () => {
+    timersRef.current.forEach(t => window.clearTimeout(t));
+    timersRef.current = [];
+    const frames: Array<Record<number, number>> = [
+      { 11: 2, 12: 1 },
+      { 11: 2, 12: 1, 13: 2 },
+      { 11: 2, 12: 2, 13: 2 },
+    ];
+    frames.forEach((frame, idx) => {
+      const t = window.setTimeout(() => {
+        setBoard(makeBoard(frame));
+        setLastChanged(new Set(Object.keys(frame).map(k => Number(k))));
+      }, idx * CAPTURE_INTERVAL_MS);
+      timersRef.current.push(t);
+    });
+  };
+
+  const runWinDemo = () => {
+    timersRef.current.forEach(t => window.clearTimeout(t));
+    timersRef.current = [];
+    const frames: Array<Record<number, number>> = [
+      { 2: 1, 7: 1, 12: 3, 17: 1, 22: 5 },
+      { 10: 2, 11: 2, 12: 4, 13: 2, 14: 2 },
+      { 0: 1, 6: 3, 12: 1, 18: 5, 24: 1 },
+    ];
+    frames.forEach((frame, idx) => {
+      const t = window.setTimeout(() => {
+        setBoard(makeBoard(frame));
+        setLastChanged(new Set(Object.keys(frame).map(k => Number(k))));
+      }, idx * WIN_INTERVAL_MS);
+      timersRef.current.push(t);
+    });
+  };
+
+  const onClickRule = (
+    key: string,
+    text: string,
+    boardValues?: Record<number, number>,
+    demo?: "capture" | "win"
+  ) => {
+    setRuleClicks(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      setMsg(text);
+      if (demo === "capture") {
+        runCaptureDemo();
+      } else if (demo === "win") {
+        runWinDemo();
+      } else if (boardValues) {
+        setBoard(makeBoard(boardValues));
+        setLastChanged(new Set(Object.keys(boardValues).map(k => Number(k))));
+      } else {
+        setBoard(emptyBoard());
+        setLastChanged(new Set());
+      }
+      if (next.size === 4 && step.id === "rules") {
+        setCompleted(true);
+        setDoneMsg("OK！ ルールを確認しました。");
+      }
+      return next;
+    });
+  };
+
+  const handleRitualClick = (pos: number) => {
+    if (ritualPhase === "wait1" || ritualPhase === "wait2") {
+      setMsg("自動配置中です。少し待ってください。");
+      return;
+    }
+    if (ritualPhase === "done") return;
+
+    if (ritualPhase === "first") {
+      if (!isCorner(pos)) {
+        setMsg("初手は角に置いてください。");
+        return;
+      }
+      const first = applyMove(board, pos, "p1");
+      if (!first.ok) {
+        setMsg(first.reason);
+        return;
+      }
+      setBoard(first.newBoard);
+      setLastChanged(new Set(first.changed.map(c => c.i)));
+      setRitualSenteFirst(pos);
+      setRitualPhase("wait1");
+      setMsg("後手が、対角ではない角に一を置きます。");
+
+      const gotePos = pickNonDiagonalCorner(pos);
+      const t = window.setTimeout(() => {
+        setBoard(prev => {
+          const next = prev.slice();
+          next[gotePos] = 1;
+          return next;
+        });
+        setLastChanged(new Set([gotePos]));
+        setRitualGoteFirst(gotePos);
+        setRitualPhase("takeDiag");
+        setMsg("次に、あなたの初手角の対角を取ってください。");
+      }, RITUAL_DELAY_MS);
+      timersRef.current.push(t);
+      return;
+    }
+
+    if (ritualPhase === "takeDiag" && ritualSenteFirst !== null && ritualGoteFirst !== null) {
+      const expected = diagonalCorner(ritualSenteFirst);
+      if (pos !== expected) {
+        setMsg("自分の初手角の対角を取ってください。");
+        return;
+      }
+      const second = applyMove(board, pos, "p1");
+      if (!second.ok) {
+        setMsg(second.reason);
+        return;
+      }
+      setBoard(second.newBoard);
+      setLastChanged(new Set(second.changed.map(c => c.i)));
+      setRitualPhase("wait2");
+      setMsg("後手が、初手角の対角に一を置きます。");
+
+      const goteDiag = diagonalCorner(ritualGoteFirst);
+      const t = window.setTimeout(() => {
+        setBoard(prev => {
+          const next = prev.slice();
+          next[goteDiag] = 1;
+          return next;
+        });
+        setLastChanged(new Set([goteDiag]));
+        setRitualPhase("done");
+        setCompleted(true);
+        setDoneMsg("初め方は完璧です。");
+      }, RITUAL_DELAY_MS);
+      timersRef.current.push(t);
+    }
+  };
+
   const onClickCell = (pos: number) => {
-    if (step.allowed.length === 0) {
-      setMsg("下のルールボタンをすべてクリックしてください。");
+    if (step.id === "rules") {
+      setMsg("ルールボタンを使って確認してください。");
+      return;
+    }
+    if (step.id === "ritual") {
+      handleRitualClick(pos);
       return;
     }
     if (!step.allowed.includes(pos)) {
@@ -152,85 +323,18 @@ export default function TutorialPage() {
 
   const resetStep = () => {
     const init = step.init();
+    timersRef.current.forEach(t => window.clearTimeout(t));
+    timersRef.current = [];
     setBoard(init.board);
     setTurn(init.turn);
     setMsg("");
+    setDoneMsg("");
     setCompleted(false);
     setLastChanged(new Set());
     setRuleClicks(new Set());
-    setDoneMsg("");
-    timersRef.current.forEach(t => window.clearTimeout(t));
-    timersRef.current = [];
-  };
-
-  const runCaptureDemo = () => {
-    timersRef.current.forEach(t => window.clearTimeout(t));
-    timersRef.current = [];
-
-    const frames: Array<Record<number, number>> = [
-      { 11: 2, 12: 1 },
-      { 11: 2, 12: 1, 13: 2 },
-      { 11: 2, 12: 2, 13: 2 },
-    ];
-
-    frames.forEach((frame, idx) => {
-      const t = window.setTimeout(() => {
-        setBoard(makeBoard(frame));
-        setLastChanged(new Set(Object.keys(frame).map(k => Number(k))));
-      }, idx * CAPTURE_INTERVAL_MS);
-      timersRef.current.push(t);
-    });
-  };
-
-  const runWinDemo = () => {
-    timersRef.current.forEach(t => window.clearTimeout(t));
-    timersRef.current = [];
-
-    const frames: Array<Record<number, number>> = [
-      // 縦（奇数側の勝ち: 1多め + 3/5を混ぜる）
-      { 2: 1, 7: 1, 12: 3, 17: 1, 22: 5 },
-      // 横（偶数側の勝ち: 2多め + 4を混ぜる）
-      { 10: 2, 11: 2, 12: 4, 13: 2, 14: 2 },
-      // 斜め（奇数側の勝ち: 1多め + 3/5を混ぜる）
-      { 0: 1, 6: 3, 12: 1, 18: 5, 24: 1 },
-    ];
-
-    frames.forEach((frame, idx) => {
-      const t = window.setTimeout(() => {
-        setBoard(makeBoard(frame));
-        setLastChanged(new Set(Object.keys(frame).map(k => Number(k))));
-      }, idx * WIN_INTERVAL_MS);
-      timersRef.current.push(t);
-    });
-  };
-
-  const onClickRule = (
-    key: string,
-    text: string,
-    boardValues?: Record<number, number>,
-    demo?: "capture" | "win"
-  ) => {
-    setRuleClicks(prev => {
-      const next = new Set(prev);
-      next.add(key);
-      setMsg(text);
-      if (demo === "capture") {
-        runCaptureDemo();
-      } else if (demo === "win") {
-        runWinDemo();
-      } else if (boardValues) {
-        setBoard(makeBoard(boardValues));
-        setLastChanged(new Set(Object.keys(boardValues).map(k => Number(k))));
-      } else {
-        setBoard(emptyBoard());
-        setLastChanged(new Set());
-      }
-      if (next.size === 4 && stepIndex === 0) {
-        setCompleted(true);
-        setDoneMsg("OK！ ルールを確認しました。");
-      }
-      return next;
-    });
+    setRitualPhase("first");
+    setRitualSenteFirst(null);
+    setRitualGoteFirst(null);
   };
 
   return (
@@ -241,63 +345,23 @@ export default function TutorialPage() {
         <p style={{ margin: 0 }}>{step.description}</p>
       </div>
 
-      {stepIndex === 0 && (
+      {step.id === "rules" && (
         <div style={{ display: "grid", gap: 8, width: "100%", maxWidth: 720 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-            <button
-              onClick={() =>
-                onClickRule(
-                  "sente",
-                  "先手は偶数画（2と4）を使います。",
-                  { 11: 2, 13: 4 }
-                )
-              }
-              style={btnStyle}
-            >
+            <button onClick={() => onClickRule("sente", "先手は偶数画（2と4）です。", { 11: 2, 13: 4 })} style={btnStyle}>
               先手
             </button>
-            <button
-              onClick={() =>
-                onClickRule(
-                  "gote",
-                  "後手は奇数画（1・3・5）を使います。",
-                  { 7: 1, 12: 3, 17: 5 }
-                )
-              }
-              style={btnStyle}
-            >
+            <button onClick={() => onClickRule("gote", "後手は奇数画（1・3・5）です。", { 7: 1, 12: 3, 17: 5 })} style={btnStyle}>
               後手
             </button>
-            <button
-              onClick={() =>
-                onClickRule(
-                  "capture",
-                  "相手を挟むと+1され、最大5（ロック）まで増えます。",
-                  undefined,
-                  "capture"
-                )
-              }
-              style={btnStyle}
-            >
+            <button onClick={() => onClickRule("capture", "挟むと+1されます（最大5）。", undefined, "capture")} style={btnStyle}>
               取り込み
             </button>
-            <button
-              onClick={() =>
-                onClickRule(
-                  "win",
-                  "縦・横・斜めの1列が自分の数字で揃えば勝利です。",
-                  undefined,
-                  "win"
-                )
-              }
-              style={btnStyle}
-            >
+            <button onClick={() => onClickRule("win", "縦・横・斜めの1列が揃うと勝利です。", undefined, "win")} style={btnStyle}>
               勝利条件
             </button>
           </div>
-          <div style={{ fontSize: 12, color: "#555", textAlign: "center" }}>
-            クリック済み: {ruleClicks.size}/4
-          </div>
+          <div style={{ fontSize: 12, color: "#555", textAlign: "center" }}>クリック済み: {ruleClicks.size}/4</div>
         </div>
       )}
 
@@ -334,7 +398,7 @@ export default function TutorialPage() {
           const isActive = i === stepIndex;
           return (
             <button
-              key={s.title}
+              key={s.id}
               onClick={() => setStepIndex(i)}
               style={{
                 ...btnStyle,

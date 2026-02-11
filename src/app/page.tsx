@@ -17,6 +17,7 @@ export default function Home() {
     <main style={{ padding: 24, display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ fontSize: 28, fontWeight: 900 }}>一正 (hisei)</h1>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+        <Link href="/hajimeni" style={linkStyle}>初めに</Link>
         <Link href="/play" style={linkStyle}>対局を始める</Link>
         <Link href="/login" style={linkStyle}>ログイン</Link>
         <Link href="/tutorial" style={linkStyle}>チュートリアル</Link>
