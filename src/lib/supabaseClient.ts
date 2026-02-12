@@ -4,36 +4,45 @@ type LooseSupabaseClient = ReturnType<typeof createClient<any, "public", any>>;
 
 let supabaseInstance: LooseSupabaseClient | null = null;
 const memoryStorage = new Map<string, string>();
+let resolvedStorageMode: "local" | "memory" | null = null;
+
+function resolveStorageMode(): "local" | "memory" {
+  if (resolvedStorageMode) return resolvedStorageMode;
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const probeKey = "__hisei_storage_probe__";
+      window.localStorage.setItem(probeKey, "1");
+      window.localStorage.removeItem(probeKey);
+      resolvedStorageMode = "local";
+      return resolvedStorageMode;
+    }
+  } catch {
+    // Safari private mode / storage restriction
+  }
+  resolvedStorageMode = "memory";
+  return resolvedStorageMode;
+}
 
 const safeBrowserStorage = {
   getItem: (key: string) => {
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        return window.localStorage.getItem(key);
-      }
-    } catch {
-      // Safari private mode / storage restriction fallback
+    const mode = resolveStorageMode();
+    if (mode === "local" && typeof window !== "undefined" && window.localStorage) {
+      return window.localStorage.getItem(key);
     }
     return memoryStorage.get(key) ?? null;
   },
   setItem: (key: string, value: string) => {
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        window.localStorage.setItem(key, value);
-        return;
-      }
-    } catch {
-      // Safari private mode / storage restriction fallback
+    const mode = resolveStorageMode();
+    if (mode === "local" && typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.setItem(key, value);
+      return;
     }
     memoryStorage.set(key, value);
   },
   removeItem: (key: string) => {
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        window.localStorage.removeItem(key);
-      }
-    } catch {
-      // Safari private mode / storage restriction fallback
+    const mode = resolveStorageMode();
+    if (mode === "local" && typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.removeItem(key);
     }
     memoryStorage.delete(key);
   },
