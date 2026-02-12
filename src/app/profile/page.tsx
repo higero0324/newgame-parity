@@ -8,8 +8,9 @@ import {
   ensureFriendIdForCurrentUser,
   getClipPrefsFromUserMetadata,
   getMatchNamesFromUserMetadata,
-  normalizeAvatarImageDataUrl,
+  loadIconImageDataUrlFromProfiles,
   getProfilePrefsFromUserMetadata,
+  saveIconImageDataUrlToProfiles,
   saveClipPrefsToSupabase,
   syncCurrentUserPublicProfile,
 } from "@/lib/profilePrefs";
@@ -72,7 +73,9 @@ export default function ProfilePage() {
       setFeaturedIds(clipPrefs.featuredIds);
       setStarredIdsForSave(clipPrefs.starredIds);
       setIconText(profilePrefs.iconText);
-      setIconImageDataUrl(profilePrefs.iconImageDataUrl);
+      const iconRes = await loadIconImageDataUrlFromProfiles();
+      if (iconRes.ok) setIconImageDataUrl(iconRes.iconImageDataUrl);
+      else setIconImageDataUrl(profilePrefs.iconImageDataUrl);
 
       const { data, error } = await supabase
         .from("matches")
@@ -100,12 +103,18 @@ export default function ProfilePage() {
     setSaving(true);
     setStatus("");
     try {
+      const imageRes = await saveIconImageDataUrlToProfiles(iconImageDataUrl);
+      if (!imageRes.ok) {
+        setStatus(`画像アイコンの保存に失敗しました。詳細: ${imageRes.reason}`);
+        return;
+      }
       const { error } = await supabase.auth.updateUser({
         data: {
           display_name: displayName.trim(),
           status_message: statusMessage.trim(),
           icon_text: iconText.trim().slice(0, 2),
-          icon_image_data_url: normalizeAvatarImageDataUrl(iconImageDataUrl),
+          // Keep auth JWT small for mobile Safari by not storing image data in user_metadata.
+          icon_image_data_url: "",
         },
       });
       if (error) {
