@@ -3,6 +3,41 @@
 type LooseSupabaseClient = ReturnType<typeof createClient<any, "public", any>>;
 
 let supabaseInstance: LooseSupabaseClient | null = null;
+const memoryStorage = new Map<string, string>();
+
+const safeBrowserStorage = {
+  getItem: (key: string) => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        return window.localStorage.getItem(key);
+      }
+    } catch {
+      // Safari private mode / storage restriction fallback
+    }
+    return memoryStorage.get(key) ?? null;
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.setItem(key, value);
+        return;
+      }
+    } catch {
+      // Safari private mode / storage restriction fallback
+    }
+    memoryStorage.set(key, value);
+  },
+  removeItem: (key: string) => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.removeItem(key);
+      }
+    } catch {
+      // Safari private mode / storage restriction fallback
+    }
+    memoryStorage.delete(key);
+  },
+};
 
 export function getSupabase() {
   if (supabaseInstance) {
@@ -35,7 +70,14 @@ export function getSupabase() {
     } as unknown as LooseSupabaseClient;
   }
 
-  supabaseInstance = createClient<any, "public", any>(url, anon);
+  supabaseInstance = createClient<any, "public", any>(url, anon, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: safeBrowserStorage,
+    },
+  });
   return supabaseInstance;
 }
 
