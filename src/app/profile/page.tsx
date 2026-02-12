@@ -165,11 +165,12 @@ export default function ProfilePage() {
             {profileEditOpen ? "編集を閉じる" : "編集"}
           </button>
         </div>
-        <div><b>名前:</b> {displayName || "（未設定）"}</div>
-        <div><b>ステータス:</b> {statusMessage || "（未設定）"}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span><b>アイコン:</b></span>
+        <div style={profileTopStyle}>
           <Avatar iconText={iconText} iconImageDataUrl={iconImageDataUrl} displayName={displayName} email={email} />
+          <div style={{ display: "grid", gap: 6, alignContent: "start" }}>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>{displayName || "（未設定）"}</div>
+            <div style={{ fontSize: 14, color: "#555" }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
+          </div>
         </div>
         <div style={{ fontSize: 13, color: "#666" }}>ログイン中: {email || "(不明)"}</div>
         {profileEditOpen && (
@@ -370,11 +371,8 @@ function MiniBoard({ board }: { board: number[] }) {
 
 function toShoTally(value: number) {
   if (value <= 0) return "";
-  const v = Math.min(20, Math.floor(value));
-  const full = Math.floor(v / 5);
-  const rest = v % 5;
-  const restMarks = ["", "丨", "二", "三", "四"][rest] ?? "";
-  return `${"正".repeat(full)}${restMarks}`;
+  const v = Math.min(5, Math.floor(value));
+  return ["", "一", "二", "三", "四", "五"][v] ?? "";
 }
 
 const sectionStyle: React.CSSProperties = {
@@ -446,14 +444,22 @@ const miniCellStyle: React.CSSProperties = {
 };
 
 const avatarStyle: React.CSSProperties = {
-  width: 44,
-  height: 44,
+  width: 96,
+  height: 96,
   borderRadius: "50%",
-  border: "2px solid #8f6337",
+  border: "3px solid #8f6337",
   background: "linear-gradient(180deg, #f8e9d3 0%, #e7c39a 100%)",
   color: "#5d3d1d",
   display: "grid",
   placeItems: "center",
   fontWeight: 800,
+  fontSize: 34,
   boxShadow: "0 2px 0 rgba(90, 50, 20, 0.25)",
+};
+
+const profileTopStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "auto 1fr",
+  gap: 14,
+  alignItems: "start",
 };
