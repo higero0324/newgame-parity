@@ -1,6 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+﻿import { createClient } from "@supabase/supabase-js";
 
-let supabaseInstance: ReturnType<typeof createClient> | null = null;
+type LooseSupabaseClient = ReturnType<typeof createClient<any, "public", any>>;
+
+let supabaseInstance: LooseSupabaseClient | null = null;
 
 export function getSupabase() {
   if (supabaseInstance) {
@@ -30,16 +32,16 @@ export function getSupabase() {
         signOut: async () => ({ error: notConfiguredError }),
       },
       from: () => mockQuery,
-    } as unknown as ReturnType<typeof createClient>;
+    } as unknown as LooseSupabaseClient;
   }
 
-  supabaseInstance = createClient(url, anon);
+  supabaseInstance = createClient<any, "public", any>(url, anon);
   return supabaseInstance;
 }
 
 // For backward compatibility, create a lazy proxy
-export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+export const supabase = new Proxy({} as LooseSupabaseClient, {
   get: (_target, prop: string | symbol) => {
-    return getSupabase()[prop as keyof ReturnType<typeof createClient>];
+    return getSupabase()[prop as keyof LooseSupabaseClient];
   },
 });
