@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Noto_Sans_JP, Noto_Serif_JP, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -20,12 +20,17 @@ const hiseiMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "一正 ～HISEI～",
-  description: "紙ゲーに革命を起こす神ゲー。",
+  title: "hisei",
+  applicationName: "hisei",
+  description: "盤面を均すゲーム",
+  appleWebApp: {
+    title: "hisei",
+  },
+  manifest: "/manifest.json",
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [{ url: "/favicon.ico" }],
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
