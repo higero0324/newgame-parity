@@ -5,10 +5,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   getClipPrefsFromUserMetadata,
-  getMatchNames,
-  removeMatchFromPrefs,
+  getMatchNamesFromUserMetadata,
   saveClipPrefsToSupabase,
-  setMatchName,
+  saveMatchNamesToSupabase,
 } from "@/lib/profilePrefs";
 
 type MatchRow = {
@@ -51,7 +50,7 @@ export default function HistoryPage() {
           return;
         }
         setUserId(auth.user.id);
-        const names = getMatchNames(auth.user.id);
+        const names = getMatchNamesFromUserMetadata(auth.user.user_metadata);
         const clipPrefs = getClipPrefsFromUserMetadata(auth.user.user_metadata);
         setMatchNames(names);
         setStarred(new Set(clipPrefs.starredIds));
@@ -110,11 +109,19 @@ export default function HistoryPage() {
   const saveName = (matchId: string) => {
     if (!userId) return;
     const raw = draftNames[matchId] ?? "";
-    setMatchName(userId, matchId, raw);
-    const nextNames = getMatchNames(userId);
+    const trimmed = raw.trim();
+    const nextNames = { ...matchNames };
+    if (trimmed) nextNames[matchId] = trimmed;
+    else delete nextNames[matchId];
     setMatchNames(nextNames);
     setDraftNames(prev => ({ ...prev, [matchId]: nextNames[matchId] ?? "" }));
-    setStatus("棋譜名を保存しました。");
+    saveMatchNamesToSupabase(nextNames).then(res => {
+      if (!res.ok) {
+        setStatus(`棋譜名の保存に失敗しました。詳細: ${res.reason}`);
+        return;
+      }
+      setStatus("棋譜名を保存しました。");
+    });
   };
 
   const toggleFeatured = (matchId: string) => {
@@ -250,8 +257,12 @@ export default function HistoryPage() {
                           return next;
                         });
                         if (userId) {
-                          removeMatchFromPrefs(userId, r.id);
-                          setMatchNames(getMatchNames(userId));
+                          const nextNames = { ...matchNames };
+                          delete nextNames[r.id];
+                          setMatchNames(nextNames);
+                          saveMatchNamesToSupabase(nextNames).then(res => {
+                            if (!res.ok) setStatus(`削除後の棋譜名保存に失敗しました。詳細: ${res.reason}`);
+                          });
                         }
                         setStarred(prev => {
                           const next = new Set(prev);
