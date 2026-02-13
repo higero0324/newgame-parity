@@ -1,10 +1,11 @@
 import { applyMove, checkWinner, type Player, ownerOf, SIZE, idx } from "./gameLogic";
 
-export type CpuLevel = "easy" | "medium" | "hard";
+export type CpuLevel = "easy" | "medium" | "hard" | "extreme";
 
 export function findCpuMove(board: number[], player: Player, level: CpuLevel = "hard"): number {
   if (level === "easy") return findEasyMove(board, player);
   if (level === "medium") return findMediumMove(board, player);
+  if (level === "extreme") return findExtremeMove(board, player);
   return findHardMove(board, player);
 }
 
@@ -73,21 +74,21 @@ function findHardMove(board: number[], player: Player): number {
   }
 
   transpositionTable.clear();
-  
+
   // 動的な探索深度（序盤は浅く、終盤は深く）
   const emptyCount = emptyPositions.length;
   const maxDepth = emptyCount > 15 ? 4 : emptyCount > 10 ? 5 : 6;
-  
+
   // 反復深化探索
   let bestPos = emptyPositions[0];
   for (let depth = 2; depth <= maxDepth; depth++) {
     const moves = orderMoves(board, emptyPositions, player);
     let bestScore = -Infinity;
-    
+
     for (const pos of moves) {
       const res = applyMove(board, pos, player);
       if (!res.ok) continue;
-      
+
       const score = minimax(res.newBoard, depth - 1, -Infinity, Infinity, false, player);
       if (score > bestScore) {
         bestScore = score;
@@ -99,6 +100,67 @@ function findHardMove(board: number[], player: Player): number {
   return bestPos;
 }
 
+// 極級：上級 + 角優先（悪手回避）+ 対角角優先
+function findExtremeMove(board: number[], player: Player): number {
+  const emptyPositions = board.map((v, i) => (v === 0 ? i : -1)).filter(i => i >= 0);
+  if (emptyPositions.length === 0) return -1;
+
+  // 即勝ち手があれば最優先
+  for (const pos of emptyPositions) {
+    const res = applyMove(board, pos, player);
+    if (res.ok && res.winner === player) return pos;
+  }
+
+  const preferredCorner = findPreferredCornerMove(board, player);
+  if (preferredCorner !== null) return preferredCorner;
+
+  return findHardMove(board, player);
+}
+
+const CORNERS = [idx(0, 0), idx(0, 4), idx(4, 0), idx(4, 4)] as const;
+
+function oppositeCorner(pos: number): number | null {
+  if (pos === idx(0, 0)) return idx(4, 4);
+  if (pos === idx(4, 4)) return idx(0, 0);
+  if (pos === idx(0, 4)) return idx(4, 0);
+  if (pos === idx(4, 0)) return idx(0, 4);
+  return null;
+}
+
+function findPreferredCornerMove(board: number[], player: Player): number | null {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const emptyCorners = CORNERS.filter(pos => board[pos] === 0);
+  if (emptyCorners.length === 0) return null;
+
+  // 角が開いている時、1手で大崩れしない角を優先
+  const safeCorners = emptyCorners.filter(pos => {
+    const res = applyMove(board, pos, player);
+    if (!res.ok) return false;
+    return !opponentHasImmediateWinningMove(res.newBoard, opponent);
+  });
+
+  if (safeCorners.length === 0) return null;
+
+  // 既に取っている角があれば、その対角角を優先
+  const myCorners = CORNERS.filter(pos => ownerOf(board[pos]) === player);
+  for (const myCorner of myCorners) {
+    const diag = oppositeCorner(myCorner);
+    if (diag !== null && safeCorners.includes(diag)) return diag;
+  }
+
+  // 角同士では評価の高い手を採用
+  return orderMoves(board, [...safeCorners], player)[0] ?? null;
+}
+
+function opponentHasImmediateWinningMove(board: number[], opponent: Player): boolean {
+  const emptyPositions = board.map((v, i) => (v === 0 ? i : -1)).filter(i => i >= 0);
+  for (const pos of emptyPositions) {
+    const res = applyMove(board, pos, opponent);
+    if (res.ok && res.winner === opponent) return true;
+  }
+  return false;
+}
+
 // 手の並び替え（中央優先 + 評価値順）
 function orderMoves(board: number[], positions: number[], player: Player): number[] {
   const center = idx(2, 2);
@@ -106,18 +168,18 @@ function orderMoves(board: number[], positions: number[], player: Player): numbe
     // 中央を優先
     if (a === center) return -1;
     if (b === center) return 1;
-    
+
     // 中央からの距離
     const distA = Math.abs(Math.floor(a / SIZE) - 2) + Math.abs((a % SIZE) - 2);
     const distB = Math.abs(Math.floor(b / SIZE) - 2) + Math.abs((b % SIZE) - 2);
     if (distA !== distB) return distA - distB;
-    
+
     // 簡易評価
     const resA = applyMove(board, a, player);
     const resB = applyMove(board, b, player);
     if (!resA.ok) return 1;
     if (!resB.ok) return -1;
-    
+
     const scoreA = evaluateBoard(resA.newBoard, player);
     const scoreB = evaluateBoard(resB.newBoard, player);
     return scoreB - scoreA;

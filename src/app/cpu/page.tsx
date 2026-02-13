@@ -49,13 +49,13 @@ export default function PlayCpuPage() {
     const cpuSide: Player = playerSide === "p1" ? "p2" : "p1";
     if (current.turn === cpuSide && !winner && !thinking) {
       setThinking(true);
-      
+
       const animDuration = lastMoveRef.current
         ? calculateAnimationDuration(lastMoveRef.current.changed, lastMoveRef.current.placedPos)
         : 0;
-      
+
       const delay = Math.max(animDuration + 300, 600);
-      
+
       setTimeout(() => {
         const pos = findCpuMove(current.board, cpuSide, cpuLevel);
         if (pos >= 0) {
@@ -173,6 +173,7 @@ export default function PlayCpuPage() {
     easy: "初級",
     medium: "中級",
     hard: "上級",
+    extreme: "極級",
   };
 
   const sideLabels = {
@@ -207,7 +208,7 @@ export default function PlayCpuPage() {
             <div style={{ textAlign: "center", padding: "8px 0", borderBottom: "2px solid #8b6f47" }}>
               <span style={{ fontWeight: 900, fontSize: 18, color: "#2c1810", fontFamily: "serif", letterSpacing: "0.1em" }}>段位選択</span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, minmax(0, 1fr))", gap: 12 }}>
               {(Object.keys(levelLabels) as CpuLevel[]).map(level => (
                 <button
                   key={level}
@@ -224,8 +225,8 @@ export default function PlayCpuPage() {
                     fontSize: 16,
                     color: "#2c1810",
                     fontFamily: "serif",
-                    boxShadow: cpuLevel === level 
-                      ? "0 4px 12px rgba(212, 175, 55, 0.4), inset 0 1px 2px rgba(255,255,255,0.8)" 
+                    boxShadow: cpuLevel === level
+                      ? "0 4px 12px rgba(212, 175, 55, 0.4), inset 0 1px 2px rgba(255,255,255,0.8)"
                       : "0 2px 6px rgba(44, 24, 16, 0.2), inset 0 1px 2px rgba(255,255,255,0.6)",
                     transition: "all 0.2s",
                     letterSpacing: "0.05em",
@@ -280,12 +281,12 @@ export default function PlayCpuPage() {
           </div>
         </div>
 
-        <Link 
-          href="/" 
-          style={{ 
-            ...btnStyle, 
-            textAlign: "center", 
-            fontSize: 14, 
+        <Link
+          href="/"
+          style={{
+            ...btnStyle,
+            textAlign: "center",
+            fontSize: 14,
             padding: "10px 20px",
             fontFamily: "serif",
             letterSpacing: "0.05em",
