@@ -335,30 +335,33 @@ const avatarWrapStyle: React.CSSProperties = {
 
 const setsugekkaFrameStyle: React.CSSProperties = {
   position: "absolute",
-  inset: -6,
+  inset: -1,
   borderRadius: "50%",
-  border: "3px solid #d8b14d",
+  border: "4px solid #c99824",
   boxShadow:
-    "0 0 0 2px rgba(113, 79, 24, 0.65), 0 0 16px rgba(232, 201, 124, 0.75), inset 0 0 10px rgba(255, 246, 212, 0.9)",
-  background: "linear-gradient(140deg, rgba(255,240,190,0.15) 0%, rgba(184,132,40,0.2) 100%)",
+    "0 0 0 1px rgba(92, 63, 14, 0.8), 0 2px 6px rgba(90, 62, 18, 0.38), inset 0 1px 2px rgba(255, 248, 220, 0.95), inset 0 -2px 4px rgba(112, 70, 9, 0.6)",
+  background:
+    "conic-gradient(from 25deg, #fff7cf 0deg, #f2c558 45deg, #a46f0e 95deg, #f7d66f 150deg, #8e5f0a 215deg, #ffd978 280deg, #b98317 330deg, #fff7cf 360deg)",
   pointerEvents: "none",
 };
 
 const setsugekkaCrestStyle: React.CSSProperties = {
   position: "absolute",
-  top: -7,
-  right: -5,
-  width: 28,
-  height: 28,
+  top: -10,
+  right: -10,
+  width: 30,
+  height: 30,
   borderRadius: "50%",
-  border: "2px solid #b3872e",
-  background: "radial-gradient(circle at 30% 28%, #fff7d5 0%, #f3d17a 46%, #c69738 100%)",
-  color: "#76531a",
-  fontSize: 15,
+  border: "2px solid #8f640f",
+  background:
+    "radial-gradient(circle at 28% 22%, #fffbe7 0%, #f8da84 40%, #c18a1f 72%, #8a5c08 100%)",
+  color: "#6f4706",
+  fontSize: 16,
   fontWeight: 900,
   display: "grid",
   placeItems: "center",
-  boxShadow: "0 6px 10px rgba(70, 45, 12, 0.32), inset 0 0 0 1px rgba(255, 250, 225, 0.7)",
+  boxShadow:
+    "0 7px 12px rgba(70, 45, 12, 0.4), inset 0 1px 1px rgba(255, 250, 225, 0.92), inset 0 -1px 2px rgba(96, 64, 12, 0.55)",
   pointerEvents: "none",
 };
 
