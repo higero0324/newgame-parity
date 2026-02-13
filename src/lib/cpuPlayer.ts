@@ -111,6 +111,10 @@ function findExtremeMove(board: number[], player: Player): number {
     if (res.ok && res.winner === player) return pos;
   }
 
+  // 端3連取以上の危険局面は最優先で受ける
+  const emergencyEdgeMove = findEmergencyEdgeBreakMove(board, player);
+  if (emergencyEdgeMove !== null) return emergencyEdgeMove;
+
   // 端からの押し込み（横角定石含む）を優先して崩す
   const antiEdgeMove = findAntiEdgeSweepMove(board, player);
   if (antiEdgeMove !== null) return antiEdgeMove;
@@ -205,6 +209,43 @@ function findAntiEdgeSweepMove(board: number[], player: Player): number | null {
     if (!res.ok) continue;
     if (opponentHasImmediateWinningMove(res.newBoard, opponent)) continue;
     const score = (edgePressureByCell.get(pos) ?? 0) + evaluateBoard(res.newBoard, player);
+    if (score > bestScore) {
+      bestScore = score;
+      bestPos = pos;
+    }
+  }
+  return bestPos;
+}
+
+function findEmergencyEdgeBreakMove(board: number[], player: Player): number | null {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const urgentCells = new Set<number>();
+
+  for (const line of EDGE_LINES) {
+    const oppOwned = line.filter(i => ownerOf(board[i]) === opponent).length;
+    const myOwned = line.filter(i => ownerOf(board[i]) === player).length;
+    const empty = line.filter(i => board[i] === 0);
+    if (empty.length === 0) continue;
+
+    // 相手が端を3つ以上支配している時点で緊急防衛対象
+    if (oppOwned >= 3 && oppOwned > myOwned) {
+      for (const cell of empty) urgentCells.add(cell);
+    }
+  }
+
+  const candidates = [...urgentCells];
+  if (candidates.length === 0) return null;
+
+  transpositionTable.clear();
+  let bestPos: number | null = null;
+  let bestScore = -Infinity;
+  for (const pos of candidates) {
+    const res = applyMove(board, pos, player);
+    if (!res.ok) continue;
+    if (opponentHasImmediateWinningMove(res.newBoard, opponent)) continue;
+
+    // 緊急局面では通常より少し深く読む
+    const score = minimax(res.newBoard, 4, -Infinity, Infinity, false, player) + evaluateBoard(res.newBoard, player);
     if (score > bestScore) {
       bestScore = score;
       bestPos = pos;
