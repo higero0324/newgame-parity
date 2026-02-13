@@ -21,7 +21,7 @@ export default function AchievementsPage() {
     total_cpu_wins: number;
     saved_matches: number;
   } | null>(null);
-  const [claimRevealTitle, setClaimRevealTitle] = useState<TitleDef | null>(null);
+  const [claimReveal, setClaimReveal] = useState<{ title: TitleDef; items: Array<{ id: string; label: string; kind: "title" | "frame" }> } | null>(null);
   const revealTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -75,12 +75,15 @@ export default function AchievementsPage() {
     setStatus("称号を回収しました。");
     const title = getTitleById(titleId);
     if (title) {
-      setClaimRevealTitle(title);
+      setClaimReveal({
+        title,
+        items: buildClaimRevealItems(title),
+      });
       if (revealTimerRef.current !== null) {
         window.clearTimeout(revealTimerRef.current);
       }
       revealTimerRef.current = window.setTimeout(() => {
-        setClaimRevealTitle(null);
+        setClaimReveal(null);
         revealTimerRef.current = null;
       }, 1800);
     }
@@ -162,11 +165,27 @@ export default function AchievementsPage() {
 
       {status && <div style={sectionStyle}>{status}</div>}
 
-      {claimRevealTitle && (
+      {claimReveal && (
         <div style={claimRevealOverlayStyle} aria-live="polite">
-          <div style={{ ...claimRevealCardStyle, ...titleChipStyleFor(claimRevealTitle) }}>
-            <div style={{ fontSize: 12, opacity: 0.9, marginBottom: 6 }}>称号獲得</div>
-            <div style={{ fontSize: 30, fontWeight: 900, lineHeight: 1.1 }}>{claimRevealTitle.name}</div>
+          <div style={claimRevealCardStyle}>
+            <div style={{ fontSize: 12, opacity: 0.9, marginBottom: 6 }}>獲得アイテム</div>
+            <div style={{ fontSize: 30, fontWeight: 900, lineHeight: 1.1, marginBottom: 10 }}>
+              {claimReveal.title.name}
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {claimReveal.items.map(item => (
+                <div
+                  key={item.id}
+                  style={{
+                    ...claimRevealItemStyle,
+                    ...(item.kind === "title" ? titleChipStyleFor(claimReveal.title) : claimRevealFrameItemStyle),
+                  }}
+                >
+                  {item.kind === "title" ? "称号: " : "フレーム: "}
+                  {item.label}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -251,8 +270,25 @@ const claimRevealCardStyle: React.CSSProperties = {
   textAlign: "center",
   border: "2px solid rgba(80, 50, 20, 0.35)",
   borderRadius: 14,
+  background: "rgba(255, 251, 242, 0.96)",
   boxShadow: "0 14px 32px rgba(35, 20, 10, 0.32)",
   padding: "16px 20px",
+};
+
+const claimRevealItemStyle: React.CSSProperties = {
+  border: "1px solid transparent",
+  borderRadius: 10,
+  padding: "8px 10px",
+  fontWeight: 800,
+  fontSize: 14,
+  textAlign: "center",
+};
+
+const claimRevealFrameItemStyle: React.CSSProperties = {
+  background: "linear-gradient(135deg, #1b1f31 0%, #5b4f78 55%, #d9c7ff 100%)",
+  color: "#fff",
+  borderColor: "#7c67b2",
+  boxShadow: "inset 0 0 0 1px rgba(240, 228, 255, 0.35)",
 };
 
 const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
@@ -293,4 +329,14 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
     ...titleChipByRarity[title.rarity],
     borderRadius: isUpper ? 8 : 999,
   };
+}
+
+function buildClaimRevealItems(title: TitleDef): Array<{ id: string; label: string; kind: "title" | "frame" }> {
+  const items: Array<{ id: string; label: string; kind: "title" | "frame" }> = [
+    { id: `title:${title.id}`, label: title.name, kind: "title" },
+  ];
+  if (title.id === "extreme_emperor") {
+    items.push({ id: "frame:setsugekka_frame", label: "雪月花フレーム", kind: "frame" });
+  }
+  return items;
 }

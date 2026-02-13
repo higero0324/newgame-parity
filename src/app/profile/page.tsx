@@ -235,11 +235,6 @@ export default function ProfilePage() {
   }, [equippedTitleIds]);
   const canUseSnowFrame = unlockedTitleIds.includes("extreme_emperor");
 
-  useEffect(() => {
-    if (canUseSnowFrame) return;
-    if (iconFrameId) setIconFrameId("");
-  }, [canUseSnowFrame, iconFrameId]);
-
   const onToggleFeaturedWithStar = (matchId: string) => {
     if (!userId) return;
     const current = [...featuredIds];
@@ -615,6 +610,7 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
         <div style={avatarStyle}>{text}</div>
       )}
       {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaFrameStyle} aria-hidden />}
+      {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaCrestStyle} aria-hidden>❄</div>}
     </div>
   );
 }
@@ -780,11 +776,30 @@ const avatarWrapStyle: React.CSSProperties = {
 
 const setsugekkaFrameStyle: React.CSSProperties = {
   position: "absolute",
-  inset: -5,
+  inset: -6,
   borderRadius: "50%",
-  border: "3px solid rgba(224, 205, 255, 0.95)",
+  border: "3px solid #d8b14d",
   boxShadow:
-    "0 0 0 2px rgba(120, 80, 150, 0.5), 0 0 18px rgba(210, 184, 255, 0.75), inset 0 0 10px rgba(255,255,255,0.7)",
+    "0 0 0 2px rgba(113, 79, 24, 0.65), 0 0 16px rgba(232, 201, 124, 0.75), inset 0 0 10px rgba(255, 246, 212, 0.9)",
+  background: "linear-gradient(140deg, rgba(255,240,190,0.15) 0%, rgba(184,132,40,0.2) 100%)",
+  pointerEvents: "none",
+};
+
+const setsugekkaCrestStyle: React.CSSProperties = {
+  position: "absolute",
+  top: -7,
+  right: -5,
+  width: 28,
+  height: 28,
+  borderRadius: "50%",
+  border: "2px solid #b3872e",
+  background: "radial-gradient(circle at 30% 28%, #fff7d5 0%, #f3d17a 46%, #c69738 100%)",
+  color: "#76531a",
+  fontSize: 15,
+  fontWeight: 900,
+  display: "grid",
+  placeItems: "center",
+  boxShadow: "0 6px 10px rgba(70, 45, 12, 0.32), inset 0 0 0 1px rgba(255, 250, 225, 0.7)",
   pointerEvents: "none",
 };
 
