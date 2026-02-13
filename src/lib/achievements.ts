@@ -56,7 +56,7 @@ const TITLE_DEFS: TitleDef[] = [
   { id: "hard_master", name: "紅に染まる河川", rarity: "gold", description: "上級に10回勝利" },
   { id: "extreme_slayer", name: "まるで銀世界", rarity: "gold", description: "極級に1回勝利" },
   { id: "extreme_emperor", name: "雪月花", rarity: "obsidian", description: "極級に5回勝利" },
-  { id: "cpu_veteran", name: "研鑽", rarity: "silver", description: "CPU戦で通算30勝" },
+  { id: "cpu_veteran", name: "百戦錬磨", rarity: "obsidian", description: "CPU戦で通算100勝" },
   { id: "record_keeper", name: "文箱の若芽", rarity: "bronze", description: "季譜を1件保存" },
   { id: "archive_lord", name: "一冊を綴る", rarity: "silver", description: "季譜を10件保存" },
 ];
@@ -71,7 +71,7 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: "hard_10", name: "紅に染まる河川", description: "上級に10回勝利", title_id: "hard_master", target: () => 10 },
   { id: "extreme_1", name: "まるで銀世界", description: "極級に1回勝利", title_id: "extreme_slayer", target: () => 1 },
   { id: "extreme_5", name: "雪月花", description: "極級に5回勝利", title_id: "extreme_emperor", target: () => 5 },
-  { id: "cpu_total_30", name: "研鑽", description: "CPU戦で通算30勝", title_id: "cpu_veteran", target: () => 30 },
+  { id: "cpu_total_30", name: "百戦錬磨", description: "CPU戦で通算100勝", title_id: "cpu_veteran", target: () => 100 },
   { id: "saved_10", name: "文箱の若芽", description: "季譜を1件保存", title_id: "record_keeper", target: () => 1 },
   { id: "saved_30", name: "一冊を綴る", description: "季譜を10件保存", title_id: "archive_lord", target: () => 10 },
 ];
