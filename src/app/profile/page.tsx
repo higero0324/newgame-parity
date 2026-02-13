@@ -273,7 +273,7 @@ export default function ProfilePage() {
             {equippedTitles.length > 0 && (
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {equippedTitles.map(title => (
-                  <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipStyleFor(title) }}>
+                  <span key={title.id} style={{ ...titleChipStyleBase, ...cardTitleChipAdaptiveStyle, ...titleChipStyleFor(title) }}>
                     {title.name}
                   </span>
                 ))}
@@ -764,9 +764,9 @@ const templateChipActiveStyle: React.CSSProperties = {
 };
 
 const titleChipStyleBase: React.CSSProperties = {
-  padding: "clamp(3px, 0.8vw, 6px) clamp(8px, 1.6vw, 12px)",
+  padding: "4px 10px",
   borderRadius: 999,
-  fontSize: "clamp(11px, 1.5vw, 13px)",
+  fontSize: 12,
   fontWeight: 700,
   border: "1px solid transparent",
   width: "fit-content",
@@ -823,17 +823,22 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
 }
 
 const profileNameTextStyle: React.CSSProperties = {
-  fontSize: "clamp(18px, 3.4vw, 24px)",
+  fontSize: "clamp(18px, 4.2cqw, 24px)",
   fontWeight: 800,
   lineHeight: 1.2,
 };
 
 const profileStatusTextStyle: React.CSSProperties = {
-  fontSize: "clamp(12px, 2.2vw, 15px)",
+  fontSize: "clamp(12px, 2.8cqw, 15px)",
   lineHeight: 1.45,
 };
 
 const profileMetaTextStyle: React.CSSProperties = {
-  fontSize: "clamp(11px, 1.8vw, 13px)",
+  fontSize: "clamp(11px, 2.2cqw, 13px)",
   lineHeight: 1.4,
+};
+
+const cardTitleChipAdaptiveStyle: React.CSSProperties = {
+  padding: "clamp(3px, 1.0cqw, 6px) clamp(8px, 2.2cqw, 12px)",
+  fontSize: "clamp(11px, 2.1cqw, 13px)",
 };

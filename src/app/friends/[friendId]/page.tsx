@@ -151,7 +151,7 @@ export default function FriendProfilePage() {
                         event.stopPropagation();
                         setOpenTitleId(prev => (prev === title.id ? null : title.id));
                       }}
-                      style={{ ...titleChipStyleBase, ...titleChipButtonStyle, ...titleChipStyleFor(title) }}
+                      style={{ ...titleChipStyleBase, ...cardTitleChipAdaptiveStyle, ...titleChipButtonStyle, ...titleChipStyleFor(title) }}
                       aria-expanded={openTitleId === title.id}
                     >
                       {title.name}
@@ -370,9 +370,9 @@ const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
 };
 
 const titleChipStyleBase: React.CSSProperties = {
-  padding: "clamp(3px, 0.8vw, 6px) clamp(8px, 1.6vw, 12px)",
+  padding: "4px 10px",
   borderRadius: 999,
-  fontSize: "clamp(11px, 1.5vw, 13px)",
+  fontSize: 12,
   fontWeight: 700,
   border: "1px solid transparent",
   width: "fit-content",
@@ -443,17 +443,22 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
 }
 
 const profileNameTextStyle: React.CSSProperties = {
-  fontSize: "clamp(18px, 3.4vw, 24px)",
+  fontSize: "clamp(18px, 4.2cqw, 24px)",
   fontWeight: 800,
   lineHeight: 1.2,
 };
 
 const profileStatusTextStyle: React.CSSProperties = {
-  fontSize: "clamp(12px, 2.2vw, 15px)",
+  fontSize: "clamp(12px, 2.8cqw, 15px)",
   lineHeight: 1.45,
 };
 
 const profileMetaTextStyle: React.CSSProperties = {
-  fontSize: "clamp(11px, 1.8vw, 13px)",
+  fontSize: "clamp(11px, 2.2cqw, 13px)",
   lineHeight: 1.4,
+};
+
+const cardTitleChipAdaptiveStyle: React.CSSProperties = {
+  padding: "clamp(3px, 1.0cqw, 6px) clamp(8px, 2.2cqw, 12px)",
+  fontSize: "clamp(11px, 2.1cqw, 13px)",
 };
