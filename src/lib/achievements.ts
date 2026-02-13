@@ -52,13 +52,13 @@ const TITLE_DEFS: TitleDef[] = [
   { id: "rookie_winner", name: "春の訪れ", rarity: "bronze", description: "CPU戦で1回勝利" },
   { id: "easy_hunter", name: "花の便り", rarity: "bronze", description: "初級に5回勝利" },
   { id: "medium_breaker", name: "氷菓も溶ける頃", rarity: "silver", description: "中級に5回勝利" },
-  { id: "hard_striker", name: "枯れ葉もまたおかし", rarity: "gold", description: "上級に3回勝利" },
+  { id: "hard_striker", name: "枯れ葉も風情", rarity: "gold", description: "上級に3回勝利" },
   { id: "hard_master", name: "紅に染まる河川", rarity: "gold", description: "上級に10回勝利" },
   { id: "extreme_slayer", name: "まるで銀世界", rarity: "gold", description: "極級に1回勝利" },
   { id: "extreme_emperor", name: "雪月花", rarity: "obsidian", description: "極級に5回勝利" },
   { id: "cpu_veteran", name: "研鑽", rarity: "silver", description: "CPU戦で通算30勝" },
-  { id: "record_keeper", name: "文箱の若芽", rarity: "bronze", description: "季譜を10件保存" },
-  { id: "archive_lord", name: "一冊を綴る", rarity: "obsidian", description: "季譜を30件保存" },
+  { id: "record_keeper", name: "文箱の若芽", rarity: "bronze", description: "季譜を1件保存" },
+  { id: "archive_lord", name: "一冊を綴る", rarity: "silver", description: "季譜を10件保存" },
 ];
 
 const TITLE_MAP = new Map(TITLE_DEFS.map(x => [x.id, x]));
@@ -67,13 +67,13 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: "cpu_first_win", name: "春の訪れ", description: "CPU戦で1回勝利", title_id: "rookie_winner", target: () => 1 },
   { id: "easy_5", name: "花の便り", description: "初級に5回勝利", title_id: "easy_hunter", target: s => s.cpu_wins.easy >= 5 ? 5 : 5 },
   { id: "medium_5", name: "氷菓も溶ける頃", description: "中級に5回勝利", title_id: "medium_breaker", target: () => 5 },
-  { id: "hard_3", name: "枯れ葉もまたおかし", description: "上級に3回勝利", title_id: "hard_striker", target: () => 3 },
+  { id: "hard_3", name: "枯れ葉も風情", description: "上級に3回勝利", title_id: "hard_striker", target: () => 3 },
   { id: "hard_10", name: "紅に染まる河川", description: "上級に10回勝利", title_id: "hard_master", target: () => 10 },
   { id: "extreme_1", name: "まるで銀世界", description: "極級に1回勝利", title_id: "extreme_slayer", target: () => 1 },
   { id: "extreme_5", name: "雪月花", description: "極級に5回勝利", title_id: "extreme_emperor", target: () => 5 },
   { id: "cpu_total_30", name: "研鑽", description: "CPU戦で通算30勝", title_id: "cpu_veteran", target: () => 30 },
-  { id: "saved_10", name: "文箱の若芽", description: "季譜を10件保存", title_id: "record_keeper", target: () => 10 },
-  { id: "saved_30", name: "一冊を綴る", description: "季譜を30件保存", title_id: "archive_lord", target: () => 30 },
+  { id: "saved_10", name: "文箱の若芽", description: "季譜を1件保存", title_id: "record_keeper", target: () => 1 },
+  { id: "saved_30", name: "一冊を綴る", description: "季譜を10件保存", title_id: "archive_lord", target: () => 10 },
 ];
 
 function normalizeStringArray(value: unknown): string[] {
