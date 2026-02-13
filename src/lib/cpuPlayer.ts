@@ -111,6 +111,10 @@ function findExtremeMove(board: number[], player: Player): number {
     if (res.ok && res.winner === player) return pos;
   }
 
+  // 相手次手で端3を作られる筋を先に封じる
+  const preventEdgeTripleMove = findPreventEdgeTripleThreatMove(board, player);
+  if (preventEdgeTripleMove !== null) return preventEdgeTripleMove;
+
   // 端3連取を与える危険手を回避できるなら最優先で回避
   const antiGiftMove = findAntiEdgeGiftMove(board, player);
   if (antiGiftMove !== null) return antiGiftMove;
@@ -283,6 +287,65 @@ function findAntiEdgeGiftMove(board: number[], player: Player): number | null {
     }
   }
   return bestPos;
+}
+
+function findPreventEdgeTripleThreatMove(board: number[], player: Player): number | null {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const empties = board.map((v, i) => (v === 0 ? i : -1)).filter(i => i >= 0);
+  if (empties.length === 0) return null;
+
+  type Candidate = { pos: number; worstEdge: number; score: number };
+  const candidates: Candidate[] = [];
+  for (const pos of empties) {
+    const res = applyMove(board, pos, player);
+    if (!res.ok) continue;
+    if (opponentHasImmediateWinningMove(res.newBoard, opponent)) continue;
+
+    const worstEdge = worstOpponentEdgeCountAfterOurMove(res.newBoard, opponent);
+    const score = evaluateBoard(res.newBoard, player);
+    candidates.push({ pos, worstEdge, score });
+  }
+
+  if (candidates.length === 0) return null;
+  const minWorstEdge = Math.min(...candidates.map(c => c.worstEdge));
+  // 次手で端3以上を許す筋があるなら、最小のものを優先して封じる
+  if (minWorstEdge <= 2) {
+    const safeCandidates = candidates
+      .filter(c => c.worstEdge === minWorstEdge)
+      .sort((a, b) => b.score - a.score);
+    return safeCandidates[0]?.pos ?? null;
+  }
+
+  return null;
+}
+
+function worstOpponentEdgeCountAfterOurMove(boardAfterOurMove: number[], opponent: Player): number {
+  const empties = boardAfterOurMove.map((v, i) => (v === 0 ? i : -1)).filter(i => i >= 0);
+  if (empties.length === 0) {
+    return maxEdgeOwnedCount(boardAfterOurMove, opponent);
+  }
+
+  let worst = 0;
+  for (const pos of empties) {
+    const res = applyMove(boardAfterOurMove, pos, opponent);
+    if (!res.ok) continue;
+    const edgeCount = maxEdgeOwnedCount(res.newBoard, opponent);
+    if (edgeCount > worst) worst = edgeCount;
+    if (worst >= 5) break;
+  }
+  return worst;
+}
+
+function maxEdgeOwnedCount(board: number[], player: Player): number {
+  let maxCount = 0;
+  for (const line of EDGE_LINES) {
+    let count = 0;
+    for (const i of line) {
+      if (ownerOf(board[i]) === player) count++;
+    }
+    if (count > maxCount) maxCount = count;
+  }
+  return maxCount;
 }
 
 function isEdgeGiftMove(board: number[], pos: number, player: Player): boolean {
