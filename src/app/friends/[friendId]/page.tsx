@@ -339,14 +339,14 @@ const setsugekkaFrameStyle: React.CSSProperties = {
   borderRadius: "50%",
   border: "3px solid #cb9926",
   boxShadow:
-    "0 0 0 1px rgba(92, 63, 14, 0.82), 0 2px 6px rgba(90, 62, 18, 0.34), inset 0 1px 2px rgba(255, 248, 220, 0.92), inset 0 -2px 4px rgba(112, 70, 9, 0.52)",
+    "0 0 0 1px rgba(92, 63, 14, 0.82), 0 2px 6px rgba(90, 62, 18, 0.34), 0 0 14px rgba(245, 207, 96, 0.62), inset 0 1px 2px rgba(255, 248, 220, 0.92), inset 0 -2px 4px rgba(112, 70, 9, 0.52)",
   background: "transparent",
   pointerEvents: "none",
 };
 
 const setsugekkaCrestStyle: React.CSSProperties = {
   position: "absolute",
-  top: -4,
+  bottom: -4,
   right: -4,
   width: 26,
   height: 26,
