@@ -13,6 +13,7 @@ type ProfileRow = {
   status_message: string;
   icon_text: string;
   icon_image_data_url: string;
+  icon_frame_id?: string;
   profile_card_template?: string;
   equipped_title_ids?: string[];
   featured_match_ids: string[];
@@ -49,7 +50,7 @@ export default function FriendProfilePage() {
 
       const { data: target, error: targetError } = await supabase
         .from("profiles")
-        .select("user_id, friend_id, display_name, status_message, icon_text, icon_image_data_url, profile_card_template, equipped_title_ids, featured_match_ids, match_names")
+        .select("user_id, friend_id, display_name, status_message, icon_text, icon_image_data_url, icon_frame_id, profile_card_template, equipped_title_ids, featured_match_ids, match_names")
         .eq("friend_id", friendId)
         .maybeSingle();
       if (targetError) {
@@ -135,7 +136,12 @@ export default function FriendProfilePage() {
 
       <section style={{ ...sectionStyle, ...profileCardBaseStyle, ...profileCardClosedShapeStyle, ...profileCardTemplateStyles[cardTemplate] }}>
         <div style={profileTopStyle}>
-          <Avatar iconText={profile?.icon_text ?? ""} iconImageDataUrl={profile?.icon_image_data_url ?? ""} displayName={displayName} />
+          <Avatar
+            iconText={profile?.icon_text ?? ""}
+            iconImageDataUrl={profile?.icon_image_data_url ?? ""}
+            iconFrameId={profile?.icon_frame_id ?? ""}
+            displayName={displayName}
+          />
           <div style={{ display: "grid", gap: 6 }}>
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
             <div style={{ ...profileStatusTextStyle, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
@@ -145,7 +151,7 @@ export default function FriendProfilePage() {
             {isFriend && equippedTitles.length > 0 && (
               <div
                 ref={titleAreaRef}
-                style={{ ...equippedTitleListStyle, ...(equippedTitles.some(isUpperTitle) ? equippedTitleListUpperStyle : null) }}
+                style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle }}
               >
                 {equippedTitles.map(title => (
                   <div key={title.id} style={titleChipWrapStyle}>
@@ -214,13 +220,19 @@ export default function FriendProfilePage() {
   );
 }
 
-function Avatar(props: { iconText: string; iconImageDataUrl: string; displayName: string }) {
-  if (props.iconImageDataUrl) {
-    return <img src={props.iconImageDataUrl} alt="icon" style={{ ...avatarStyle, objectFit: "cover", borderRadius: "50%" }} />;
-  }
+function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId: string; displayName: string }) {
   const fallback = props.displayName.trim().slice(0, 1).toUpperCase() || "?";
   const text = (props.iconText.trim() || fallback).slice(0, 2);
-  return <div style={avatarStyle}>{text}</div>;
+  return (
+    <div style={avatarWrapStyle}>
+      {props.iconImageDataUrl ? (
+        <img src={props.iconImageDataUrl} alt="icon" style={{ ...avatarStyle, objectFit: "cover", borderRadius: "50%" }} />
+      ) : (
+        <div style={avatarStyle}>{text}</div>
+      )}
+      {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaFrameStyle} aria-hidden />}
+    </div>
+  );
 }
 
 function MiniBoard({ board }: { board: number[] }) {
@@ -312,6 +324,22 @@ const avatarStyle: React.CSSProperties = {
   fontWeight: 800,
   fontSize: "clamp(28px, 5vw, 36px)",
   boxShadow: "0 2px 0 rgba(90, 50, 20, 0.25)",
+};
+
+const avatarWrapStyle: React.CSSProperties = {
+  position: "relative",
+  width: "clamp(74px, 18vw, 108px)",
+  aspectRatio: "1 / 1",
+};
+
+const setsugekkaFrameStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -5,
+  borderRadius: "50%",
+  border: "3px solid rgba(224, 205, 255, 0.95)",
+  boxShadow:
+    "0 0 0 2px rgba(120, 80, 150, 0.5), 0 0 18px rgba(210, 184, 255, 0.75), inset 0 0 10px rgba(255,255,255,0.7)",
+  pointerEvents: "none",
 };
 
 function parseTemplate(value: string | undefined): CardTemplateId {
@@ -501,8 +529,11 @@ const titleChipUpperDisplayStyle: React.CSSProperties = {
 };
 
 const titleChipLowerDisplayStyle: React.CSSProperties = {
-  width: "fit-content",
-  maxWidth: "100%",
+  width: "100%",
+  minWidth: 0,
+  padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
+  fontSize: "clamp(13px, 2.5cqw, 16px)",
+  lineHeight: 1.25,
   textAlign: "center",
   boxSizing: "border-box",
 };

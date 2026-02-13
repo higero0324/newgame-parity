@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const [starredIdsForSave, setStarredIdsForSave] = useState<string[]>([]);
   const [iconText, setIconText] = useState("");
   const [iconImageDataUrl, setIconImageDataUrl] = useState("");
+  const [iconFrameId, setIconFrameId] = useState("");
   const [iconImageStatus, setIconImageStatus] = useState("");
   const [iconFileName, setIconFileName] = useState("");
   const [profileEditOpen, setProfileEditOpen] = useState(false);
@@ -59,7 +60,9 @@ export default function ProfilePage() {
   const [cardTemplate, setCardTemplate] = useState<CardTemplateId>("classic");
   const [unlockedTitleIds, setUnlockedTitleIds] = useState<string[]>([]);
   const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
+  const [titlePickerSlot, setTitlePickerSlot] = useState<0 | 1 | null>(null);
   const [achievementNotice, setAchievementNotice] = useState(false);
+  const iconFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -85,10 +88,12 @@ export default function ProfilePage() {
           setMatchNames(loaded.prefs.matchNames);
           setFeaturedIds(loaded.prefs.featuredIds);
           setStarredIdsForSave(loaded.prefs.starredIds);
+          setIconFrameId(loaded.prefs.iconFrameId);
         } else {
           setMatchNames({});
           setFeaturedIds([]);
           setStarredIdsForSave([]);
+          setIconFrameId("");
           setStatus(`プロフィール設定の取得に失敗しました。詳細: ${loaded.reason}`);
         }
         setIconText(profilePrefs.iconText);
@@ -167,6 +172,7 @@ export default function ProfilePage() {
             status_message: statusMessage.trim(),
             icon_text: iconText.trim().slice(0, 2),
             profile_card_template: cardTemplate,
+            icon_frame_id: iconFrameId,
           },
           { onConflict: "user_id" },
         );
@@ -224,6 +230,15 @@ export default function ProfilePage() {
   const unlockedTitles = useMemo(() => {
     return unlockedTitleIds.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
   }, [unlockedTitleIds]);
+  const equippedSlots = useMemo(() => {
+    return [equippedTitleIds[0] ?? "", equippedTitleIds[1] ?? ""] as [string, string];
+  }, [equippedTitleIds]);
+  const canUseSnowFrame = unlockedTitleIds.includes("extreme_emperor");
+
+  useEffect(() => {
+    if (canUseSnowFrame) return;
+    if (iconFrameId) setIconFrameId("");
+  }, [canUseSnowFrame, iconFrameId]);
 
   const onToggleFeaturedWithStar = (matchId: string) => {
     if (!userId) return;
@@ -242,6 +257,34 @@ export default function ProfilePage() {
     saveClipPrefsToSupabase({ starredIds: starredIdsForSave, featuredIds: next }).then(res => {
       if (!res.ok) setStatus(`厳選クリップの保存に失敗しました。詳細: ${res.reason}`);
     });
+  };
+
+  const assignTitleToSlot = (slot: 0 | 1, titleId: string) => {
+    const next: [string, string] = [equippedSlots[0], equippedSlots[1]];
+    next[slot] = titleId;
+    const uniqueOrdered = Array.from(new Set(next.filter(Boolean)));
+    setEquippedTitleIds(uniqueOrdered);
+  };
+
+  const clearTitleSlot = (slot: 0 | 1) => {
+    const next: [string, string] = [equippedSlots[0], equippedSlots[1]];
+    next[slot] = "";
+    setEquippedTitleIds(next.filter(Boolean));
+  };
+
+  const onPickIconImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIconFileName(file.name);
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      setIconImageDataUrl(dataUrl);
+      setIconImageStatus("画像を設定しました。保存で反映されます。");
+    } catch {
+      setIconImageStatus("画像の読み込みに失敗しました。");
+    } finally {
+      e.currentTarget.value = "";
+    }
   };
 
   return (
@@ -266,25 +309,118 @@ export default function ProfilePage() {
           </button>
         </div>
         <div style={profileTopStyle}>
-          <Avatar iconText={iconText} iconImageDataUrl={iconImageDataUrl} displayName={displayName} email={email} />
+          <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (!profileEditOpen) return;
+                iconFileInputRef.current?.click();
+              }}
+              style={{
+                border: "none",
+                background: "transparent",
+                padding: 0,
+                cursor: profileEditOpen ? "pointer" : "default",
+                width: "fit-content",
+              }}
+              aria-label={profileEditOpen ? "アイコン画像を変更" : "プロフィールアイコン"}
+            >
+              <Avatar iconText={iconText} iconImageDataUrl={iconImageDataUrl} iconFrameId={iconFrameId} displayName={displayName} email={email} />
+            </button>
+            {profileEditOpen && (
+              <div style={{ fontSize: 12, color: mutedTextColor }}>
+                アイコンをタップして画像変更
+              </div>
+            )}
+            <input
+              ref={iconFileInputRef}
+              type="file"
+              accept="image/*"
+              style={hiddenFileInputStyle}
+              onChange={onPickIconImage}
+            />
+          </div>
           <div style={{ display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }}>
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
             <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
-            {equippedTitles.length > 0 && (
-              <div style={{ ...equippedTitleListStyle, ...(equippedTitles.some(isUpperTitle) ? equippedTitleListUpperStyle : null) }}>
-                {equippedTitles.map(title => (
-                  <span
-                    key={title.id}
-                    style={{
-                      ...titleChipStyleBase,
-                      ...cardTitleChipAdaptiveStyle,
-                      ...titleChipStyleFor(title),
-                      ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : titleChipLowerDisplayStyle),
+            {(equippedTitles.length > 0 || profileEditOpen) && (
+              <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle }}>
+                {[0, 1].map(i => {
+                  const slot = i as 0 | 1;
+                  const titleId = equippedSlots[slot];
+                  const title = titleId ? getTitleById(titleId) : null;
+                  const empty = !title;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => {
+                        if (!profileEditOpen) return;
+                        setTitlePickerSlot(prev => (prev === slot ? null : slot));
+                      }}
+                      style={{
+                        ...titleChipStyleBase,
+                        ...cardTitleChipAdaptiveStyle,
+                        ...(empty
+                          ? emptyTitleSlotStyle
+                          : {
+                              ...titleChipStyleFor(title),
+                              ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : titleChipLowerDisplayStyle),
+                            }),
+                        cursor: profileEditOpen ? "pointer" : "default",
+                      }}
+                    >
+                      {empty ? "＋ 称号を設定" : title.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {profileEditOpen && titlePickerSlot !== null && (
+              <div style={titlePickerPanelStyle}>
+                <div style={{ fontSize: 13, color: mutedTextColor, fontWeight: 700 }}>
+                  {titlePickerSlot + 1}枠目に設定する称号を選択
+                </div>
+                <div style={{ display: "grid", gap: 6 }}>
+                  <button
+                    type="button"
+                    style={{ ...titleSelectButtonStyle, ...titleSelectClearStyle }}
+                    onClick={() => {
+                      clearTitleSlot(titlePickerSlot);
+                      setTitlePickerSlot(null);
                     }}
                   >
-                    {title.name}
-                  </span>
-                ))}
+                    この枠を空にする
+                  </button>
+                  {unlockedTitles.length === 0 && (
+                    <div style={{ fontSize: 13, color: "#666" }}>まだ称号を獲得していません。</div>
+                  )}
+                  {unlockedTitles.map(title => {
+                    const anotherSlot = titlePickerSlot === 0 ? equippedSlots[1] : equippedSlots[0];
+                    const selectedInThisSlot = equippedSlots[titlePickerSlot] === title.id;
+                    const usedInOtherSlot = anotherSlot === title.id;
+                    return (
+                      <button
+                        key={title.id}
+                        type="button"
+                        disabled={usedInOtherSlot}
+                        style={{
+                          ...titleSelectButtonStyle,
+                          ...(selectedInThisSlot ? titleSelectButtonActiveStyle : null),
+                          ...titleChipStyleFor(title),
+                          ...(usedInOtherSlot ? titleSelectButtonDisabledStyle : null),
+                        }}
+                        onClick={() => {
+                          assignTitleToSlot(titlePickerSlot, title.id);
+                          setTitlePickerSlot(null);
+                        }}
+                      >
+                        <span>{title.name}</span>
+                        <span style={{ fontSize: 12, opacity: 0.9 }}>{title.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -327,67 +463,40 @@ export default function ProfilePage() {
                 ))}
               </div>
             </label>
+            <div style={{ fontSize: 12, color: "#666" }}>
+              称号は上のカード内の「称号枠」をタップして設定できます（最大2つ）。
+            </div>
             <label style={{ display: "grid", gap: 6 }}>
-              <span>称号（最大2つまでプロフィールカードに表示）</span>
-              <div style={{ display: "grid", gap: 6 }}>
-                {unlockedTitles.length === 0 && <div style={{ fontSize: 13, color: "#666" }}>まだ称号を獲得していません。</div>}
-                {unlockedTitles.map(title => {
-                  const selected = equippedTitleIds.includes(title.id);
-                  return (
-                    <button
-                      key={title.id}
-                      type="button"
-                      style={{
-                        ...titleSelectButtonStyle,
-                        ...(selected ? titleSelectButtonActiveStyle : null),
-                        ...titleChipStyleFor(title),
-                      }}
-                      onClick={() => {
-                        if (selected) {
-                          setEquippedTitleIds(prev => prev.filter(id => id !== title.id));
-                          return;
-                        }
-                        if (equippedTitleIds.length >= 2) {
-                          setStatus("称号は2つまで装備できます。");
-                          return;
-                        }
-                        setEquippedTitleIds(prev => [...prev, title.id]);
-                      }}
-                    >
-                      <span>{title.name}</span>
-                      <span style={{ fontSize: 12, opacity: 0.9 }}>{title.description}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </label>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>アイコン画像（任意）</span>
-              <label style={filePickLabelStyle}>
-                画像を選ぶ
-                <input
-                  type="file"
-                  accept="image/*"
-                  style={hiddenFileInputStyle}
-                  onChange={async e => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setIconFileName(file.name);
-                    try {
-                      const dataUrl = await resizeImageToDataUrl(file);
-                      setIconImageDataUrl(dataUrl);
-                      setIconImageStatus("画像を設定しました。保存で反映されます。");
-                    } catch {
-                      setIconImageStatus("画像の読み込みに失敗しました。");
-                    } finally {
-                      e.currentTarget.value = "";
-                    }
+              <span>アイコンフレーム</span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setIconFrameId("")}
+                  style={{ ...templateChipStyle, ...(iconFrameId === "" ? templateChipActiveStyle : null) }}
+                >
+                  なし
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canUseSnowFrame) return;
+                    setIconFrameId("setsugekka_frame");
                   }}
-                />
-              </label>
-              <div style={{ fontSize: 12, color: "#666" }}>
-                {iconFileName ? `選択中: ${iconFileName}` : "未選択"}
+                  disabled={!canUseSnowFrame}
+                  style={{
+                    ...templateChipStyle,
+                    ...(iconFrameId === "setsugekka_frame" ? templateChipActiveStyle : null),
+                    ...(canUseSnowFrame ? snowFrameChipStyle : snowFrameChipLockedStyle),
+                  }}
+                >
+                  雪月花フレーム
+                </button>
               </div>
+              {!canUseSnowFrame && (
+                <div style={{ fontSize: 12, color: "#666" }}>
+                  「雪月花」の称号を回収すると、雪月花フレームが解放されます。
+                </div>
+              )}
             </label>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
@@ -400,6 +509,9 @@ export default function ProfilePage() {
               >
                 画像を解除
               </button>
+              <span style={{ fontSize: 12, color: "#666", alignSelf: "center" }}>
+                {iconFileName ? `選択中: ${iconFileName}` : "画像未選択"}
+              </span>
               {iconImageStatus && <span style={{ fontSize: 13, color: "#666" }}>{iconImageStatus}</span>}
             </div>
             <button onClick={saveProfile} disabled={saving} style={btnStyle}>
@@ -486,21 +598,25 @@ export default function ProfilePage() {
   );
 }
 
-function Avatar(props: { iconText: string; iconImageDataUrl: string; displayName: string; email: string }) {
-  if (props.iconImageDataUrl) {
-    return (
-      <img
-        src={props.iconImageDataUrl}
-        alt="icon"
-        style={{ ...avatarStyle, objectFit: "cover", borderRadius: "50%" }}
-      />
-    );
-  }
+function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId: string; displayName: string; email: string }) {
   const trimmed = props.iconText.trim();
   const fallbackSource = props.displayName.trim() || props.email.trim() || "?";
   const fallback = fallbackSource.slice(0, 1).toUpperCase();
   const text = (trimmed || fallback).slice(0, 2);
-  return <div style={avatarStyle}>{text}</div>;
+  return (
+    <div style={avatarWrapStyle}>
+      {props.iconImageDataUrl ? (
+        <img
+          src={props.iconImageDataUrl}
+          alt="icon"
+          style={{ ...avatarStyle, objectFit: "cover", borderRadius: "50%" }}
+        />
+      ) : (
+        <div style={avatarStyle}>{text}</div>
+      )}
+      {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaFrameStyle} aria-hidden />}
+    </div>
+  );
 }
 
 async function resizeImageToDataUrl(file: File) {
@@ -656,25 +772,27 @@ const avatarStyle: React.CSSProperties = {
   boxShadow: "0 2px 0 rgba(90, 50, 20, 0.25)",
 };
 
+const avatarWrapStyle: React.CSSProperties = {
+  position: "relative",
+  width: "clamp(74px, 18vw, 108px)",
+  aspectRatio: "1 / 1",
+};
+
+const setsugekkaFrameStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -5,
+  borderRadius: "50%",
+  border: "3px solid rgba(224, 205, 255, 0.95)",
+  boxShadow:
+    "0 0 0 2px rgba(120, 80, 150, 0.5), 0 0 18px rgba(210, 184, 255, 0.75), inset 0 0 10px rgba(255,255,255,0.7)",
+  pointerEvents: "none",
+};
+
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
   gap: 14,
   alignItems: "start",
-};
-
-const filePickLabelStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "fit-content",
-  padding: "8px 12px",
-  borderRadius: 12,
-  border: "1px solid var(--line)",
-  background: "linear-gradient(180deg, #fff8ec 0%, #f1dfbf 100%)",
-  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
-  cursor: "pointer",
-  fontWeight: 700,
 };
 
 const hiddenFileInputStyle: React.CSSProperties = {
@@ -771,6 +889,17 @@ const templateChipActiveStyle: React.CSSProperties = {
   fontWeight: 700,
 };
 
+const snowFrameChipStyle: React.CSSProperties = {
+  background: "linear-gradient(135deg, #1b1f31 0%, #5b4f78 55%, #d9c7ff 100%)",
+  color: "#fff",
+  borderColor: "#7c67b2",
+};
+
+const snowFrameChipLockedStyle: React.CSSProperties = {
+  opacity: 0.5,
+  cursor: "not-allowed",
+};
+
 const titleChipStyleBase: React.CSSProperties = {
   padding: "4px 10px",
   borderRadius: 999,
@@ -793,6 +922,41 @@ const titleSelectButtonStyle: React.CSSProperties = {
 
 const titleSelectButtonActiveStyle: React.CSSProperties = {
   boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.6), 0 2px 0 rgba(120,80,40,0.2)",
+};
+
+const titleSelectButtonDisabledStyle: React.CSSProperties = {
+  opacity: 0.45,
+  cursor: "not-allowed",
+};
+
+const titleSelectClearStyle: React.CSSProperties = {
+  borderStyle: "dashed",
+  background: "rgba(255,255,255,0.55)",
+};
+
+const emptyTitleSlotStyle: React.CSSProperties = {
+  width: "100%",
+  minWidth: 0,
+  borderRadius: 10,
+  border: "1px dashed rgba(90, 60, 30, 0.45)",
+  background: "rgba(255,255,255,0.45)",
+  color: "#6f5a40",
+  fontWeight: 700,
+  textAlign: "center",
+  boxSizing: "border-box",
+  padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
+  fontSize: "clamp(13px, 2.5cqw, 16px)",
+  lineHeight: 1.25,
+};
+
+const titlePickerPanelStyle: React.CSSProperties = {
+  marginTop: 6,
+  display: "grid",
+  gap: 8,
+  border: "1px solid rgba(90, 60, 30, 0.25)",
+  borderRadius: 12,
+  padding: 10,
+  background: "rgba(255,255,255,0.68)",
 };
 
 const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
@@ -880,8 +1044,11 @@ const titleChipUpperDisplayStyle: React.CSSProperties = {
 };
 
 const titleChipLowerDisplayStyle: React.CSSProperties = {
-  width: "fit-content",
-  maxWidth: "100%",
+  width: "100%",
+  minWidth: 0,
+  padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
+  fontSize: "clamp(13px, 2.5cqw, 16px)",
+  lineHeight: 1.25,
   textAlign: "center",
   boxSizing: "border-box",
 };

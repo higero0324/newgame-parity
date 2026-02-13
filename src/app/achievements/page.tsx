@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   buildAchievementProgress,
   claimTitleForCurrentUser,
@@ -21,6 +21,8 @@ export default function AchievementsPage() {
     total_cpu_wins: number;
     saved_matches: number;
   } | null>(null);
+  const [claimRevealTitle, setClaimRevealTitle] = useState<TitleDef | null>(null);
+  const revealTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -35,6 +37,15 @@ export default function AchievementsPage() {
       setStatsLoaded(loaded.stats);
       setStatus("");
     })();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (revealTimerRef.current !== null) {
+        window.clearTimeout(revealTimerRef.current);
+        revealTimerRef.current = null;
+      }
+    };
   }, []);
 
   const equippedTitles = useMemo(() => {
@@ -62,6 +73,17 @@ export default function AchievementsPage() {
     setClaimableTitleIds(loaded.claimableTitleIds);
     setStatsLoaded(loaded.stats);
     setStatus("称号を回収しました。");
+    const title = getTitleById(titleId);
+    if (title) {
+      setClaimRevealTitle(title);
+      if (revealTimerRef.current !== null) {
+        window.clearTimeout(revealTimerRef.current);
+      }
+      revealTimerRef.current = window.setTimeout(() => {
+        setClaimRevealTitle(null);
+        revealTimerRef.current = null;
+      }, 1800);
+    }
   };
 
   return (
@@ -139,6 +161,15 @@ export default function AchievementsPage() {
       </div>
 
       {status && <div style={sectionStyle}>{status}</div>}
+
+      {claimRevealTitle && (
+        <div style={claimRevealOverlayStyle} aria-live="polite">
+          <div style={{ ...claimRevealCardStyle, ...titleChipStyleFor(claimRevealTitle) }}>
+            <div style={{ fontSize: 12, opacity: 0.9, marginBottom: 6 }}>称号獲得</div>
+            <div style={{ fontSize: 30, fontWeight: 900, lineHeight: 1.1 }}>{claimRevealTitle.name}</div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -202,6 +233,26 @@ const titleChipStyleBase: React.CSSProperties = {
   fontWeight: 700,
   border: "1px solid transparent",
   width: "fit-content",
+};
+
+const claimRevealOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 80,
+  display: "grid",
+  placeItems: "center",
+  pointerEvents: "none",
+  padding: 16,
+};
+
+const claimRevealCardStyle: React.CSSProperties = {
+  minWidth: "min(90vw, 340px)",
+  maxWidth: 520,
+  textAlign: "center",
+  border: "2px solid rgba(80, 50, 20, 0.35)",
+  borderRadius: 14,
+  boxShadow: "0 14px 32px rgba(35, 20, 10, 0.32)",
+  padding: "16px 20px",
 };
 
 const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {

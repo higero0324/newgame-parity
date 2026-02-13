@@ -10,6 +10,7 @@ create table if not exists public.profiles (
   status_message text not null default '',
   icon_text text not null default '',
   icon_image_data_url text not null default '',
+  icon_frame_id text not null default '',
   profile_card_template text not null default 'classic',
   achievement_stats jsonb not null default '{}'::jsonb,
   unlocked_title_ids text[] not null default '{}',
@@ -34,6 +35,9 @@ alter table public.profiles
 
 alter table public.profiles
   add column if not exists equipped_title_ids text[] not null default '{}';
+
+alter table public.profiles
+  add column if not exists icon_frame_id text not null default '';
 
 create table if not exists public.friend_requests (
   id uuid primary key default gen_random_uuid(),

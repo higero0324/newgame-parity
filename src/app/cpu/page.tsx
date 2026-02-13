@@ -254,7 +254,7 @@ export default function PlayCpuPage() {
       setMsg(res.reason);
       return;
     }
-    setMsg(res.warning ? `保存しました（棋譟ID: ${res.matchId}）。${res.warning}` : `保存しました（棋譟ID: ${res.matchId}）`);
+    setMsg(res.warning ? `保存しました（季譜ID: ${res.matchId}）。${res.warning}` : `保存しました（季譜ID: ${res.matchId}）`);
   };
 
   const levelLabels = {
@@ -420,7 +420,7 @@ export default function PlayCpuPage() {
           </div>
           <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
           <button onClick={save} disabled={!winner || saving} style={btnStyle}>
-            {saving ? "保存中..." : "棋譟を保存"}
+            {saving ? "保存中..." : "季譜を保存"}
           </button>
           <button onClick={reset} style={btnStyle}>リセット</button>
           <Link href="/" style={btnStyle}>ホームへ戻る</Link>
@@ -437,7 +437,7 @@ export default function PlayCpuPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
             <button onClick={save} disabled={!winner || saving} style={btnStyle}>
-              {saving ? "保存中..." : "棋譟を保存"}
+              {saving ? "保存中..." : "季譜を保存"}
             </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>

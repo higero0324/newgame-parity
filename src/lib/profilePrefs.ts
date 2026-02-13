@@ -39,12 +39,18 @@ function normalizeIconImageDataUrl(value: unknown): string {
   return trimmed;
 }
 
+function normalizeIconFrameId(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim();
+}
+
 export type ProfilePrefs = {
   starredIds: string[];
   featuredIds: string[];
   matchNames: Record<string, string>;
   iconText: string;
   iconImageDataUrl: string;
+  iconFrameId: string;
 };
 
 export type StoredProfilePrefs = {
@@ -52,6 +58,7 @@ export type StoredProfilePrefs = {
   featuredIds: string[];
   matchNames: Record<string, string>;
   iconImageDataUrl: string;
+  iconFrameId: string;
 };
 
 export function getProfilePrefsFromUserMetadata(metadata: unknown): ProfilePrefs {
@@ -61,6 +68,7 @@ export function getProfilePrefsFromUserMetadata(metadata: unknown): ProfilePrefs
     match_names?: unknown;
     icon_text?: unknown;
     icon_image_data_url?: unknown;
+    icon_frame_id?: unknown;
   };
   return {
     starredIds: normalizeIds(meta.starred_match_ids),
@@ -68,6 +76,7 @@ export function getProfilePrefsFromUserMetadata(metadata: unknown): ProfilePrefs
     matchNames: normalizeMatchNames(meta.match_names),
     iconText: normalizeIconText(meta.icon_text),
     iconImageDataUrl: normalizeIconImageDataUrl(meta.icon_image_data_url),
+    iconFrameId: normalizeIconFrameId(meta.icon_frame_id),
   };
 }
 
@@ -126,12 +135,13 @@ export async function syncCurrentUserPublicProfile() {
 
   const { data: existingProfile } = await supabase
     .from("profiles")
-    .select("icon_image_data_url, featured_match_ids, match_names, starred_match_ids")
+    .select("icon_image_data_url, icon_frame_id, featured_match_ids, match_names, starred_match_ids")
     .eq("user_id", user.id)
     .maybeSingle();
 
   const existing = (existingProfile ?? {}) as {
     icon_image_data_url?: string;
+    icon_frame_id?: string;
     featured_match_ids?: string[];
     starred_match_ids?: string[];
     match_names?: Record<string, string>;
@@ -144,6 +154,7 @@ export async function syncCurrentUserPublicProfile() {
     status_message: (user.user_metadata?.status_message as string | undefined) ?? "",
     icon_text: prefs.iconText,
     icon_image_data_url: prefs.iconImageDataUrl || (existing.icon_image_data_url ?? ""),
+    icon_frame_id: prefs.iconFrameId || (existing.icon_frame_id ?? ""),
     featured_match_ids: prefs.featuredIds.length > 0 ? prefs.featuredIds : (existing.featured_match_ids ?? []),
     starred_match_ids: prefs.starredIds.length > 0 ? prefs.starredIds : (existing.starred_match_ids ?? []),
     match_names: Object.keys(prefs.matchNames).length > 0 ? prefs.matchNames : (existing.match_names ?? {}),
@@ -167,10 +178,10 @@ export async function saveClipPrefsToSupabase(args: {
   if (!currentUser.ok) return currentUser;
   const { data: current } = await supabase
     .from("profiles")
-    .select("match_names, icon_image_data_url")
+    .select("match_names, icon_image_data_url, icon_frame_id")
     .eq("user_id", currentUser.user.id)
     .maybeSingle();
-  const cur = (current ?? {}) as { match_names?: Record<string, string>; icon_image_data_url?: string };
+  const cur = (current ?? {}) as { match_names?: Record<string, string>; icon_image_data_url?: string; icon_frame_id?: string };
   const { error } = await supabase.from("profiles").upsert(
     {
       user_id: currentUser.user.id,
@@ -179,6 +190,7 @@ export async function saveClipPrefsToSupabase(args: {
       featured_match_ids: normalizeIds(args.featuredIds, FEATURED_CLIPS_LIMIT),
       match_names: cur.match_names ?? {},
       icon_image_data_url: cur.icon_image_data_url ?? "",
+      icon_frame_id: cur.icon_frame_id ?? "",
     },
     { onConflict: "user_id" },
   );
@@ -201,13 +213,14 @@ export async function saveMatchNamesToSupabase(matchNames: Record<string, string
   if (!currentUser.ok) return currentUser;
   const { data: current } = await supabase
     .from("profiles")
-    .select("starred_match_ids, featured_match_ids, icon_image_data_url")
+    .select("starred_match_ids, featured_match_ids, icon_image_data_url, icon_frame_id")
     .eq("user_id", currentUser.user.id)
     .maybeSingle();
   const cur = (current ?? {}) as {
     starred_match_ids?: string[];
     featured_match_ids?: string[];
     icon_image_data_url?: string;
+    icon_frame_id?: string;
   };
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -217,6 +230,7 @@ export async function saveMatchNamesToSupabase(matchNames: Record<string, string
       starred_match_ids: normalizeIds(cur.starred_match_ids),
       featured_match_ids: normalizeIds(cur.featured_match_ids, FEATURED_CLIPS_LIMIT),
       icon_image_data_url: cur.icon_image_data_url ?? "",
+      icon_frame_id: cur.icon_frame_id ?? "",
     },
     { onConflict: "user_id" },
   );
@@ -278,7 +292,7 @@ export async function loadCurrentProfilePrefsFromProfiles() {
   if (authError || !auth.user) return { ok: false as const, reason: authError?.message ?? "not logged in" };
   const { data, error } = await supabase
     .from("profiles")
-    .select("starred_match_ids, featured_match_ids, match_names, icon_image_data_url")
+    .select("starred_match_ids, featured_match_ids, match_names, icon_image_data_url, icon_frame_id")
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (error) return { ok: false as const, reason: error.message };
@@ -287,12 +301,14 @@ export async function loadCurrentProfilePrefsFromProfiles() {
     featured_match_ids?: unknown;
     match_names?: unknown;
     icon_image_data_url?: unknown;
+    icon_frame_id?: unknown;
   };
   const prefs: StoredProfilePrefs = {
     starredIds: normalizeIds(row.starred_match_ids),
     featuredIds: normalizeIds(row.featured_match_ids, FEATURED_CLIPS_LIMIT),
     matchNames: normalizeMatchNames(row.match_names),
     iconImageDataUrl: normalizeIconImageDataUrl(row.icon_image_data_url),
+    iconFrameId: normalizeIconFrameId(row.icon_frame_id),
   };
   return { ok: true as const, prefs };
 }
