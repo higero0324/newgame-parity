@@ -98,7 +98,7 @@ export default function AchievementsPage() {
             <div
               key={item.id}
               style={{
-                ...achievementCardStyle,
+                ...achievementCardStyleFor(item.title.rarity),
                 ...(item.done && !item.claimed ? achievementClaimableCardStyle : null),
               }}
               onClick={() => {
@@ -166,19 +166,27 @@ const btnStyle: React.CSSProperties = {
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
 };
 
-const achievementCardStyle: React.CSSProperties = {
+const achievementCardStyleBase: React.CSSProperties = {
   border: "1px solid var(--line)",
-  borderRadius: 10,
   padding: 10,
   background: "rgba(255,255,255,0.72)",
   display: "grid",
   gap: 6,
 };
 
+function achievementCardStyleFor(rarity: TitleRarity): React.CSSProperties {
+  const isLower = rarity === "bronze" || rarity === "silver";
+  return {
+    ...achievementCardStyleBase,
+    borderRadius: isLower ? 18 : 8,
+  };
+}
+
 const achievementClaimableCardStyle: React.CSSProperties = {
   cursor: "pointer",
-  borderColor: "#b06a3d",
-  boxShadow: "inset 0 0 0 1px rgba(255,210,150,0.45)",
+  borderColor: "#d2a318",
+  background: "linear-gradient(180deg, rgba(255,247,199,0.95) 0%, rgba(255,236,156,0.85) 100%)",
+  boxShadow: "inset 0 0 0 1px rgba(255, 213, 79, 0.55)",
 };
 
 const progressTrackStyle: React.CSSProperties = {

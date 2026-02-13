@@ -80,24 +80,34 @@ function findHardMove(board: number[], player: Player): number {
   const maxDepth = emptyCount > 15 ? 4 : emptyCount > 10 ? 5 : 6;
 
   // 反復深化探索
-  let bestPos = emptyPositions[0];
+  let scoredAtLastDepth: Array<{ pos: number; score: number }> = [];
   for (let depth = 2; depth <= maxDepth; depth++) {
     const moves = orderMoves(board, emptyPositions, player);
-    let bestScore = -Infinity;
+    const scored: Array<{ pos: number; score: number }> = [];
 
     for (const pos of moves) {
       const res = applyMove(board, pos, player);
       if (!res.ok) continue;
 
       const score = minimax(res.newBoard, depth - 1, -Infinity, Infinity, false, player);
-      if (score > bestScore) {
-        bestScore = score;
-        bestPos = pos;
-      }
+      scored.push({ pos, score });
     }
+
+    if (scored.length > 0) scoredAtLastDepth = scored;
   }
 
-  return bestPos;
+  if (scoredAtLastDepth.length === 0) return emptyPositions[0];
+
+  // 危険手（相手の即勝ちを許す手）を除外しつつ、上位候補をランダムに選ぶ
+  const safeMoves = scoredAtLastDepth.filter(x => !isDangerousMove(board, x.pos, player));
+  const source = safeMoves.length > 0 ? safeMoves : scoredAtLastDepth;
+  const bestScore = Math.max(...source.map(x => x.score));
+
+  // 同程度の強さの手はランダム化して、中央固定になりにくくする
+  const scoreMargin = 25;
+  const nearBest = source.filter(x => bestScore - x.score <= scoreMargin);
+  const pool = nearBest.length > 0 ? nearBest : source;
+  return pool[Math.floor(Math.random() * pool.length)]?.pos ?? source[0].pos;
 }
 
 // 極級：上級 + 角優先（対角角最優先）
@@ -259,4 +269,16 @@ function evaluateBoard(board: number[], player: Player): number {
   if (ownerOf(board[center]) === player) score += 30;
 
   return score;
+}
+
+function isDangerousMove(board: number[], pos: number, player: Player): boolean {
+  const moved = applyMove(board, pos, player);
+  if (!moved.ok) return true;
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const emptyPositions = moved.newBoard.map((v, i) => (v === 0 ? i : -1)).filter(i => i >= 0);
+  for (const nextPos of emptyPositions) {
+    const res = applyMove(moved.newBoard, nextPos, opponent);
+    if (res.ok && res.winner === opponent) return true;
+  }
+  return false;
 }
