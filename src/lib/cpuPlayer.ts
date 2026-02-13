@@ -111,6 +111,10 @@ function findExtremeMove(board: number[], player: Player): number {
     if (res.ok && res.winner === player) return pos;
   }
 
+  // 端3連取を与える危険手を回避できるなら最優先で回避
+  const antiGiftMove = findAntiEdgeGiftMove(board, player);
+  if (antiGiftMove !== null) return antiGiftMove;
+
   // 端3連取以上の危険局面は最優先で受ける
   const emergencyEdgeMove = findEmergencyEdgeBreakMove(board, player);
   if (emergencyEdgeMove !== null) return emergencyEdgeMove;
@@ -252,6 +256,51 @@ function findEmergencyEdgeBreakMove(board: number[], player: Player): number | n
     }
   }
   return bestPos;
+}
+
+function findAntiEdgeGiftMove(board: number[], player: Player): number | null {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const empties = board.map((v, i) => (v === 0 ? i : -1)).filter(i => i >= 0);
+  if (empties.length === 0) return null;
+
+  const riskyExists = empties.some(pos => isEdgeGiftMove(board, pos, player));
+  if (!riskyExists) return null;
+
+  const safeMoves = empties.filter(pos => !isEdgeGiftMove(board, pos, player));
+  if (safeMoves.length === 0) return null;
+
+  transpositionTable.clear();
+  let bestPos: number | null = null;
+  let bestScore = -Infinity;
+  for (const pos of safeMoves) {
+    const res = applyMove(board, pos, player);
+    if (!res.ok) continue;
+    if (opponentHasImmediateWinningMove(res.newBoard, opponent)) continue;
+    const score = minimax(res.newBoard, 3, -Infinity, Infinity, false, player) + evaluateBoard(res.newBoard, player);
+    if (score > bestScore) {
+      bestScore = score;
+      bestPos = pos;
+    }
+  }
+  return bestPos;
+}
+
+function isEdgeGiftMove(board: number[], pos: number, player: Player): boolean {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const res = applyMove(board, pos, player);
+  if (!res.ok) return true;
+
+  for (const line of EDGE_LINES) {
+    const beforeOpp = line.filter(i => ownerOf(board[i]) === opponent).length;
+    const afterOpp = line.filter(i => ownerOf(res.newBoard[i]) === opponent).length;
+    const afterMy = line.filter(i => ownerOf(res.newBoard[i]) === player).length;
+
+    // 相手端支配が2以下 -> 3以上へ進む手は原則危険手とみなす
+    if (beforeOpp < 3 && afterOpp >= 3 && afterOpp > afterMy) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function opponentHasImmediateWinningMove(board: number[], opponent: Player): boolean {
