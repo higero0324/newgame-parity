@@ -271,9 +271,17 @@ export default function ProfilePage() {
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
             <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
             {equippedTitles.length > 0 && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div style={{ ...equippedTitleListStyle, ...(equippedTitles.some(isUpperTitle) ? equippedTitleListUpperStyle : null) }}>
                 {equippedTitles.map(title => (
-                  <span key={title.id} style={{ ...titleChipStyleBase, ...cardTitleChipAdaptiveStyle, ...titleChipStyleFor(title) }}>
+                  <span
+                    key={title.id}
+                    style={{
+                      ...titleChipStyleBase,
+                      ...cardTitleChipAdaptiveStyle,
+                      ...titleChipStyleFor(title),
+                      ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : null),
+                    }}
+                  >
                     {title.name}
                   </span>
                 ))}
@@ -822,6 +830,10 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
   return titleChipByRarity[title.rarity];
 }
 
+function isUpperTitle(title: TitleDef): boolean {
+  return title.rarity === "gold" || title.rarity === "obsidian";
+}
+
 const profileNameTextStyle: React.CSSProperties = {
   fontSize: "clamp(18px, 4.2cqw, 24px)",
   fontWeight: 800,
@@ -836,6 +848,28 @@ const profileStatusTextStyle: React.CSSProperties = {
 const profileMetaTextStyle: React.CSSProperties = {
   fontSize: "clamp(11px, 2.2cqw, 13px)",
   lineHeight: 1.4,
+};
+
+const equippedTitleListStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 6,
+  flexWrap: "wrap",
+  maxWidth: "100%",
+};
+
+const equippedTitleListUpperStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 8,
+  justifyItems: "start",
+};
+
+const titleChipUpperDisplayStyle: React.CSSProperties = {
+  borderRadius: 8,
+  padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
+  fontSize: "clamp(13px, 2.5cqw, 16px)",
+  lineHeight: 1.25,
+  minWidth: "min(100%, 220px)",
+  textAlign: "center",
 };
 
 const cardTitleChipAdaptiveStyle: React.CSSProperties = {

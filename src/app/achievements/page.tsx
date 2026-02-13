@@ -95,7 +95,18 @@ export default function AchievementsPage() {
         )}
         <div style={{ display: "grid", gap: 8 }}>
           {progressList.map(item => (
-            <div key={item.id} style={achievementCardStyle}>
+            <div
+              key={item.id}
+              style={{
+                ...achievementCardStyle,
+                ...(item.done && !item.claimed ? achievementClaimableCardStyle : null),
+              }}
+              onClick={() => {
+                if (item.done && !item.claimed) claim(item.title.id);
+              }}
+              role={item.done && !item.claimed ? "button" : undefined}
+              aria-label={item.done && !item.claimed ? `${item.name} の称号を回収` : undefined}
+            >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <div style={{ display: "grid", gap: 2 }}>
                   <b>{item.name}</b>
@@ -115,13 +126,8 @@ export default function AchievementsPage() {
                 />
               </div>
               <div style={{ fontSize: 12, color: "#555" }}>
-                {!item.done ? `${item.progress} / ${item.target}` : item.claimed ? "達成・回収済み" : "達成済み（未回収）"}
+                {!item.done ? `${item.progress} / ${item.target}` : item.claimed ? "達成・回収済み" : "達成済み（タップで回収）"}
               </div>
-              {item.done && !item.claimed && (
-                <button style={claimButtonStyle} onClick={() => claim(item.title.id)}>
-                  称号を回収
-                </button>
-              )}
             </div>
           ))}
         </div>
@@ -169,6 +175,12 @@ const achievementCardStyle: React.CSSProperties = {
   gap: 6,
 };
 
+const achievementClaimableCardStyle: React.CSSProperties = {
+  cursor: "pointer",
+  borderColor: "#b06a3d",
+  boxShadow: "inset 0 0 0 1px rgba(255,210,150,0.45)",
+};
+
 const progressTrackStyle: React.CSSProperties = {
   height: 8,
   borderRadius: 999,
@@ -180,17 +192,6 @@ const progressFillStyle: React.CSSProperties = {
   height: "100%",
   borderRadius: 999,
   transition: "width 220ms ease",
-};
-
-const claimButtonStyle: React.CSSProperties = {
-  justifySelf: "start",
-  padding: "6px 10px",
-  borderRadius: 10,
-  border: "1px solid #a1643f",
-  background: "linear-gradient(180deg, #fff5e3 0%, #f1d3a8 100%)",
-  color: "#5c3514",
-  cursor: "pointer",
-  fontWeight: 700,
 };
 
 const titleChipStyleBase: React.CSSProperties = {

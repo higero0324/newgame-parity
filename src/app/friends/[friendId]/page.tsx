@@ -142,7 +142,10 @@ export default function FriendProfilePage() {
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
             {isFriend && equippedTitles.length > 0 && (
-              <div ref={titleAreaRef} style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div
+                ref={titleAreaRef}
+                style={{ ...equippedTitleListStyle, ...(equippedTitles.some(isUpperTitle) ? equippedTitleListUpperStyle : null) }}
+              >
                 {equippedTitles.map(title => (
                   <div key={title.id} style={titleChipWrapStyle}>
                     <button
@@ -151,7 +154,13 @@ export default function FriendProfilePage() {
                         event.stopPropagation();
                         setOpenTitleId(prev => (prev === title.id ? null : title.id));
                       }}
-                      style={{ ...titleChipStyleBase, ...cardTitleChipAdaptiveStyle, ...titleChipButtonStyle, ...titleChipStyleFor(title) }}
+                      style={{
+                        ...titleChipStyleBase,
+                        ...cardTitleChipAdaptiveStyle,
+                        ...titleChipButtonStyle,
+                        ...titleChipStyleFor(title),
+                        ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : null),
+                      }}
                       aria-expanded={openTitleId === title.id}
                     >
                       {title.name}
@@ -442,6 +451,10 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
   return titleChipByRarity[title.rarity];
 }
 
+function isUpperTitle(title: TitleDef): boolean {
+  return title.rarity === "gold" || title.rarity === "obsidian";
+}
+
 const profileNameTextStyle: React.CSSProperties = {
   fontSize: "clamp(18px, 4.2cqw, 24px)",
   fontWeight: 800,
@@ -456,6 +469,28 @@ const profileStatusTextStyle: React.CSSProperties = {
 const profileMetaTextStyle: React.CSSProperties = {
   fontSize: "clamp(11px, 2.2cqw, 13px)",
   lineHeight: 1.4,
+};
+
+const equippedTitleListStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 6,
+  flexWrap: "wrap",
+  maxWidth: "100%",
+};
+
+const equippedTitleListUpperStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 8,
+  justifyItems: "start",
+};
+
+const titleChipUpperDisplayStyle: React.CSSProperties = {
+  borderRadius: 8,
+  padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
+  fontSize: "clamp(13px, 2.5cqw, 16px)",
+  lineHeight: 1.25,
+  minWidth: "min(100%, 220px)",
+  textAlign: "center",
 };
 
 const cardTitleChipAdaptiveStyle: React.CSSProperties = {
