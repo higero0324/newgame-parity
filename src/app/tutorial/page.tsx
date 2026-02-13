@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Board from "@/components/Board";
 import { applyMove, emptyBoard, type Player } from "@/lib/gameLogic";
 
-type StepId = "rules" | "place" | "ritual" | "capture" | "lock" | "win";
+type StepId = "rules" | "place" | "ritual" | "capture" | "lock" | "cornerBridge" | "win";
 
 type Step = {
   id: StepId;
@@ -21,6 +21,7 @@ const WIN_INTERVAL_MS = 2500;
 const CAPTURE_INTERVAL_MS = 1000;
 const RITUAL_DELAY_MS = 1000;
 const CORNERS = [0, 4, 20, 24] as const;
+const RULE_CARD_COUNT = 7;
 
 function makeBoard(values: Record<number, number>) {
   const b = emptyBoard();
@@ -55,7 +56,7 @@ export default function TutorialPage() {
       {
         id: "rules",
         title: "1. ルールを確認する",
-        description: "下のボタンをすべてクリックして、基本ルールを確認してください。",
+        description: "下のルールカードをすべて押して、基本ルールを確認してください。",
         init: () => ({ board: emptyBoard(), turn: "p1" }),
         allowed: [],
         isSuccess: () => true,
@@ -64,7 +65,7 @@ export default function TutorialPage() {
       {
         id: "place",
         title: "2. まずは置いてみる",
-        description: "中央のマスをクリックして、石を1つ置いてください。",
+        description: "中央のマス（三秋）をクリックして、先手の「2」を置いてください。",
         init: () => ({ board: emptyBoard(), turn: "p1" }),
         allowed: [12],
         isSuccess: res => res.ok,
@@ -104,8 +105,20 @@ export default function TutorialPage() {
         successMessage: "OK！ 5が壁として働きました。",
       },
       {
+        id: "cornerBridge",
+        title: "6. 隣接角の新ルール",
+        description: "一春・一夏を取った側は、間が空の間はその間に置けません。上辺のどこか（四春 / 三春 / 二春）を押して確認してください。",
+        init: () => ({
+          board: makeBoard({ 0: 2, 4: 2 }),
+          turn: "p1",
+        }),
+        allowed: [1, 2, 3],
+        isSuccess: () => false,
+        successMessage: "OK！ 隣接角ルールを確認しました。",
+      },
+      {
         id: "win",
-        title: "6. 勝利条件",
+        title: "7. 勝利条件",
         description: "四夏に置いてください。",
         init: () => ({
           // 対角交換ルール後でも成立する、現実的な勝ち筋
@@ -223,7 +236,7 @@ export default function TutorialPage() {
         setLastChanged(new Set());
         setLastPlaced(undefined);
       }
-      if (next.size === 4 && step.id === "rules") {
+      if (next.size === RULE_CARD_COUNT && step.id === "rules") {
         setCompleted(true);
         setDoneMsg("OK！ ルールを確認しました。");
       }
@@ -315,6 +328,25 @@ export default function TutorialPage() {
       handleRitualClick(pos);
       return;
     }
+    if (step.id === "cornerBridge") {
+      if (!step.allowed.includes(pos)) {
+        setMsg("上辺の3マス（四春 / 三春 / 二春）を押してください。");
+        return;
+      }
+      const res = applyMove(board, pos, turn);
+      if (!res.ok) {
+        if (res.reason.includes("隣接角")) {
+          setCompleted(true);
+          setDoneMsg("OK！ 隣接角ルールを確認しました。");
+          setMsg("この場面では、角を取った側は間が空の間その間に置けません。");
+          return;
+        }
+        setMsg(res.reason);
+        return;
+      }
+      setMsg("この手は置けてしまいました。上辺の3マスを選んでください。");
+      return;
+    }
     if (!step.allowed.includes(pos)) {
       setMsg("指定のマスをクリックしてください。");
       return;
@@ -364,20 +396,29 @@ export default function TutorialPage() {
       {step.id === "rules" && (
         <div style={{ display: "grid", gap: 8, width: "100%", maxWidth: 720 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-            <button onClick={() => onClickRule("sente", "先手は偶数画（2と4）です。", { 11: 2, 13: 4 })} style={btnStyle}>
-              先手
-            </button>
-            <button onClick={() => onClickRule("gote", "後手は奇数画（1・3・5）です。", { 7: 1, 12: 3, 17: 5 })} style={btnStyle}>
-              後手
-            </button>
-            <button onClick={() => onClickRule("capture", "挟むと1画加算されます（正になると追加できません）。", undefined, "capture")} style={btnStyle}>
-              取り込み
-            </button>
-            <button onClick={() => onClickRule("win", "縦・横・斜めの1列が偶数または奇数で揃うと勝利です。", undefined, "win")} style={btnStyle}>
-              勝利条件
-            </button>
-          </div>
-          <div style={{ fontSize: 12, color: "#555", textAlign: "center" }}>クリック済み: {ruleClicks.size}/4</div>
+              <button onClick={() => onClickRule("sente", "先手は偶数画（2と4）です。", { 11: 2, 13: 4 })} style={btnStyle}>
+                先手
+              </button>
+              <button onClick={() => onClickRule("gote", "後手は奇数画（1・3・5）です。", { 7: 1, 12: 3, 17: 5 })} style={btnStyle}>
+                後手
+              </button>
+              <button onClick={() => onClickRule("place", "先手は毎手『2』を、後手は毎手『1』を空マスに置きます。", { 12: 2, 13: 1 })} style={btnStyle}>
+                置く数字
+              </button>
+              <button onClick={() => onClickRule("capture", "挟むと1画加算されます（正になると追加できません）。", undefined, "capture")} style={btnStyle}>
+                取り込み
+              </button>
+              <button onClick={() => onClickRule("lock", "5は固定され、挟みでは壁として扱われます。", { 11: 5, 12: 1, 13: 2 })} style={btnStyle}>
+                5ロック
+              </button>
+              <button onClick={() => onClickRule("bridge", "新ルール: 同じ辺の両角を取って間が空の間は、その間3マスにその側は置けません。", { 0: 2, 4: 2 })} style={btnStyle}>
+                隣接角ルール
+              </button>
+              <button onClick={() => onClickRule("win", "縦・横・斜めの1列が偶数または奇数で揃うと勝利です。", undefined, "win")} style={btnStyle}>
+                勝利条件
+              </button>
+            </div>
+          <div style={{ fontSize: 12, color: "#555", textAlign: "center" }}>クリック済み: {ruleClicks.size}/{RULE_CARD_COUNT}</div>
         </div>
       )}
 
