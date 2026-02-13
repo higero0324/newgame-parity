@@ -20,6 +20,41 @@ type LastMove = {
   placedPos: number;
 };
 
+const CORNERS = [0, 4, 20, 24] as const;
+
+function diagonalCorner(pos: number): number {
+  if (pos === 0) return 24;
+  if (pos === 4) return 20;
+  if (pos === 20) return 4;
+  return 0;
+}
+
+function getExtremeOpeningAllowedPositions(board: number[], moves: MoveRecord[]): number[] | null {
+  if (moves.length >= 4) return null;
+
+  if (moves.length === 0) {
+    return CORNERS.filter(pos => board[pos] === 0);
+  }
+
+  const first = moves[0]?.pos;
+  if (!CORNERS.includes(first as (typeof CORNERS)[number])) return null;
+  const firstDiag = diagonalCorner(first);
+
+  if (moves.length === 1) {
+    return CORNERS.filter(pos => pos !== first && pos !== firstDiag && board[pos] === 0);
+  }
+
+  const second = moves[1]?.pos;
+  if (!CORNERS.includes(second as (typeof CORNERS)[number])) return null;
+
+  if (moves.length === 2) {
+    return board[firstDiag] === 0 ? [firstDiag] : [];
+  }
+
+  const secondDiag = diagonalCorner(second);
+  return board[secondDiag] === 0 ? [secondDiag] : [];
+}
+
 export default function PlayCpuPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [cpuLevel, setCpuLevel] = useState<CpuLevel>("medium");
@@ -35,9 +70,11 @@ export default function PlayCpuPage() {
   const [thinking, setThinking] = useState(false);
   const [moves, setMoves] = useState<MoveRecord[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showExtremeNotice, setShowExtremeNotice] = useState(false);
   const lastMoveRef = useRef<LastMove | null>(null);
   const resultRecordedRef = useRef(false);
   const usedUndoThisMatchRef = useRef(false);
+  const extremeNoticeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -45,6 +82,15 @@ export default function PlayCpuPage() {
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (extremeNoticeTimerRef.current !== null) {
+        window.clearTimeout(extremeNoticeTimerRef.current);
+        extremeNoticeTimerRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -60,7 +106,12 @@ export default function PlayCpuPage() {
       const delay = Math.max(animDuration + 300, 600);
 
       setTimeout(() => {
-        const pos = findCpuMove(current.board, cpuSide, cpuLevel);
+        const openingAllowed =
+          cpuLevel === "extreme" ? getExtremeOpeningAllowedPositions(current.board, moves) : null;
+        let pos = findCpuMove(current.board, cpuSide, cpuLevel);
+        if (openingAllowed && openingAllowed.length > 0 && !openingAllowed.includes(pos)) {
+          pos = openingAllowed[0];
+        }
         if (pos >= 0) {
           const res = applyMove(current.board, pos, cpuSide);
           if (res.ok) {
@@ -89,12 +140,19 @@ export default function PlayCpuPage() {
         setThinking(false);
       }, delay);
     }
-  }, [current, winner, thinking, cpuLevel, playerSide]);
+  }, [current, winner, thinking, cpuLevel, playerSide, moves]);
 
   const canPlay = winner === null && current.turn === playerSide && !thinking;
 
   const onClickCell = (pos: number) => {
     if (!canPlay) return;
+    if (cpuLevel === "extreme") {
+      const openingAllowed = getExtremeOpeningAllowedPositions(current.board, moves);
+      if (openingAllowed && !openingAllowed.includes(pos)) {
+        setMsg("極級は対角定石限定です。指定の角に置いてください。");
+        return;
+      }
+    }
     const res = applyMove(current.board, pos, playerSide);
     if (!res.ok) {
       setMsg(res.reason);
@@ -159,6 +217,11 @@ export default function PlayCpuPage() {
     resultRecordedRef.current = false;
     usedUndoThisMatchRef.current = false;
     setPlayerSide(null);
+    setShowExtremeNotice(false);
+    if (extremeNoticeTimerRef.current !== null) {
+      window.clearTimeout(extremeNoticeTimerRef.current);
+      extremeNoticeTimerRef.current = null;
+    }
   };
 
   const save = async () => {
@@ -273,7 +336,21 @@ export default function PlayCpuPage() {
               {(Object.keys(sideLabels) as Player[]).map(side => (
                 <button
                   key={side}
-                  onClick={() => setPlayerSide(side)}
+                  onClick={() => {
+                    setPlayerSide(side);
+                    if (cpuLevel === "extreme") {
+                      setShowExtremeNotice(true);
+                      if (extremeNoticeTimerRef.current !== null) {
+                        window.clearTimeout(extremeNoticeTimerRef.current);
+                      }
+                      extremeNoticeTimerRef.current = window.setTimeout(() => {
+                        setShowExtremeNotice(false);
+                        extremeNoticeTimerRef.current = null;
+                      }, 1700);
+                    } else {
+                      setShowExtremeNotice(false);
+                    }
+                  }}
                   style={{
                     padding: "24px 20px",
                     borderRadius: 4,
@@ -377,6 +454,35 @@ export default function PlayCpuPage() {
       )}
 
       <Board board={current.board} onClickCell={onClickCell} lastChanged={lastChanged} lastPlaced={lastPlaced} disabled={!canPlay} winningLine={winningLine} />
+
+      {showExtremeNotice && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            pointerEvents: "none",
+            zIndex: 60,
+          }}
+        >
+          <div
+            style={{
+              padding: isMobile ? "10px 14px" : "12px 16px",
+              borderRadius: 12,
+              border: "2px solid #8b6f47",
+              background: "rgba(255, 248, 236, 0.95)",
+              color: "#2c1810",
+              fontWeight: 900,
+              fontSize: isMobile ? 15 : 17,
+              boxShadow: "0 8px 24px rgba(44, 24, 16, 0.25)",
+              textAlign: "center",
+            }}
+          >
+            極級は対角定石限定です！
+          </div>
+        </div>
+      )}
     </main>
   );
 }
