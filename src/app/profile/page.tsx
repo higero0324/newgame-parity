@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
+  ensureFriendIdForCurrentUser,
   loadCurrentProfilePrefsFromProfiles,
   loadIconImageDataUrlFromProfiles,
   getProfilePrefsFromUserMetadata,
@@ -130,9 +131,15 @@ export default function ProfilePage() {
         return;
       }
       if (userId) {
+        const ensured = await ensureFriendIdForCurrentUser();
+        if (!ensured.ok) {
+          setStatus(`フレンドIDの準備に失敗しました。詳細: ${ensured.reason}`);
+          return;
+        }
         const { error: profileError } = await supabase.from("profiles").upsert(
           {
             user_id: userId,
+            friend_id: ensured.friendId,
             display_name: displayName.trim(),
             status_message: statusMessage.trim(),
             icon_text: iconText.trim().slice(0, 2),
