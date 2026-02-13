@@ -111,6 +111,10 @@ function findExtremeMove(board: number[], player: Player): number {
     if (res.ok && res.winner === player) return pos;
   }
 
+  // 端からの押し込み（横角定石含む）を優先して崩す
+  const antiEdgeMove = findAntiEdgeSweepMove(board, player);
+  if (antiEdgeMove !== null) return antiEdgeMove;
+
   const preferredCorner = findPreferredCornerMove(board, player);
   if (preferredCorner !== null) return preferredCorner;
 
@@ -118,6 +122,12 @@ function findExtremeMove(board: number[], player: Player): number {
 }
 
 const CORNERS = [idx(0, 0), idx(0, 4), idx(4, 0), idx(4, 4)] as const;
+const EDGE_LINES: number[][] = [
+  [idx(0, 0), idx(0, 1), idx(0, 2), idx(0, 3), idx(0, 4)],
+  [idx(4, 0), idx(4, 1), idx(4, 2), idx(4, 3), idx(4, 4)],
+  [idx(0, 0), idx(1, 0), idx(2, 0), idx(3, 0), idx(4, 0)],
+  [idx(0, 4), idx(1, 4), idx(2, 4), idx(3, 4), idx(4, 4)],
+];
 
 function oppositeCorner(pos: number): number | null {
   if (pos === idx(0, 0)) return idx(4, 4);
@@ -150,6 +160,57 @@ function findPreferredCornerMove(board: number[], player: Player): number | null
 
   // 角同士では評価の高い手を採用
   return orderMoves(board, [...safeCorners], player)[0] ?? null;
+}
+
+function findAntiEdgeSweepMove(board: number[], player: Player): number | null {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const edgePressureByCell = new Map<number, number>();
+
+  for (const line of EDGE_LINES) {
+    const oppOwned = line.filter(i => ownerOf(board[i]) === opponent).length;
+    const myOwned = line.filter(i => ownerOf(board[i]) === player).length;
+    const empty = line.filter(i => board[i] === 0);
+    if (empty.length === 0) continue;
+
+    const pressure = oppOwned - myOwned;
+    if (pressure <= 0) continue;
+
+    for (const cell of empty) {
+      let score = pressure * 24;
+      if (oppOwned >= 3) score += 36;
+      if (CORNERS.includes(line[0] as (typeof CORNERS)[number]) && ownerOf(board[line[0]]) === opponent) score += 14;
+      if (CORNERS.includes(line[4] as (typeof CORNERS)[number]) && ownerOf(board[line[4]]) === opponent) score += 14;
+      edgePressureByCell.set(cell, (edgePressureByCell.get(cell) ?? 0) + score);
+    }
+
+    // 角から連続で押してくる形を特に警戒（例: 角,隣を相手が所持し、その先が空き）
+    if (ownerOf(board[line[0]]) === opponent && ownerOf(board[line[1]]) === opponent && board[line[2]] === 0) {
+      edgePressureByCell.set(line[2], (edgePressureByCell.get(line[2]) ?? 0) + 48);
+    }
+    if (ownerOf(board[line[4]]) === opponent && ownerOf(board[line[3]]) === opponent && board[line[2]] === 0) {
+      edgePressureByCell.set(line[2], (edgePressureByCell.get(line[2]) ?? 0) + 48);
+    }
+  }
+
+  const candidates = [...edgePressureByCell.entries()]
+    .filter(([_, score]) => score > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([pos]) => pos);
+  if (candidates.length === 0) return null;
+
+  let bestPos: number | null = null;
+  let bestScore = -Infinity;
+  for (const pos of candidates) {
+    const res = applyMove(board, pos, player);
+    if (!res.ok) continue;
+    if (opponentHasImmediateWinningMove(res.newBoard, opponent)) continue;
+    const score = (edgePressureByCell.get(pos) ?? 0) + evaluateBoard(res.newBoard, player);
+    if (score > bestScore) {
+      bestScore = score;
+      bestPos = pos;
+    }
+  }
+  return bestPos;
 }
 
 function opponentHasImmediateWinningMove(board: number[], opponent: Player): boolean {
@@ -275,6 +336,26 @@ function evaluateBoard(board: number[], player: Player): number {
 
   const center = idx(2, 2);
   if (ownerOf(board[center]) === player) score += 30;
+
+  // 端の圧力評価（角定石以外の端押しを軽視しない）
+  for (const line of EDGE_LINES) {
+    let myEdge = 0;
+    let oppEdge = 0;
+    for (const i of line) {
+      const o = ownerOf(board[i]);
+      if (o === player) myEdge++;
+      else if (o === opponent) oppEdge++;
+    }
+    score += myEdge * 10;
+    score -= oppEdge * 10;
+  }
+
+  // 角そのものは強く評価
+  for (const c of CORNERS) {
+    const o = ownerOf(board[c]);
+    if (o === player) score += 22;
+    else if (o === opponent) score -= 22;
+  }
 
   return score;
 }
