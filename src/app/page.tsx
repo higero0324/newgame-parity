@@ -94,6 +94,7 @@ export default function Home() {
             {achievementNotice && <span style={noticeBadgeStyle}>!</span>}
           </Link>
         )}
+        <Link href="/rules" style={linkStyle}>ルール説明</Link>
         <Link href="/tutorial" style={linkStyle}>チュートリアル</Link>
         <Link href="/history" style={linkStyle}>保存季譜（ログイン時）</Link>
       </div>

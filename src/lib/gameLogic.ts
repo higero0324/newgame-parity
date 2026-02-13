@@ -29,6 +29,29 @@ const DIRS: Array<[number, number]> = [
   [1, -1],  [1, 0],  [1, 1],
 ];
 
+type CornerBridgeRule = {
+  corners: [number, number];
+  between: number[];
+};
+
+const CORNER_BRIDGE_RULES: CornerBridgeRule[] = [
+  { corners: [idx(0, 0), idx(0, 4)], between: [idx(0, 1), idx(0, 2), idx(0, 3)] },
+  { corners: [idx(4, 0), idx(4, 4)], between: [idx(4, 1), idx(4, 2), idx(4, 3)] },
+  { corners: [idx(0, 0), idx(4, 0)], between: [idx(1, 0), idx(2, 0), idx(3, 0)] },
+  { corners: [idx(0, 4), idx(4, 4)], between: [idx(1, 4), idx(2, 4), idx(3, 4)] },
+];
+
+function isBlockedByCornerBridgeRule(board: number[], pos: number, player: Player): boolean {
+  for (const rule of CORNER_BRIDGE_RULES) {
+    if (!rule.between.includes(pos)) continue;
+    const [c1, c2] = rule.corners;
+    if (ownerOf(board[c1]) !== player || ownerOf(board[c2]) !== player) continue;
+    if (!rule.between.every(i => board[i] === 0)) continue;
+    return true;
+  }
+  return false;
+}
+
 export type ApplyMoveResult =
   | { ok: false; reason: string }
   | {
@@ -41,6 +64,9 @@ export type ApplyMoveResult =
 export function applyMove(board: number[], pos: number, player: Player): ApplyMoveResult {
   if (pos < 0 || pos >= BOARD_LEN) return { ok: false, reason: "範囲外です" };
   if (board[pos] !== 0) return { ok: false, reason: "空マス(0)にしか置けません" };
+  if (isBlockedByCornerBridgeRule(board, pos, player)) {
+    return { ok: false, reason: "隣接角を取った側は、間が空の間はその間に置けません" };
+  }
 
   const placeValue = player === "p1" ? 2 : 1;
 
