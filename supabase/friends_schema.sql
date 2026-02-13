@@ -10,6 +10,7 @@ create table if not exists public.profiles (
   status_message text not null default '',
   icon_text text not null default '',
   icon_image_data_url text not null default '',
+  profile_card_template text not null default 'classic',
   starred_match_ids uuid[] not null default '{}',
   featured_match_ids uuid[] not null default '{}',
   match_names jsonb not null default '{}'::jsonb,
@@ -18,6 +19,9 @@ create table if not exists public.profiles (
 
 alter table public.profiles
   add column if not exists starred_match_ids uuid[] not null default '{}';
+
+alter table public.profiles
+  add column if not exists profile_card_template text not null default 'classic';
 
 create table if not exists public.friend_requests (
   id uuid primary key default gen_random_uuid(),

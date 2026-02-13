@@ -24,7 +24,10 @@ type MatchRow = {
 type UserMeta = {
   display_name?: string;
   status_message?: string;
+  profile_card_template?: string;
 };
+
+type CardTemplateId = "classic" | "lacquer" | "paper";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -46,6 +49,7 @@ export default function ProfilePage() {
   const [iconFileName, setIconFileName] = useState("");
   const [profileEditOpen, setProfileEditOpen] = useState(false);
   const [clipsEditOpen, setClipsEditOpen] = useState(false);
+  const [cardTemplate, setCardTemplate] = useState<CardTemplateId>("classic");
 
   useEffect(() => {
     (async () => {
@@ -63,6 +67,7 @@ export default function ProfilePage() {
         const meta = (currentUser.user_metadata ?? {}) as UserMeta;
         setDisplayName(meta.display_name ?? "");
         setStatusMessage(meta.status_message ?? "");
+        setCardTemplate(parseTemplate(meta.profile_card_template));
 
         const profilePrefs = getProfilePrefsFromUserMetadata(currentUser.user_metadata);
         const loaded = await loadCurrentProfilePrefsFromProfiles();
@@ -122,6 +127,7 @@ export default function ProfilePage() {
           display_name: displayName.trim(),
           status_message: statusMessage.trim(),
           icon_text: iconText.trim().slice(0, 2),
+          profile_card_template: cardTemplate,
           // Keep auth JWT small for mobile Safari by not storing image data in user_metadata.
           icon_image_data_url: "",
         },
@@ -143,6 +149,7 @@ export default function ProfilePage() {
             display_name: displayName.trim(),
             status_message: statusMessage.trim(),
             icon_text: iconText.trim().slice(0, 2),
+            profile_card_template: cardTemplate,
           },
           { onConflict: "user_id" },
         );
@@ -186,6 +193,9 @@ export default function ProfilePage() {
     }
     return slots;
   }, [featuredRows]);
+  const isDarkCard = cardTemplate === "lacquer";
+  const mutedTextColor = isDarkCard ? "rgba(255,245,230,0.85)" : "#555";
+  const lightTextColor = isDarkCard ? "rgba(255,245,230,0.8)" : "#666";
 
   const onToggleFeaturedWithStar = (matchId: string) => {
     if (!userId) return;
@@ -213,7 +223,7 @@ export default function ProfilePage() {
         <div style={{ width: "100%", maxWidth: 760, fontSize: 14, color: "#666" }}>読み込み中...</div>
       )}
 
-      <section style={sectionStyle}>
+      <section style={{ ...sectionStyle, ...profileCardTemplateStyles[cardTemplate] }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <h2 style={{ margin: 0, fontSize: 20 }}>基本情報</h2>
           <button style={btnStyle} onClick={() => setProfileEditOpen(v => !v)}>
@@ -224,10 +234,10 @@ export default function ProfilePage() {
           <Avatar iconText={iconText} iconImageDataUrl={iconImageDataUrl} displayName={displayName} email={email} />
           <div style={{ display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }}>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{displayName || "（未設定）"}</div>
-            <div style={{ fontSize: 14, color: "#555" }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
+            <div style={{ fontSize: 14, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
           </div>
         </div>
-        <div style={{ fontSize: 13, color: "#666" }}>ログイン中: {email || "(不明)"}</div>
+        <div style={{ fontSize: 13, color: lightTextColor }}>ログイン中: {email || "(不明)"}</div>
         {profileEditOpen && (
           <div style={{ display: "grid", gap: 8, borderTop: "1px solid var(--line)", paddingTop: 10 }}>
             <label style={{ display: "grid", gap: 6 }}>
@@ -246,6 +256,24 @@ export default function ProfilePage() {
             <label style={{ display: "grid", gap: 6 }}>
               <span>アイコン文字（1〜2文字。空欄なら名前の頭文字）</span>
               <input value={iconText} onChange={e => setIconText(e.target.value)} style={inputStyle} placeholder="例: 😀 / H" />
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>カードテンプレート</span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {cardTemplateOptions.map(opt => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setCardTemplate(opt.id)}
+                    style={{
+                      ...templateChipStyle,
+                      ...(cardTemplate === opt.id ? templateChipActiveStyle : null),
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </label>
             <label style={{ display: "grid", gap: 6 }}>
               <span>アイコン画像（任意）</span>
@@ -550,4 +578,48 @@ const hiddenFileInputStyle: React.CSSProperties = {
   pointerEvents: "none",
   width: 1,
   height: 1,
+};
+
+function parseTemplate(value: string | undefined): CardTemplateId {
+  if (value === "lacquer" || value === "paper") return value;
+  return "classic";
+}
+
+const cardTemplateOptions: Array<{ id: CardTemplateId; label: string }> = [
+  { id: "classic", label: "Classic" },
+  { id: "lacquer", label: "Lacquer" },
+  { id: "paper", label: "Paper" },
+];
+
+const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
+  classic: {
+    background: "linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.62) 100%)",
+  },
+  lacquer: {
+    background: "linear-gradient(135deg, rgba(77,36,24,0.9) 0%, rgba(124,74,48,0.82) 45%, rgba(204,150,105,0.8) 100%)",
+    color: "#fff7eb",
+    borderColor: "#6b3c26",
+    boxShadow: "inset 0 0 0 1px rgba(255,220,180,0.2), 0 6px 16px rgba(70,35,20,0.25)",
+  },
+  paper: {
+    background:
+      "repeating-linear-gradient(0deg, rgba(255,252,245,0.95) 0px, rgba(255,252,245,0.95) 24px, rgba(236,226,209,0.95) 25px), linear-gradient(180deg, #faf2e4 0%, #efe3d0 100%)",
+    borderColor: "#b99f74",
+    boxShadow: "0 4px 0 rgba(140, 110, 70, 0.2)",
+  },
+};
+
+const templateChipStyle: React.CSSProperties = {
+  padding: "8px 10px",
+  borderRadius: 999,
+  border: "1px solid var(--line)",
+  background: "rgba(255,255,255,0.9)",
+  color: "var(--ink)",
+  cursor: "pointer",
+};
+
+const templateChipActiveStyle: React.CSSProperties = {
+  background: "linear-gradient(180deg, #fff8ec 0%, #f1dfbf 100%)",
+  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
+  fontWeight: 700,
 };

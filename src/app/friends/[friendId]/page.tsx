@@ -12,9 +12,12 @@ type ProfileRow = {
   status_message: string;
   icon_text: string;
   icon_image_data_url: string;
+  profile_card_template?: string;
   featured_match_ids: string[];
   match_names: Record<string, string>;
 };
+
+type CardTemplateId = "classic" | "lacquer" | "paper";
 
 type MatchRow = {
   id: string;
@@ -42,7 +45,7 @@ export default function FriendProfilePage() {
 
       const { data: target, error: targetError } = await supabase
         .from("profiles")
-        .select("user_id, friend_id, display_name, status_message, icon_text, icon_image_data_url, featured_match_ids, match_names")
+        .select("user_id, friend_id, display_name, status_message, icon_text, icon_image_data_url, profile_card_template, featured_match_ids, match_names")
         .eq("friend_id", friendId)
         .maybeSingle();
       if (targetError) {
@@ -96,6 +99,8 @@ export default function FriendProfilePage() {
   }, [friendId]);
 
   const displayName = profile?.display_name || "（名前未設定）";
+  const cardTemplate = parseTemplate(profile?.profile_card_template);
+  const isDarkCard = cardTemplate === "lacquer";
   const matchNames = profile?.match_names ?? {};
   const frameRows = useMemo(() => {
     const slots: Array<MatchRow | null> = [null, null, null];
@@ -107,15 +112,15 @@ export default function FriendProfilePage() {
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>フレンドプロフィール</h1>
 
-      <section style={sectionStyle}>
+      <section style={{ ...sectionStyle, ...profileCardTemplateStyles[cardTemplate] }}>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(72px, 96px) 1fr", gap: 12 }}>
           <Avatar iconText={profile?.icon_text ?? ""} iconImageDataUrl={profile?.icon_image_data_url ?? ""} displayName={displayName} />
           <div style={{ display: "grid", gap: 6 }}>
             <div style={{ fontSize: 22, fontWeight: 800, overflowWrap: "anywhere" }}>{displayName}</div>
-            <div style={{ fontSize: 14, color: "#555", overflowWrap: "anywhere" }}>
+            <div style={{ fontSize: 14, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
-            <div style={{ fontSize: 13, color: "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
+            <div style={{ fontSize: 13, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
           </div>
         </div>
       </section>
@@ -252,4 +257,27 @@ const avatarStyle: React.CSSProperties = {
   fontWeight: 800,
   fontSize: 34,
   boxShadow: "0 2px 0 rgba(90, 50, 20, 0.25)",
+};
+
+function parseTemplate(value: string | undefined): CardTemplateId {
+  if (value === "lacquer" || value === "paper") return value;
+  return "classic";
+}
+
+const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
+  classic: {
+    background: "linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.62) 100%)",
+  },
+  lacquer: {
+    background: "linear-gradient(135deg, rgba(77,36,24,0.9) 0%, rgba(124,74,48,0.82) 45%, rgba(204,150,105,0.8) 100%)",
+    color: "#fff7eb",
+    borderColor: "#6b3c26",
+    boxShadow: "inset 0 0 0 1px rgba(255,220,180,0.2), 0 6px 16px rgba(70,35,20,0.25)",
+  },
+  paper: {
+    background:
+      "repeating-linear-gradient(0deg, rgba(255,252,245,0.95) 0px, rgba(255,252,245,0.95) 24px, rgba(236,226,209,0.95) 25px), linear-gradient(180deg, #faf2e4 0%, #efe3d0 100%)",
+    borderColor: "#b99f74",
+    boxShadow: "0 4px 0 rgba(140, 110, 70, 0.2)",
+  },
 };
