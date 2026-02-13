@@ -159,7 +159,7 @@ export default function FriendProfilePage() {
                         ...cardTitleChipAdaptiveStyle,
                         ...titleChipButtonStyle,
                         ...titleChipStyleFor(title),
-                        ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : null),
+                        ...titleChipUpperDisplayStyle,
                       }}
                       aria-expanded={openTitleId === title.id}
                     >

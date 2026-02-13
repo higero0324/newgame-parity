@@ -279,7 +279,7 @@ export default function ProfilePage() {
                       ...titleChipStyleBase,
                       ...cardTitleChipAdaptiveStyle,
                       ...titleChipStyleFor(title),
-                      ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : null),
+                      ...titleChipUpperDisplayStyle,
                     }}
                   >
                     {title.name}
