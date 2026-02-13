@@ -19,7 +19,7 @@ type ProfileRow = {
   match_names: Record<string, string>;
 };
 
-type CardTemplateId = "classic" | "lacquer" | "paper" | "modern";
+type CardTemplateId = "classic" | "lacquer" | "paper" | "modern" | "white";
 
 type MatchRow = {
   id: string;
@@ -118,7 +118,7 @@ export default function FriendProfilePage() {
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>フレンドプロフィール</h1>
 
-      <section style={{ ...sectionStyle, ...profileCardBaseStyle, ...profileCardTemplateStyles[cardTemplate] }}>
+      <section style={{ ...sectionStyle, ...profileCardBaseStyle, ...profileCardClosedShapeStyle, ...profileCardTemplateStyles[cardTemplate] }}>
         <div style={profileTopStyle}>
           <Avatar iconText={profile?.icon_text ?? ""} iconImageDataUrl={profile?.icon_image_data_url ?? ""} displayName={displayName} />
           <div style={{ display: "grid", gap: 6 }}>
@@ -275,7 +275,7 @@ const avatarStyle: React.CSSProperties = {
 };
 
 function parseTemplate(value: string | undefined): CardTemplateId {
-  if (value === "lacquer" || value === "paper" || value === "modern") return value;
+  if (value === "lacquer" || value === "paper" || value === "modern" || value === "white") return value;
   return "classic";
 }
 
@@ -286,7 +286,7 @@ const profileTopStyle: React.CSSProperties = {
 };
 
 const profileCardBaseStyle: React.CSSProperties = {
-  borderRadius: 22,
+  borderRadius: 16,
   borderWidth: 2,
   padding: "clamp(12px, 3vw, 20px)",
   boxShadow: "0 12px 28px rgba(35, 20, 10, 0.14)",
@@ -294,31 +294,45 @@ const profileCardBaseStyle: React.CSSProperties = {
   position: "relative",
 };
 
+const profileCardClosedShapeStyle: React.CSSProperties = {
+  maxWidth: 620,
+  minHeight: "clamp(250px, 52vw, 360px)",
+  aspectRatio: "1.58 / 1",
+  alignContent: "space-between",
+  gridTemplateRows: "auto 1fr auto",
+};
+
 const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
+  white: {
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,246,246,0.96) 100%)",
+    borderColor: "#d9d9d9",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.9), 0 10px 22px rgba(60,60,60,0.12)",
+  },
   classic: {
     background:
-      "radial-gradient(circle at 100% 0%, rgba(255,235,176,0.34) 0%, rgba(255,235,176,0) 46%), repeating-linear-gradient(45deg, rgba(197,148,74,0.18) 0px, rgba(197,148,74,0.18) 8px, rgba(245,227,182,0.3) 9px, rgba(245,227,182,0.3) 17px), linear-gradient(180deg, #fff8e8 0%, #f4e0b2 100%)",
-    borderColor: "#b98c46",
+      "linear-gradient(180deg, rgba(255,247,230,0.92) 0%, rgba(240,214,171,0.86) 100%), repeating-linear-gradient(8deg, rgba(127,83,42,0.14) 0px, rgba(127,83,42,0.14) 2px, rgba(170,120,70,0.1) 2.5px, rgba(170,120,70,0.1) 6px)",
+    borderColor: "#9b6b38",
   },
   lacquer: {
     background:
-      "radial-gradient(circle at 8% 8%, rgba(255,214,169,0.25) 0%, rgba(255,214,169,0) 38%), linear-gradient(135deg, #2f120a 0%, #5a2b1b 52%, #c48a52 100%)",
+      "radial-gradient(circle at 90% 10%, rgba(235,194,129,0.3) 0%, rgba(235,194,129,0) 42%), linear-gradient(135deg, #2d0f09 0%, #4b1f14 50%, #7f4325 100%)",
     color: "#fff7eb",
-    borderColor: "#6f3a1f",
-    boxShadow: "inset 0 0 0 1px rgba(255,220,180,0.24), 0 12px 26px rgba(50, 24, 12, 0.4)",
+    borderColor: "#5f2f1c",
+    boxShadow: "inset 0 0 0 1px rgba(255,220,180,0.24), inset 0 0 36px rgba(255,160,90,0.08), 0 12px 26px rgba(50, 24, 12, 0.4)",
   },
   paper: {
     background:
-      "radial-gradient(circle at 88% 12%, rgba(140,110,70,0.12) 0%, rgba(140,110,70,0) 42%), repeating-linear-gradient(0deg, rgba(255,252,245,0.96) 0px, rgba(255,252,245,0.96) 23px, rgba(233,223,205,0.92) 24px), linear-gradient(180deg, #fbf3e6 0%, #efe2cf 100%)",
-    borderColor: "#b59a72",
-    boxShadow: "inset 0 0 0 1px rgba(170,130,85,0.18), 0 8px 20px rgba(85,60,30,0.14)",
+      "radial-gradient(circle at 12% 0%, rgba(255,224,186,0.25) 0%, rgba(255,224,186,0) 40%), repeating-linear-gradient(0deg, rgba(252,248,239,0.95) 0px, rgba(252,248,239,0.95) 22px, rgba(236,227,212,0.93) 23px), linear-gradient(180deg, #fbf4e7 0%, #efe5d5 100%)",
+    borderColor: "#b8a17f",
+    boxShadow: "inset 0 0 0 1px rgba(170,130,85,0.2), 0 8px 20px rgba(85,60,30,0.14)",
   },
   modern: {
     background:
-      "radial-gradient(circle at 5% 0%, rgba(120,220,255,0.3) 0%, rgba(120,220,255,0) 45%), radial-gradient(circle at 100% 100%, rgba(255,120,180,0.24) 0%, rgba(255,120,180,0) 40%), linear-gradient(140deg, #131b2e 0%, #2a3552 46%, #4c5d86 100%)",
-    borderColor: "#5b6f9d",
-    color: "#ecf4ff",
-    boxShadow: "inset 0 0 0 1px rgba(213,233,255,0.22), 0 14px 30px rgba(24,33,56,0.4)",
+      "radial-gradient(circle at 100% 100%, rgba(202,228,255,0.23) 0%, rgba(202,228,255,0) 45%), radial-gradient(circle at 12% 10%, rgba(176,201,255,0.2) 0%, rgba(176,201,255,0) 38%), linear-gradient(145deg, #1b2741 0%, #2f456f 52%, #5a78ad 100%)",
+    borderColor: "#5673a8",
+    color: "#edf4ff",
+    boxShadow: "inset 0 0 0 1px rgba(213,233,255,0.24), 0 14px 30px rgba(24,33,56,0.35)",
   },
 };
 
