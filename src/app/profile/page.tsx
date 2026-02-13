@@ -610,7 +610,6 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
         <div style={avatarStyle}>{text}</div>
       )}
       {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaFrameStyle} aria-hidden />}
-      {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaCrestStyle} aria-hidden>❄</div>}
     </div>
   );
 }
@@ -782,26 +781,6 @@ const setsugekkaFrameStyle: React.CSSProperties = {
   boxShadow:
     "0 0 0 1px rgba(92, 63, 14, 0.82), 0 2px 6px rgba(90, 62, 18, 0.34), 0 0 14px rgba(245, 207, 96, 0.62), inset 0 1px 2px rgba(255, 248, 220, 0.92), inset 0 -2px 4px rgba(112, 70, 9, 0.52)",
   background: "transparent",
-  pointerEvents: "none",
-};
-
-const setsugekkaCrestStyle: React.CSSProperties = {
-  position: "absolute",
-  bottom: -4,
-  right: -4,
-  width: 26,
-  height: 26,
-  borderRadius: "50%",
-  border: "2px solid #8f640f",
-  background:
-    "radial-gradient(circle at 28% 22%, #fffbe7 0%, #f8da84 40%, #c18a1f 72%, #8a5c08 100%)",
-  color: "#6f4706",
-  fontSize: 16,
-  fontWeight: 900,
-  display: "grid",
-  placeItems: "center",
-  boxShadow:
-    "0 7px 12px rgba(70, 45, 12, 0.4), inset 0 1px 1px rgba(255, 250, 225, 0.92), inset 0 -1px 2px rgba(96, 64, 12, 0.55)",
   pointerEvents: "none",
 };
 
