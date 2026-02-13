@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { getTitleById, type TitleRarity } from "@/lib/achievements";
 
 type ProfileRow = {
   user_id: string;
@@ -13,6 +14,7 @@ type ProfileRow = {
   icon_text: string;
   icon_image_data_url: string;
   profile_card_template?: string;
+  equipped_title_ids?: string[];
   featured_match_ids: string[];
   match_names: Record<string, string>;
 };
@@ -45,7 +47,7 @@ export default function FriendProfilePage() {
 
       const { data: target, error: targetError } = await supabase
         .from("profiles")
-        .select("user_id, friend_id, display_name, status_message, icon_text, icon_image_data_url, profile_card_template, featured_match_ids, match_names")
+        .select("user_id, friend_id, display_name, status_message, icon_text, icon_image_data_url, profile_card_template, equipped_title_ids, featured_match_ids, match_names")
         .eq("friend_id", friendId)
         .maybeSingle();
       if (targetError) {
@@ -102,6 +104,10 @@ export default function FriendProfilePage() {
   const cardTemplate = parseTemplate(profile?.profile_card_template);
   const isDarkCard = cardTemplate === "lacquer";
   const matchNames = profile?.match_names ?? {};
+  const equippedTitles = useMemo(() => {
+    const ids = Array.isArray(profile?.equipped_title_ids) ? profile?.equipped_title_ids : [];
+    return ids.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x)).slice(0, 2);
+  }, [profile?.equipped_title_ids]);
   const frameRows = useMemo(() => {
     const slots: Array<MatchRow | null> = [null, null, null];
     for (let i = 0; i < 3; i += 1) slots[i] = featuredRows[i] ?? null;
@@ -120,6 +126,15 @@ export default function FriendProfilePage() {
             <div style={{ fontSize: 14, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
+            {isFriend && equippedTitles.length > 0 && (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {equippedTitles.map(title => (
+                  <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipByRarity[title.rarity] }}>
+                    {title.name}
+                  </span>
+                ))}
+              </div>
+            )}
             <div style={{ fontSize: 13, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
           </div>
         </div>
@@ -279,5 +294,38 @@ const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
       "repeating-linear-gradient(0deg, rgba(255,252,245,0.95) 0px, rgba(255,252,245,0.95) 24px, rgba(236,226,209,0.95) 25px), linear-gradient(180deg, #faf2e4 0%, #efe3d0 100%)",
     borderColor: "#b99f74",
     boxShadow: "0 4px 0 rgba(140, 110, 70, 0.2)",
+  },
+};
+
+const titleChipStyleBase: React.CSSProperties = {
+  padding: "4px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 700,
+  border: "1px solid transparent",
+  width: "fit-content",
+};
+
+const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
+  bronze: {
+    background: "linear-gradient(180deg, #f3d7bf 0%, #d6a274 100%)",
+    color: "#5c3514",
+    borderColor: "#b27a47",
+  },
+  silver: {
+    background: "linear-gradient(180deg, #f4f6f8 0%, #c9d1d9 100%)",
+    color: "#213243",
+    borderColor: "#9aa6b2",
+  },
+  gold: {
+    background: "linear-gradient(180deg, #fff4c7 0%, #e2b63f 100%)",
+    color: "#4b3510",
+    borderColor: "#b8891f",
+  },
+  obsidian: {
+    background: "linear-gradient(135deg, #131313 0%, #3a2a1a 45%, #c8a15f 100%)",
+    color: "#fff2d9",
+    borderColor: "#a57b3d",
+    boxShadow: "inset 0 0 0 1px rgba(255,230,180,0.25)",
   },
 };

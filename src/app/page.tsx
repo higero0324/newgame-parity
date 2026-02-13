@@ -64,6 +64,7 @@ export default function Home() {
         <Link href="/cpu" style={linkStyle}>CPU対戦</Link>
         <Link href={authLink.href} style={linkStyle}>{authLink.label}</Link>
         {isLoggedIn && <Link href="/friends" style={linkStyle}>フレンド</Link>}
+        {isLoggedIn && <Link href="/achievements" style={linkStyle}>アチーブメント</Link>}
         <Link href="/tutorial" style={linkStyle}>チュートリアル</Link>
         <Link href="/history" style={linkStyle}>保存棋譜（ログイン時）</Link>
       </div>

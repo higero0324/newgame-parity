@@ -8,6 +8,7 @@ import { findCpuMove, type CpuLevel } from "@/lib/cpuPlayer";
 import { calculateAnimationDuration } from "@/lib/animationTiming";
 import { saveMatchToSupabase, type MoveRecord } from "@/lib/saveMatch";
 import { loadCurrentProfilePrefsFromProfiles } from "@/lib/profilePrefs";
+import { recordCpuWinForCurrentUser } from "@/lib/achievements";
 
 type Snapshot = {
   board: number[];
@@ -35,6 +36,7 @@ export default function PlayCpuPage() {
   const [moves, setMoves] = useState<MoveRecord[]>([]);
   const [saving, setSaving] = useState(false);
   const lastMoveRef = useRef<LastMove | null>(null);
+  const resultRecordedRef = useRef(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -73,6 +75,13 @@ export default function PlayCpuPage() {
               setMsg(res.winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！");
               const lines = getAllWinningLines(res.newBoard);
               if (lines.length > 0) setWinningLine(new Set(lines));
+              if (!resultRecordedRef.current) {
+                resultRecordedRef.current = true;
+                const userWon = res.winner === playerSide;
+                recordCpuWinForCurrentUser(cpuLevel, userWon).catch(() => {
+                  // ignore
+                });
+              }
             }
           }
         }
@@ -106,6 +115,13 @@ export default function PlayCpuPage() {
       setMsg(res.winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！");
       const lines = getAllWinningLines(res.newBoard);
       if (lines.length > 0) setWinningLine(new Set(lines));
+      if (!resultRecordedRef.current) {
+        resultRecordedRef.current = true;
+        const userWon = res.winner === playerSide;
+        recordCpuWinForCurrentUser(cpuLevel, userWon).catch(() => {
+          // ignore
+        });
+      }
     }
   };
 
@@ -121,6 +137,7 @@ export default function PlayCpuPage() {
     setMsg("");
     setThinking(false);
     lastMoveRef.current = null;
+    resultRecordedRef.current = false;
   };
 
   const reset = () => {
@@ -133,6 +150,7 @@ export default function PlayCpuPage() {
     setThinking(false);
     setMoves([]);
     lastMoveRef.current = null;
+    resultRecordedRef.current = false;
     setPlayerSide(null);
   };
 

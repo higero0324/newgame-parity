@@ -12,6 +12,12 @@ import {
   saveIconImageDataUrlToProfiles,
   saveClipPrefsToSupabase,
 } from "@/lib/profilePrefs";
+import {
+  getTitleById,
+  loadAchievementStateForCurrentUser,
+  saveEquippedTitlesForCurrentUser,
+  type TitleRarity,
+} from "@/lib/achievements";
 
 type MatchRow = {
   id: string;
@@ -50,6 +56,8 @@ export default function ProfilePage() {
   const [profileEditOpen, setProfileEditOpen] = useState(false);
   const [clipsEditOpen, setClipsEditOpen] = useState(false);
   const [cardTemplate, setCardTemplate] = useState<CardTemplateId>("classic");
+  const [unlockedTitleIds, setUnlockedTitleIds] = useState<string[]>([]);
+  const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -85,6 +93,12 @@ export default function ProfilePage() {
         const iconRes = await loadIconImageDataUrlFromProfiles();
         if (iconRes.ok) setIconImageDataUrl(iconRes.iconImageDataUrl);
         else setIconImageDataUrl(profilePrefs.iconImageDataUrl);
+
+        const ach = await loadAchievementStateForCurrentUser();
+        if (ach.ok) {
+          setUnlockedTitleIds(ach.unlockedTitleIds);
+          setEquippedTitleIds(ach.equippedTitleIds);
+        }
 
         const { data, error } = await supabase
           .from("matches")
@@ -158,6 +172,11 @@ export default function ProfilePage() {
           return;
         }
       }
+      const titleSave = await saveEquippedTitlesForCurrentUser(equippedTitleIds);
+      if (!titleSave.ok) {
+        setStatus(`称号の保存に失敗しました。詳細: ${titleSave.reason}`);
+        return;
+      }
       setStatus("プロフィールを保存しました。");
     } finally {
       setSaving(false);
@@ -196,6 +215,12 @@ export default function ProfilePage() {
   const isDarkCard = cardTemplate === "lacquer";
   const mutedTextColor = isDarkCard ? "rgba(255,245,230,0.85)" : "#555";
   const lightTextColor = isDarkCard ? "rgba(255,245,230,0.8)" : "#666";
+  const equippedTitles = useMemo(() => {
+    return equippedTitleIds.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
+  }, [equippedTitleIds]);
+  const unlockedTitles = useMemo(() => {
+    return unlockedTitleIds.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
+  }, [unlockedTitleIds]);
 
   const onToggleFeaturedWithStar = (matchId: string) => {
     if (!userId) return;
@@ -235,6 +260,15 @@ export default function ProfilePage() {
           <div style={{ display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }}>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{displayName || "（未設定）"}</div>
             <div style={{ fontSize: 14, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
+            {equippedTitles.length > 0 && (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {equippedTitles.map(title => (
+                  <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipByRarity[title.rarity] }}>
+                    {title.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div style={{ fontSize: 13, color: lightTextColor }}>ログイン中: {email || "(不明)"}</div>
@@ -273,6 +307,40 @@ export default function ProfilePage() {
                     {opt.label}
                   </button>
                 ))}
+              </div>
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>称号（最大2つまでプロフィールカードに表示）</span>
+              <div style={{ display: "grid", gap: 6 }}>
+                {unlockedTitles.length === 0 && <div style={{ fontSize: 13, color: "#666" }}>まだ称号を獲得していません。</div>}
+                {unlockedTitles.map(title => {
+                  const selected = equippedTitleIds.includes(title.id);
+                  return (
+                    <button
+                      key={title.id}
+                      type="button"
+                      style={{
+                        ...titleSelectButtonStyle,
+                        ...(selected ? titleSelectButtonActiveStyle : null),
+                        ...titleChipByRarity[title.rarity],
+                      }}
+                      onClick={() => {
+                        if (selected) {
+                          setEquippedTitleIds(prev => prev.filter(id => id !== title.id));
+                          return;
+                        }
+                        if (equippedTitleIds.length >= 2) {
+                          setStatus("称号は2つまで装備できます。");
+                          return;
+                        }
+                        setEquippedTitleIds(prev => [...prev, title.id]);
+                      }}
+                    >
+                      <span>{title.name}</span>
+                      <span style={{ fontSize: 12, opacity: 0.9 }}>{title.description}</span>
+                    </button>
+                  );
+                })}
               </div>
             </label>
             <label style={{ display: "grid", gap: 6 }}>
@@ -383,6 +451,7 @@ export default function ProfilePage() {
           {loggingOut ? "ログアウト中..." : "ログアウト"}
         </button>
         <Link href="/friends" style={btnStyle}>フレンド</Link>
+        <Link href="/achievements" style={btnStyle}>アチーブメント</Link>
         <Link href="/" style={btnStyle}>ホームへ戻る</Link>
         <Link href="/history" style={btnStyle}>保存棋譜へ</Link>
       </div>
@@ -622,4 +691,52 @@ const templateChipActiveStyle: React.CSSProperties = {
   background: "linear-gradient(180deg, #fff8ec 0%, #f1dfbf 100%)",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
   fontWeight: 700,
+};
+
+const titleChipStyleBase: React.CSSProperties = {
+  padding: "4px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 700,
+  border: "1px solid transparent",
+  width: "fit-content",
+};
+
+const titleSelectButtonStyle: React.CSSProperties = {
+  textAlign: "left",
+  display: "grid",
+  gap: 2,
+  padding: "8px 10px",
+  borderRadius: 10,
+  border: "1px solid rgba(0,0,0,0.1)",
+  background: "rgba(255,255,255,0.75)",
+  cursor: "pointer",
+};
+
+const titleSelectButtonActiveStyle: React.CSSProperties = {
+  boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.6), 0 2px 0 rgba(120,80,40,0.2)",
+};
+
+const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
+  bronze: {
+    background: "linear-gradient(180deg, #f3d7bf 0%, #d6a274 100%)",
+    color: "#5c3514",
+    borderColor: "#b27a47",
+  },
+  silver: {
+    background: "linear-gradient(180deg, #f4f6f8 0%, #c9d1d9 100%)",
+    color: "#213243",
+    borderColor: "#9aa6b2",
+  },
+  gold: {
+    background: "linear-gradient(180deg, #fff4c7 0%, #e2b63f 100%)",
+    color: "#4b3510",
+    borderColor: "#b8891f",
+  },
+  obsidian: {
+    background: "linear-gradient(135deg, #131313 0%, #3a2a1a 45%, #c8a15f 100%)",
+    color: "#fff2d9",
+    borderColor: "#a57b3d",
+    boxShadow: "inset 0 0 0 1px rgba(255,230,180,0.25)",
+  },
 };

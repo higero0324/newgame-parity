@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { Player } from "@/lib/gameLogic";
+import { recordSavedMatchForCurrentUser } from "@/lib/achievements";
 
 export type MoveRecord = {
   ply: number;
@@ -102,6 +103,13 @@ export async function saveMatchToSupabase(args: {
     }
   } else if (listErr) {
     warning = `保存は完了しましたが、件数整理に失敗しました。詳細: ${listErr.message}`;
+  }
+
+  const achievementRes = await recordSavedMatchForCurrentUser();
+  if (!achievementRes.ok) {
+    warning = warning
+      ? `${warning} / アチーブメント更新に失敗: ${achievementRes.reason}`
+      : `保存は完了しましたが、アチーブメント更新に失敗しました。詳細: ${achievementRes.reason}`;
   }
 
   return { ok: true as const, matchId: match.id, warning };

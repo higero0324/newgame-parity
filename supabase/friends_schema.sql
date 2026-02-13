@@ -11,6 +11,9 @@ create table if not exists public.profiles (
   icon_text text not null default '',
   icon_image_data_url text not null default '',
   profile_card_template text not null default 'classic',
+  achievement_stats jsonb not null default '{}'::jsonb,
+  unlocked_title_ids text[] not null default '{}',
+  equipped_title_ids text[] not null default '{}',
   starred_match_ids uuid[] not null default '{}',
   featured_match_ids uuid[] not null default '{}',
   match_names jsonb not null default '{}'::jsonb,
@@ -22,6 +25,15 @@ alter table public.profiles
 
 alter table public.profiles
   add column if not exists profile_card_template text not null default 'classic';
+
+alter table public.profiles
+  add column if not exists achievement_stats jsonb not null default '{}'::jsonb;
+
+alter table public.profiles
+  add column if not exists unlocked_title_ids text[] not null default '{}';
+
+alter table public.profiles
+  add column if not exists equipped_title_ids text[] not null default '{}';
 
 create table if not exists public.friend_requests (
   id uuid primary key default gen_random_uuid(),
