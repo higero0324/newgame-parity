@@ -61,6 +61,7 @@ export default function Home() {
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
         <Link href="/hajimeni" style={linkStyle}>初めに</Link>
         <Link href="/play" style={linkStyle}>対局を始める</Link>
+        <Link href="/cpu" style={linkStyle}>CPU対戦</Link>
         <Link href={authLink.href} style={linkStyle}>{authLink.label}</Link>
         {isLoggedIn && <Link href="/friends" style={linkStyle}>フレンド</Link>}
         <Link href="/tutorial" style={linkStyle}>チュートリアル</Link>

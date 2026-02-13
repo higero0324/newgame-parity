@@ -9,6 +9,7 @@ type Props = {
   lastChanged?: Set<number>;
   lastPlaced?: number;
   disabled?: boolean;
+  winningLine?: Set<number>;
 };
 
 const STROKE_ANIMATION = `
@@ -18,10 +19,10 @@ const STROKE_ANIMATION = `
   }
 }
 `;
-const STROKE_DURATION_SEC = 0.34;
-const DEFAULT_STROKE_STEP_DELAY_SEC = 0.1;
+export const STROKE_DURATION_SEC = 0.34;
+export const DEFAULT_STROKE_STEP_DELAY_SEC = 0.1;
 
-export default function Board({ board, onClickCell, lastChanged, lastPlaced, disabled }: Props) {
+export default function Board({ board, onClickCell, lastChanged, lastPlaced, disabled, winningLine }: Props) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ export default function Board({ board, onClickCell, lastChanged, lastPlaced, dis
             {Array.from({ length: BOARD_LEN }, (_, i) => {
               const v = board[i];
               const highlight = lastChanged?.has(i);
+              const isWinningCell = winningLine?.has(i);
               const isPlaced = highlight && lastPlaced === i;
               const hasPlacedInChange = Boolean(lastChanged && lastPlaced !== undefined && lastChanged.has(lastPlaced));
               const placedValue = hasPlacedInChange && lastPlaced !== undefined ? board[lastPlaced] ?? 0 : 0;
@@ -147,7 +149,7 @@ export default function Board({ board, onClickCell, lastChanged, lastPlaced, dis
                     border: "2px solid var(--line)",
                     fontSize: isMobile ? 18 : "clamp(16px, 3vw, 22px)",
                     fontWeight: 700,
-                    background: highlight ? "var(--highlight)" : "var(--cell)",
+                    background: isWinningCell ? "linear-gradient(135deg, #fff9e6 0%, #ffe8b3 100%)" : highlight ? "var(--highlight)" : "var(--cell)",
                     color: "var(--cell-ink)",
                     cursor: disabled ? "not-allowed" : "pointer",
                     boxShadow: "0 1px 0 rgba(255,255,255,0.6), inset 0 1px 0 rgba(255,255,255,0.6)",

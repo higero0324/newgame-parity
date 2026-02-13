@@ -136,7 +136,88 @@ export function checkWinner(board: number[]): Player | null {
     if (vals.every(v => p1Set.has(v))) return "p1";
     if (vals.every(v => p2Set.has(v))) return "p2";
   }
+
+  // 盤面が埋まったら偶数/奇数で判定
+  if (board.every(v => v !== 0)) {
+    let evenCount = 0;
+    let oddCount = 0;
+    for (const v of board) {
+      if (v % 2 === 0) evenCount++;
+      else oddCount++;
+    }
+    return evenCount > oddCount ? "p1" : "p2";
+  }
+
   return null;
+}
+
+export function getWinningLine(board: number[]): number[] | null {
+  const lines: number[][] = [];
+
+  // rows
+  for (let r = 0; r < SIZE; r++) {
+    const line: number[] = [];
+    for (let c = 0; c < SIZE; c++) line.push(idx(r, c));
+    lines.push(line);
+  }
+
+  // cols
+  for (let c = 0; c < SIZE; c++) {
+    const line: number[] = [];
+    for (let r = 0; r < SIZE; r++) line.push(idx(r, c));
+    lines.push(line);
+  }
+
+  // diagonals
+  lines.push([idx(0, 0), idx(1, 1), idx(2, 2), idx(3, 3), idx(4, 4)]);
+  lines.push([idx(0, 4), idx(1, 3), idx(2, 2), idx(3, 1), idx(4, 0)]);
+
+  const p1Set = new Set([2, 4]);
+  const p2Set = new Set([1, 3, 5]);
+
+  for (const line of lines) {
+    const vals = line.map(i => board[i]);
+    if (vals.every(v => p1Set.has(v)) || vals.every(v => p2Set.has(v))) {
+      return line;
+    }
+  }
+
+  return null;
+}
+
+export function getAllWinningLines(board: number[]): number[] {
+  const lines: number[][] = [];
+
+  // rows
+  for (let r = 0; r < SIZE; r++) {
+    const line: number[] = [];
+    for (let c = 0; c < SIZE; c++) line.push(idx(r, c));
+    lines.push(line);
+  }
+
+  // cols
+  for (let c = 0; c < SIZE; c++) {
+    const line: number[] = [];
+    for (let r = 0; r < SIZE; r++) line.push(idx(r, c));
+    lines.push(line);
+  }
+
+  // diagonals
+  lines.push([idx(0, 0), idx(1, 1), idx(2, 2), idx(3, 3), idx(4, 4)]);
+  lines.push([idx(0, 4), idx(1, 3), idx(2, 2), idx(3, 1), idx(4, 0)]);
+
+  const p1Set = new Set([2, 4]);
+  const p2Set = new Set([1, 3, 5]);
+  const allWinningCells: number[] = [];
+
+  for (const line of lines) {
+    const vals = line.map(i => board[i]);
+    if (vals.every(v => p1Set.has(v)) || vals.every(v => p2Set.has(v))) {
+      allWinningCells.push(...line);
+    }
+  }
+
+  return allWinningCells;
 }
 
 export function emptyBoard(): number[] {

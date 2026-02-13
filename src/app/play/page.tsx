@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Board from "@/components/Board";
-import { applyMove, emptyBoard, type Player } from "@/lib/gameLogic";
+import { applyMove, emptyBoard, getAllWinningLines, type Player } from "@/lib/gameLogic";
 import { saveMatchToSupabase, type MoveRecord } from "@/lib/saveMatch";
 import { supabase } from "@/lib/supabaseClient";
 import { loadCurrentProfilePrefsFromProfiles } from "@/lib/profilePrefs";
@@ -32,6 +32,7 @@ export default function PlayPage() {
   const [lastChanged, setLastChanged] = useState<Set<number>>(new Set());
   const [lastPlaced, setLastPlaced] = useState<number | undefined>(undefined);
   const [winner, setWinner] = useState<Player | null>(null);
+  const [winningLine, setWinningLine] = useState<Set<number>>(new Set());
   const [moves, setMoves] = useState<MoveRecord[]>([]);
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
@@ -66,6 +67,8 @@ export default function PlayPage() {
     if (res.winner) {
       setWinner(res.winner);
       setMsg(res.winner === "p1" ? "先手の勝ち！" : "後手の勝ち！");
+      const lines = getAllWinningLines(res.newBoard);
+      if (lines.length > 0) setWinningLine(new Set(lines));
     }
   };
 
@@ -76,6 +79,7 @@ export default function PlayPage() {
     setMoves(prev => prev.slice(0, -1));
     setLastChanged(new Set());
     setLastPlaced(undefined);
+    setWinningLine(new Set());
     setMsg("");
   };
 
@@ -85,6 +89,7 @@ export default function PlayPage() {
     setMoves([]);
     setLastChanged(new Set());
     setLastPlaced(undefined);
+    setWinningLine(new Set());
     setMsg("");
   };
 
@@ -181,7 +186,7 @@ export default function PlayPage() {
         </div>
       )}
 
-      <Board board={current.board} onClickCell={onClickCell} lastChanged={lastChanged} lastPlaced={lastPlaced} disabled={!canPlay} />
+      <Board board={current.board} onClickCell={onClickCell} lastChanged={lastChanged} lastPlaced={lastPlaced} disabled={!canPlay} winningLine={winningLine} />
 
       <details style={{ width: "100%", maxWidth: 760 }} open={!isMobile ? undefined : false}>
         <summary style={{ cursor: "pointer", fontWeight: 700 }}>棋譜（手順）</summary>

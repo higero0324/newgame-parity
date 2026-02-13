@@ -71,9 +71,11 @@ export function getSupabase() {
     return {
       auth: {
         getUser: async () => ({ data: { user: null }, error: notConfiguredError }),
+        getSession: async () => ({ data: { session: null }, error: notConfiguredError }),
         signInWithPassword: async () => ({ data: { user: null }, error: notConfiguredError }),
         signUp: async () => ({ data: { user: null }, error: notConfiguredError }),
         signOut: async () => ({ error: notConfiguredError }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
       },
       from: () => mockQuery,
     } as unknown as LooseSupabaseClient;
