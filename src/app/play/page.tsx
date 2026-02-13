@@ -123,7 +123,7 @@ export default function PlayPage() {
       setMsg(res.reason);
       return;
     }
-    setMsg(res.warning ? `保存しました（棋譜ID: ${res.matchId}）。${res.warning}` : `保存しました（棋譜ID: ${res.matchId}）`);
+    setMsg(res.warning ? `保存しました（季譜ID: ${res.matchId}）。${res.warning}` : `保存しました（季譜ID: ${res.matchId}）`);
   };
 
   const statusStyle: React.CSSProperties = {
@@ -153,7 +153,7 @@ export default function PlayPage() {
           </div>
           <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
           <button onClick={save} disabled={!winner || saving} style={btnStyle}>
-            {saving ? "保存中..." : "棋譜を保存"}
+            {saving ? "保存中..." : "季譜を保存"}
           </button>
           <button onClick={reset} style={btnStyle}>リセット</button>
           <Link href="/" style={btnStyle}>ホームへ戻る</Link>
@@ -170,7 +170,7 @@ export default function PlayPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
             <button onClick={save} disabled={!winner || saving} style={btnStyle}>
-              {saving ? "保存中..." : "棋譜を保存"}
+              {saving ? "保存中..." : "季譜を保存"}
             </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -189,7 +189,7 @@ export default function PlayPage() {
       <Board board={current.board} onClickCell={onClickCell} lastChanged={lastChanged} lastPlaced={lastPlaced} disabled={!canPlay} winningLine={winningLine} />
 
       <details style={{ width: "100%", maxWidth: 760 }} open={!isMobile ? undefined : false}>
-        <summary style={{ cursor: "pointer", fontWeight: 700 }}>棋譜（手順）</summary>
+        <summary style={{ cursor: "pointer", fontWeight: 700 }}>季譜（手順）</summary>
         <ol>
           {moves.map(m => (
             <li key={m.ply}>

@@ -98,7 +98,7 @@ export async function saveMatchToSupabase(args: {
       }
 
       if (deletableIds.length < overflow) {
-        warning = "お気に入り保護により、30件を超える棋譜が残っています。";
+        warning = "お気に入り保護により、30件を超える季譜が残っています。";
       }
     }
   } else if (listErr) {

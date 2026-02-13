@@ -78,7 +78,7 @@ export default function MatchReplayPage() {
             return;
           }
           if (!fr) {
-            setStatus("この棋譜はフレンドのみ閲覧できます。");
+            setStatus("この季譜はフレンドのみ閲覧できます。");
             return;
           }
         }
@@ -120,7 +120,7 @@ export default function MatchReplayPage() {
 
   return (
     <main style={{ padding: 24, display: "grid", gap: 12, justifyItems: "center" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 800 }}>棋譜リプレイ</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 800 }}>季譜リプレイ</h1>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
         <Link href="/history" style={btnStyle}>一覧に戻る</Link>

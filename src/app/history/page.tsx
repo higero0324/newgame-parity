@@ -20,9 +20,9 @@ function toHistoryErrorMessage(error: unknown): string {
   const e = error as { message?: string };
   const raw = e?.message ?? "unknown error";
   if (raw.includes("row-level security") || raw.includes("permission denied")) {
-    return "棋譜の取得に失敗しました。RLSポリシーでSELECTが許可されていません。";
+    return "季譜の取得に失敗しました。RLSポリシーでSELECTが許可されていません。";
   }
-  return `棋譜の取得に失敗しました。詳細: ${raw}`;
+  return `季譜の取得に失敗しました。詳細: ${raw}`;
 }
 
 export default function HistoryPage() {
@@ -41,7 +41,7 @@ export default function HistoryPage() {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         if (!sessionData.session?.user) {
-          setStatus("未ログインです。ログインすると保存棋譜を見られます。");
+          setStatus("未ログインです。ログインすると保存季譜を見られます。");
           return;
         }
         const user = sessionData.session.user;
@@ -76,7 +76,7 @@ export default function HistoryPage() {
           nextDrafts[row.id] = (loaded.ok ? loaded.prefs.matchNames[row.id] : "") ?? "";
         }
         setDraftNames(nextDrafts);
-        setStatus(list.length === 0 ? "保存棋譜がまだありません。" : "");
+        setStatus(list.length === 0 ? "保存季譜がまだありません。" : "");
       } catch (err) {
         setStatus(toHistoryErrorMessage(err));
       }
@@ -118,10 +118,10 @@ export default function HistoryPage() {
     setDraftNames(prev => ({ ...prev, [matchId]: nextNames[matchId] ?? "" }));
     saveMatchNamesToSupabase(nextNames).then(res => {
       if (!res.ok) {
-        setStatus(`棋譜名の保存に失敗しました。詳細: ${res.reason}`);
+        setStatus(`季譜名の保存に失敗しました。詳細: ${res.reason}`);
         return;
       }
-      setStatus("棋譜名を保存しました。");
+      setStatus("季譜名を保存しました。");
     });
   };
 
@@ -160,7 +160,7 @@ export default function HistoryPage() {
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
       <div style={{ width: "100%", maxWidth: 720, display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", boxSizing: "border-box" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>保存棋譜</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>保存季譜</h1>
         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
           保存数 {rows.length}/30
         </div>
@@ -226,30 +226,30 @@ export default function HistoryPage() {
                     <input
                       value={draftNames[r.id] ?? ""}
                       onChange={e => setDraftNames(prev => ({ ...prev, [r.id]: e.target.value }))}
-                      placeholder="棋譜名を入力"
+                      placeholder="季譜名を入力"
                       style={inputStyle}
                     />
                     <button style={btnStyle} onClick={() => saveName(r.id)}>名前を保存</button>
                   </div>
-                  <div style={{ fontSize: 12, color: "#666" }}>棋譜ID: {r.id}</div>
+                  <div style={{ fontSize: 12, color: "#666" }}>季譜ID: {r.id}</div>
                   <div>
                     <button
                       style={btnStyle}
                       disabled={deletingId === r.id}
                       onClick={async () => {
-                        const ok = window.confirm("この棋譜を削除します。よろしいですか？");
+                        const ok = window.confirm("この季譜を削除します。よろしいですか？");
                         if (!ok) return;
                         setDeletingId(r.id);
                         setStatus("");
                         const { error } = await supabase.from("matches").delete().eq("id", r.id);
                         setDeletingId(null);
                         if (error) {
-                          setStatus(`棋譜の削除に失敗しました。詳細: ${error.message}`);
+                          setStatus(`季譜の削除に失敗しました。詳細: ${error.message}`);
                           return;
                         }
                         setRows(prev => {
                           const next = prev.filter(x => x.id !== r.id);
-                          setStatus(next.length === 0 ? "保存棋譜がまだありません。" : "");
+                          setStatus(next.length === 0 ? "保存季譜がまだありません。" : "");
                           return next;
                         });
                         setEditingIds(prev => {
@@ -262,7 +262,7 @@ export default function HistoryPage() {
                           delete nextNames[r.id];
                           setMatchNames(nextNames);
                           saveMatchNamesToSupabase(nextNames).then(res => {
-                            if (!res.ok) setStatus(`削除後の棋譜名保存に失敗しました。詳細: ${res.reason}`);
+                            if (!res.ok) setStatus(`削除後の季譜名保存に失敗しました。詳細: ${res.reason}`);
                           });
                         }
                         setStarred(prev => {

@@ -66,10 +66,10 @@ export default function Home() {
         {isLoggedIn && <Link href="/friends" style={linkStyle}>フレンド</Link>}
         {isLoggedIn && <Link href="/achievements" style={linkStyle}>アチーブメント</Link>}
         <Link href="/tutorial" style={linkStyle}>チュートリアル</Link>
-        <Link href="/history" style={linkStyle}>保存棋譜（ログイン時）</Link>
+        <Link href="/history" style={linkStyle}>保存季譜（ログイン時）</Link>
       </div>
       <p style={{ color: "#555", textAlign: "center" }}>
-        ※ログインは棋譜保存用。ログインなしでも対局できます。
+        ※ログインは季譜保存用。ログインなしでも対局できます。
       </p>
     </main>
   );

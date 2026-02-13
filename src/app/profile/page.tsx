@@ -33,7 +33,7 @@ type UserMeta = {
   profile_card_template?: string;
 };
 
-type CardTemplateId = "classic" | "lacquer" | "paper";
+type CardTemplateId = "classic" | "lacquer" | "paper" | "modern";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -212,7 +212,7 @@ export default function ProfilePage() {
     }
     return slots;
   }, [featuredRows]);
-  const isDarkCard = cardTemplate === "lacquer";
+  const isDarkCard = cardTemplate === "lacquer" || cardTemplate === "modern";
   const mutedTextColor = isDarkCard ? "rgba(255,245,230,0.85)" : "#555";
   const lightTextColor = isDarkCard ? "rgba(255,245,230,0.8)" : "#666";
   const equippedTitles = useMemo(() => {
@@ -248,9 +248,9 @@ export default function ProfilePage() {
         <div style={{ width: "100%", maxWidth: 760, fontSize: 14, color: "#666" }}>読み込み中...</div>
       )}
 
-      <section style={{ ...sectionStyle, ...profileCardTemplateStyles[cardTemplate] }}>
+      <section style={{ ...sectionStyle, ...profileCardBaseStyle, ...profileCardTemplateStyles[cardTemplate] }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <h2 style={{ margin: 0, fontSize: 20 }}>基本情報</h2>
+          <h2 style={{ margin: 0, fontSize: 20 }}>季士情報</h2>
           <button style={btnStyle} onClick={() => setProfileEditOpen(v => !v)}>
             {profileEditOpen ? "編集を閉じる" : "編集"}
           </button>
@@ -422,7 +422,7 @@ export default function ProfilePage() {
         </div>
         {clipsEditOpen && (
           <>
-            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, fontWeight: 700 }}>保存棋譜から選ぶ</div>
+            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, fontWeight: 700 }}>保存季譜から選ぶ</div>
             <ul style={{ display: "grid", gap: 8, width: "100%", paddingLeft: 18 }}>
               {rows.map(row => {
                 const selected = featuredIds.includes(row.id);
@@ -453,7 +453,7 @@ export default function ProfilePage() {
         <Link href="/friends" style={btnStyle}>フレンド</Link>
         <Link href="/achievements" style={btnStyle}>アチーブメント</Link>
         <Link href="/" style={btnStyle}>ホームへ戻る</Link>
-        <Link href="/history" style={btnStyle}>保存棋譜へ</Link>
+        <Link href="/history" style={btnStyle}>保存季譜へ</Link>
       </div>
 
       {status && (
@@ -607,8 +607,8 @@ const miniCellStyle: React.CSSProperties = {
 };
 
 const avatarStyle: React.CSSProperties = {
-  width: 96,
-  height: 96,
+  width: "clamp(74px, 18vw, 108px)",
+  aspectRatio: "1 / 1",
   borderRadius: "50%",
   border: "3px solid #8f6337",
   background: "linear-gradient(180deg, #f8e9d3 0%, #e7c39a 100%)",
@@ -616,13 +616,13 @@ const avatarStyle: React.CSSProperties = {
   display: "grid",
   placeItems: "center",
   fontWeight: 800,
-  fontSize: 34,
+  fontSize: "clamp(28px, 5vw, 36px)",
   boxShadow: "0 2px 0 rgba(90, 50, 20, 0.25)",
 };
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(72px, 96px) 1fr",
+  gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
   gap: 14,
   alignItems: "start",
 };
@@ -650,31 +650,51 @@ const hiddenFileInputStyle: React.CSSProperties = {
 };
 
 function parseTemplate(value: string | undefined): CardTemplateId {
-  if (value === "lacquer" || value === "paper") return value;
+  if (value === "lacquer" || value === "paper" || value === "modern") return value;
   return "classic";
 }
 
 const cardTemplateOptions: Array<{ id: CardTemplateId; label: string }> = [
-  { id: "classic", label: "Classic" },
-  { id: "lacquer", label: "Lacquer" },
-  { id: "paper", label: "Paper" },
+  { id: "classic", label: "金襴カード（和）" },
+  { id: "lacquer", label: "漆黒カード（和）" },
+  { id: "paper", label: "和紙カード（和）" },
+  { id: "modern", label: "モダンガラス（洋）" },
 ];
+
+const profileCardBaseStyle: React.CSSProperties = {
+  borderRadius: 22,
+  borderWidth: 2,
+  padding: "clamp(12px, 3vw, 20px)",
+  boxShadow: "0 12px 28px rgba(35, 20, 10, 0.14)",
+  overflow: "hidden",
+  position: "relative",
+};
 
 const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
   classic: {
-    background: "linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.62) 100%)",
+    background:
+      "radial-gradient(circle at 100% 0%, rgba(255,235,176,0.34) 0%, rgba(255,235,176,0) 46%), repeating-linear-gradient(45deg, rgba(197,148,74,0.18) 0px, rgba(197,148,74,0.18) 8px, rgba(245,227,182,0.3) 9px, rgba(245,227,182,0.3) 17px), linear-gradient(180deg, #fff8e8 0%, #f4e0b2 100%)",
+    borderColor: "#b98c46",
   },
   lacquer: {
-    background: "linear-gradient(135deg, rgba(77,36,24,0.9) 0%, rgba(124,74,48,0.82) 45%, rgba(204,150,105,0.8) 100%)",
+    background:
+      "radial-gradient(circle at 8% 8%, rgba(255,214,169,0.25) 0%, rgba(255,214,169,0) 38%), linear-gradient(135deg, #2f120a 0%, #5a2b1b 52%, #c48a52 100%)",
     color: "#fff7eb",
-    borderColor: "#6b3c26",
-    boxShadow: "inset 0 0 0 1px rgba(255,220,180,0.2), 0 6px 16px rgba(70,35,20,0.25)",
+    borderColor: "#6f3a1f",
+    boxShadow: "inset 0 0 0 1px rgba(255,220,180,0.24), 0 12px 26px rgba(50, 24, 12, 0.4)",
   },
   paper: {
     background:
-      "repeating-linear-gradient(0deg, rgba(255,252,245,0.95) 0px, rgba(255,252,245,0.95) 24px, rgba(236,226,209,0.95) 25px), linear-gradient(180deg, #faf2e4 0%, #efe3d0 100%)",
-    borderColor: "#b99f74",
-    boxShadow: "0 4px 0 rgba(140, 110, 70, 0.2)",
+      "radial-gradient(circle at 88% 12%, rgba(140,110,70,0.12) 0%, rgba(140,110,70,0) 42%), repeating-linear-gradient(0deg, rgba(255,252,245,0.96) 0px, rgba(255,252,245,0.96) 23px, rgba(233,223,205,0.92) 24px), linear-gradient(180deg, #fbf3e6 0%, #efe2cf 100%)",
+    borderColor: "#b59a72",
+    boxShadow: "inset 0 0 0 1px rgba(170,130,85,0.18), 0 8px 20px rgba(85,60,30,0.14)",
+  },
+  modern: {
+    background:
+      "radial-gradient(circle at 5% 0%, rgba(120,220,255,0.3) 0%, rgba(120,220,255,0) 45%), radial-gradient(circle at 100% 100%, rgba(255,120,180,0.24) 0%, rgba(255,120,180,0) 40%), linear-gradient(140deg, #131b2e 0%, #2a3552 46%, #4c5d86 100%)",
+    borderColor: "#5b6f9d",
+    color: "#ecf4ff",
+    boxShadow: "inset 0 0 0 1px rgba(213,233,255,0.22), 0 14px 30px rgba(24,33,56,0.4)",
   },
 };
 
