@@ -111,24 +111,25 @@ function findExtremeMove(board: number[], player: Player): number {
     if (res.ok && res.winner === player) return pos;
   }
 
-  // 相手次手で端3を作られる筋を先に封じる
-  const preventEdgeTripleMove = findPreventEdgeTripleThreatMove(board, player);
-  if (preventEdgeTripleMove !== null) return preventEdgeTripleMove;
-
-  // 端3連取を与える危険手を回避できるなら最優先で回避
-  const antiGiftMove = findAntiEdgeGiftMove(board, player);
-  if (antiGiftMove !== null) return antiGiftMove;
-
-  // 端3連取以上の危険局面は最優先で受ける
-  const emergencyEdgeMove = findEmergencyEdgeBreakMove(board, player);
-  if (emergencyEdgeMove !== null) return emergencyEdgeMove;
-
   // 端からの押し込み（横角定石含む）を優先して崩す
   const antiEdgeMove = findAntiEdgeSweepMove(board, player);
-  if (antiEdgeMove !== null) return antiEdgeMove;
+  // 角優先フェーズ前は使わない（角優先を死なせない）
+  if (antiEdgeMove !== null && isCornerPhaseSettled(board)) return antiEdgeMove;
 
   const preferredCorner = findPreferredCornerMove(board, player);
   if (preferredCorner !== null) return preferredCorner;
+
+  // 角優先フェーズが終わった後のみ、端連続取り対策を有効化
+  if (isCornerPhaseSettled(board)) {
+    const preventEdgeTripleMove = findPreventEdgeTripleThreatMove(board, player);
+    if (preventEdgeTripleMove !== null) return preventEdgeTripleMove;
+
+    const antiGiftMove = findAntiEdgeGiftMove(board, player);
+    if (antiGiftMove !== null) return antiGiftMove;
+
+    const emergencyEdgeMove = findEmergencyEdgeBreakMove(board, player);
+    if (emergencyEdgeMove !== null) return emergencyEdgeMove;
+  }
 
   return findHardMove(board, player);
 }
@@ -147,6 +148,10 @@ function oppositeCorner(pos: number): number | null {
   if (pos === idx(0, 4)) return idx(4, 0);
   if (pos === idx(4, 0)) return idx(0, 4);
   return null;
+}
+
+function isCornerPhaseSettled(board: number[]): boolean {
+  return CORNERS.every(pos => board[pos] !== 0);
 }
 
 function findPreferredCornerMove(board: number[], player: Player): number | null {
