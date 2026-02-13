@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
 
 export default function Home() {
   const [authLink, setAuthLink] = useState<{ href: string; label: string }>({
@@ -10,6 +11,7 @@ export default function Home() {
     label: "ログイン",
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [achievementNotice, setAchievementNotice] = useState(false);
 
   useEffect(() => {
     const refresh = async () => {
@@ -17,9 +19,12 @@ export default function Home() {
       if (!error && data.session?.user) {
         setAuthLink({ href: "/profile", label: "プロフィール" });
         setIsLoggedIn(true);
+        const ach = await loadAchievementStateForCurrentUser();
+        setAchievementNotice(Boolean(ach.ok && ach.claimableTitleIds.length > 0));
       } else {
         setAuthLink({ href: "/login", label: "ログイン" });
         setIsLoggedIn(false);
+        setAchievementNotice(false);
       }
     };
 
@@ -29,9 +34,13 @@ export default function Home() {
       if (session?.user) {
         setAuthLink({ href: "/profile", label: "プロフィール" });
         setIsLoggedIn(true);
+        loadAchievementStateForCurrentUser().then(ach => {
+          setAchievementNotice(Boolean(ach.ok && ach.claimableTitleIds.length > 0));
+        });
       } else {
         setAuthLink({ href: "/login", label: "ログイン" });
         setIsLoggedIn(false);
+        setAchievementNotice(false);
       }
     });
 
@@ -52,6 +61,21 @@ export default function Home() {
     textDecoration: "none",
   };
 
+  const noticeBadgeStyle: React.CSSProperties = {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 18,
+    height: 18,
+    borderRadius: "50%",
+    background: "#d33",
+    color: "#fff",
+    display: "grid",
+    placeItems: "center",
+    fontSize: 12,
+    fontWeight: 800,
+  };
+
   return (
     <main style={{ padding: 24, display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
@@ -64,7 +88,12 @@ export default function Home() {
         <Link href="/cpu" style={linkStyle}>CPU対戦</Link>
         <Link href={authLink.href} style={linkStyle}>{authLink.label}</Link>
         {isLoggedIn && <Link href="/friends" style={linkStyle}>フレンド</Link>}
-        {isLoggedIn && <Link href="/achievements" style={linkStyle}>アチーブメント</Link>}
+        {isLoggedIn && (
+          <Link href="/achievements" style={{ ...linkStyle, position: "relative" }}>
+            アチーブメント
+            {achievementNotice && <span style={noticeBadgeStyle}>!</span>}
+          </Link>
+        )}
         <Link href="/tutorial" style={linkStyle}>チュートリアル</Link>
         <Link href="/history" style={linkStyle}>保存季譜（ログイン時）</Link>
       </div>

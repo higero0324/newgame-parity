@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   buildAchievementProgress,
+  claimTitleForCurrentUser,
   getTitleById,
   loadAchievementStateForCurrentUser,
   type TitleDef,
@@ -14,6 +15,7 @@ export default function AchievementsPage() {
   const [status, setStatus] = useState("読み込み中...");
   const [unlockedTitleIds, setUnlockedTitleIds] = useState<string[]>([]);
   const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
+  const [claimableTitleIds, setClaimableTitleIds] = useState<string[]>([]);
   const [statsLoaded, setStatsLoaded] = useState<{
     cpu_wins: { easy: number; medium: number; hard: number; extreme: number };
     total_cpu_wins: number;
@@ -29,6 +31,7 @@ export default function AchievementsPage() {
       }
       setUnlockedTitleIds(loaded.unlockedTitleIds);
       setEquippedTitleIds(loaded.equippedTitleIds);
+      setClaimableTitleIds(loaded.claimableTitleIds);
       setStatsLoaded(loaded.stats);
       setStatus("");
     })();
@@ -42,6 +45,24 @@ export default function AchievementsPage() {
     if (!statsLoaded) return [];
     return buildAchievementProgress(statsLoaded, unlockedTitleIds);
   }, [statsLoaded, unlockedTitleIds]);
+
+  const claim = async (titleId: string) => {
+    const res = await claimTitleForCurrentUser(titleId);
+    if (!res.ok) {
+      setStatus(`称号の回収に失敗しました。詳細: ${res.reason}`);
+      return;
+    }
+    const loaded = await loadAchievementStateForCurrentUser();
+    if (!loaded.ok) {
+      setStatus(`再読み込みに失敗しました。詳細: ${loaded.reason}`);
+      return;
+    }
+    setUnlockedTitleIds(loaded.unlockedTitleIds);
+    setEquippedTitleIds(loaded.equippedTitleIds);
+    setClaimableTitleIds(loaded.claimableTitleIds);
+    setStatsLoaded(loaded.stats);
+    setStatus("称号を回収しました。");
+  };
 
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
@@ -66,7 +87,12 @@ export default function AchievementsPage() {
 
       <section style={sectionStyle}>
         <h2 style={{ margin: 0, fontSize: 18 }}>達成状況</h2>
-        <div style={{ fontSize: 14, color: "#555" }}>解除済み: {unlockedTitleIds.length} / {progressList.length}</div>
+        <div style={{ fontSize: 14, color: "#555" }}>回収済み: {unlockedTitleIds.length} / {progressList.length}</div>
+        {claimableTitleIds.length > 0 && (
+          <div style={{ fontSize: 13, color: "#8b3d4d", fontWeight: 700 }}>
+            回収待ちの称号があります（{claimableTitleIds.length}件）
+          </div>
+        )}
         <div style={{ display: "grid", gap: 8 }}>
           {progressList.map(item => (
             <div key={item.id} style={achievementCardStyle}>
@@ -89,8 +115,13 @@ export default function AchievementsPage() {
                 />
               </div>
               <div style={{ fontSize: 12, color: "#555" }}>
-                {item.done ? "達成済み" : `${item.progress} / ${item.target}`}
+                {!item.done ? `${item.progress} / ${item.target}` : item.claimed ? "達成・回収済み" : "達成済み（未回収）"}
               </div>
+              {item.done && !item.claimed && (
+                <button style={claimButtonStyle} onClick={() => claim(item.title.id)}>
+                  称号を回収
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -149,6 +180,17 @@ const progressFillStyle: React.CSSProperties = {
   height: "100%",
   borderRadius: 999,
   transition: "width 220ms ease",
+};
+
+const claimButtonStyle: React.CSSProperties = {
+  justifySelf: "start",
+  padding: "6px 10px",
+  borderRadius: 10,
+  border: "1px solid #a1643f",
+  background: "linear-gradient(180deg, #fff5e3 0%, #f1d3a8 100%)",
+  color: "#5c3514",
+  cursor: "pointer",
+  fontWeight: 700,
 };
 
 const titleChipStyleBase: React.CSSProperties = {

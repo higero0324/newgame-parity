@@ -137,8 +137,8 @@ export default function FriendProfilePage() {
         <div style={profileTopStyle}>
           <Avatar iconText={profile?.icon_text ?? ""} iconImageDataUrl={profile?.icon_image_data_url ?? ""} displayName={displayName} />
           <div style={{ display: "grid", gap: 6 }}>
-            <div style={{ fontSize: 22, fontWeight: 800, overflowWrap: "anywhere" }}>{displayName}</div>
-            <div style={{ fontSize: 14, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
+            <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
+            <div style={{ ...profileStatusTextStyle, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
             {isFriend && equippedTitles.length > 0 && (
@@ -166,7 +166,7 @@ export default function FriendProfilePage() {
                 ))}
               </div>
             )}
-            <div style={{ fontSize: 13, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
+            <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
           </div>
         </div>
       </section>
@@ -323,6 +323,7 @@ const profileCardBaseStyle: React.CSSProperties = {
   boxShadow: "0 12px 28px rgba(35, 20, 10, 0.14)",
   overflow: "hidden",
   position: "relative",
+  containerType: "inline-size",
 };
 
 const profileCardClosedShapeStyle: React.CSSProperties = {
@@ -369,9 +370,9 @@ const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
 };
 
 const titleChipStyleBase: React.CSSProperties = {
-  padding: "4px 10px",
+  padding: "clamp(3px, 0.8vw, 6px) clamp(8px, 1.6vw, 12px)",
   borderRadius: 999,
-  fontSize: 12,
+  fontSize: "clamp(11px, 1.5vw, 13px)",
   fontWeight: 700,
   border: "1px solid transparent",
   width: "fit-content",
@@ -440,3 +441,19 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
   }
   return titleChipByRarity[title.rarity];
 }
+
+const profileNameTextStyle: React.CSSProperties = {
+  fontSize: "clamp(18px, 3.4vw, 24px)",
+  fontWeight: 800,
+  lineHeight: 1.2,
+};
+
+const profileStatusTextStyle: React.CSSProperties = {
+  fontSize: "clamp(12px, 2.2vw, 15px)",
+  lineHeight: 1.45,
+};
+
+const profileMetaTextStyle: React.CSSProperties = {
+  fontSize: "clamp(11px, 1.8vw, 13px)",
+  lineHeight: 1.4,
+};

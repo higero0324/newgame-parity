@@ -31,6 +31,7 @@ export type AchievementProgress = {
   description: string;
   title: TitleDef;
   done: boolean;
+  claimed: boolean;
   progress: number;
   target: number;
 };
@@ -189,13 +190,15 @@ export function buildAchievementProgress(stats: AchievementStats, unlockedTitleI
     }
     const target = def.target(stats);
     const current = achievementCurrentValue(def, stats);
-    const done = unlockedSet.has(def.title_id) || current >= target;
+    const done = current >= target;
+    const claimed = unlockedSet.has(def.title_id);
     return {
       id: def.id,
       name: def.name,
       description: def.description,
       title,
       done,
+      claimed,
       progress: Math.min(current, target),
       target,
     };
@@ -206,11 +209,11 @@ export async function loadAchievementStateForCurrentUser() {
   const loaded = await loadRowForCurrentUser();
   if (!loaded.ok) return loaded;
   const stats = normalizeStats(loaded.row.achievement_stats);
-  const fromDbUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
-  const autoUnlocked = achievedTitleIds(stats);
-  const unlocked = Array.from(new Set([...fromDbUnlocked, ...autoUnlocked]));
+  const unlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
+  const achieved = achievedTitleIds(stats);
+  const claimableTitleIds = achieved.filter(id => !unlocked.includes(id));
   const equipped = clampEquipped(unlocked, normalizeStringArray(loaded.row.equipped_title_ids));
-  return { ok: true as const, stats, unlockedTitleIds: unlocked, equippedTitleIds: equipped };
+  return { ok: true as const, stats, unlockedTitleIds: unlocked, equippedTitleIds: equipped, claimableTitleIds };
 }
 
 export async function recordCpuWinForCurrentUser(level: AchievementCpuLevel, userWon: boolean, noUndoUsed = true) {
@@ -223,15 +226,8 @@ export async function recordCpuWinForCurrentUser(level: AchievementCpuLevel, use
   stats.cpu_wins[level] += 1;
   stats.total_cpu_wins = stats.cpu_wins.easy + stats.cpu_wins.medium + stats.cpu_wins.hard + stats.cpu_wins.extreme;
 
-  const prevUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
-  const nowUnlocked = Array.from(new Set([...prevUnlocked, ...achievedTitleIds(stats)]));
-  const newlyUnlocked = nowUnlocked.filter(id => !prevUnlocked.includes(id));
-
+  const nowUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
   const equipped = clampEquipped(nowUnlocked, normalizeStringArray(loaded.row.equipped_title_ids));
-  for (const titleId of nowUnlocked) {
-    if (equipped.length >= 2) break;
-    if (!equipped.includes(titleId)) equipped.push(titleId);
-  }
 
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -244,7 +240,7 @@ export async function recordCpuWinForCurrentUser(level: AchievementCpuLevel, use
     { onConflict: "user_id" },
   );
   if (error) return { ok: false as const, reason: error.message };
-  return { ok: true as const, unlockedNow: newlyUnlocked };
+  return { ok: true as const, unlockedNow: [] as string[] };
 }
 
 export async function recordSavedMatchForCurrentUser() {
@@ -253,8 +249,7 @@ export async function recordSavedMatchForCurrentUser() {
   const stats = normalizeStats(loaded.row.achievement_stats);
   stats.saved_matches += 1;
 
-  const prevUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
-  const nowUnlocked = Array.from(new Set([...prevUnlocked, ...achievedTitleIds(stats)]));
+  const nowUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
   const equipped = clampEquipped(nowUnlocked, normalizeStringArray(loaded.row.equipped_title_ids));
 
   const { error } = await supabase.from("profiles").upsert(
@@ -275,7 +270,7 @@ export async function saveEquippedTitlesForCurrentUser(equippedTitleIds: string[
   const loaded = await loadRowForCurrentUser();
   if (!loaded.ok) return loaded;
   const stats = normalizeStats(loaded.row.achievement_stats);
-  const unlocked = Array.from(new Set([...normalizeStringArray(loaded.row.unlocked_title_ids), ...achievedTitleIds(stats)]));
+  const unlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
   const equipped = clampEquipped(unlocked, normalizeStringArray(equippedTitleIds));
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -283,6 +278,34 @@ export async function saveEquippedTitlesForCurrentUser(equippedTitleIds: string[
       friend_id: loaded.auth.friendId,
       equipped_title_ids: equipped,
       unlocked_title_ids: unlocked,
+      achievement_stats: stats,
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) return { ok: false as const, reason: error.message };
+  return { ok: true as const };
+}
+
+export async function claimTitleForCurrentUser(titleId: string) {
+  const loaded = await loadRowForCurrentUser();
+  if (!loaded.ok) return loaded;
+  const stats = normalizeStats(loaded.row.achievement_stats);
+  const achieved = achievedTitleIds(stats);
+  if (!achieved.includes(titleId)) {
+    return { ok: false as const, reason: "この称号はまだ達成条件を満たしていません。" };
+  }
+
+  const unlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
+  if (!unlocked.includes(titleId)) unlocked.push(titleId);
+  const equipped = clampEquipped(unlocked, normalizeStringArray(loaded.row.equipped_title_ids));
+  if (equipped.length < 2 && !equipped.includes(titleId)) equipped.push(titleId);
+
+  const { error } = await supabase.from("profiles").upsert(
+    {
+      user_id: loaded.auth.userId,
+      friend_id: loaded.auth.friendId,
+      unlocked_title_ids: unlocked,
+      equipped_title_ids: equipped,
       achievement_stats: stats,
     },
     { onConflict: "user_id" },

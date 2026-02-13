@@ -59,6 +59,7 @@ export default function ProfilePage() {
   const [cardTemplate, setCardTemplate] = useState<CardTemplateId>("classic");
   const [unlockedTitleIds, setUnlockedTitleIds] = useState<string[]>([]);
   const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
+  const [achievementNotice, setAchievementNotice] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -99,6 +100,7 @@ export default function ProfilePage() {
         if (ach.ok) {
           setUnlockedTitleIds(ach.unlockedTitleIds);
           setEquippedTitleIds(ach.equippedTitleIds);
+          setAchievementNotice(ach.claimableTitleIds.length > 0);
         }
 
         const { data, error } = await supabase
@@ -266,8 +268,8 @@ export default function ProfilePage() {
         <div style={profileTopStyle}>
           <Avatar iconText={iconText} iconImageDataUrl={iconImageDataUrl} displayName={displayName} email={email} />
           <div style={{ display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }}>
-            <div style={{ fontSize: 22, fontWeight: 800 }}>{displayName || "（未設定）"}</div>
-            <div style={{ fontSize: 14, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
+            <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
+            <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
             {equippedTitles.length > 0 && (
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {equippedTitles.map(title => (
@@ -279,7 +281,7 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-        <div style={{ fontSize: 13, color: lightTextColor }}>ログイン中: {email || "(不明)"}</div>
+        <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>ログイン中: {email || "(不明)"}</div>
         {profileEditOpen && (
           <div style={{ display: "grid", gap: 8, borderTop: "1px solid var(--line)", paddingTop: 10 }}>
             <label style={{ display: "grid", gap: 6 }}>
@@ -459,7 +461,10 @@ export default function ProfilePage() {
           {loggingOut ? "ログアウト中..." : "ログアウト"}
         </button>
         <Link href="/friends" style={btnStyle}>フレンド</Link>
-        <Link href="/achievements" style={btnStyle}>アチーブメント</Link>
+        <Link href="/achievements" style={{ ...btnStyle, position: "relative" }}>
+          アチーブメント
+          {achievementNotice && <span style={noticeBadgeStyle}>!</span>}
+        </Link>
         <Link href="/" style={btnStyle}>ホームへ戻る</Link>
         <Link href="/history" style={btnStyle}>保存季譜へ</Link>
       </div>
@@ -566,6 +571,21 @@ const btnStyle: React.CSSProperties = {
   textDecoration: "none",
   color: "var(--ink)",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
+};
+
+const noticeBadgeStyle: React.CSSProperties = {
+  position: "absolute",
+  top: -6,
+  right: -6,
+  width: 18,
+  height: 18,
+  borderRadius: "50%",
+  background: "#d33",
+  color: "#fff",
+  display: "grid",
+  placeItems: "center",
+  fontSize: 12,
+  fontWeight: 800,
 };
 
 const inputStyle: React.CSSProperties = {
@@ -677,6 +697,7 @@ const profileCardBaseStyle: React.CSSProperties = {
   boxShadow: "0 12px 28px rgba(35, 20, 10, 0.14)",
   overflow: "hidden",
   position: "relative",
+  containerType: "inline-size",
 };
 
 const profileCardClosedShapeStyle: React.CSSProperties = {
@@ -743,9 +764,9 @@ const templateChipActiveStyle: React.CSSProperties = {
 };
 
 const titleChipStyleBase: React.CSSProperties = {
-  padding: "4px 10px",
+  padding: "clamp(3px, 0.8vw, 6px) clamp(8px, 1.6vw, 12px)",
   borderRadius: 999,
-  fontSize: 12,
+  fontSize: "clamp(11px, 1.5vw, 13px)",
   fontWeight: 700,
   border: "1px solid transparent",
   width: "fit-content",
@@ -800,3 +821,19 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
   }
   return titleChipByRarity[title.rarity];
 }
+
+const profileNameTextStyle: React.CSSProperties = {
+  fontSize: "clamp(18px, 3.4vw, 24px)",
+  fontWeight: 800,
+  lineHeight: 1.2,
+};
+
+const profileStatusTextStyle: React.CSSProperties = {
+  fontSize: "clamp(12px, 2.2vw, 15px)",
+  lineHeight: 1.45,
+};
+
+const profileMetaTextStyle: React.CSSProperties = {
+  fontSize: "clamp(11px, 1.8vw, 13px)",
+  lineHeight: 1.4,
+};
