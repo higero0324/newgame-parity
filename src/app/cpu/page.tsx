@@ -6,6 +6,8 @@ import Board from "@/components/Board";
 import { applyMove, emptyBoard, getAllWinningLines, type Player } from "@/lib/gameLogic";
 import { findCpuMove, type CpuLevel } from "@/lib/cpuPlayer";
 import { calculateAnimationDuration } from "@/lib/animationTiming";
+import { saveMatchToSupabase, type MoveRecord } from "@/lib/saveMatch";
+import { loadCurrentProfilePrefsFromProfiles } from "@/lib/profilePrefs";
 
 type Snapshot = {
   board: number[];
@@ -30,6 +32,8 @@ export default function PlayCpuPage() {
   const [winningLine, setWinningLine] = useState<Set<number>>(new Set());
   const [msg, setMsg] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [moves, setMoves] = useState<MoveRecord[]>([]);
+  const [saving, setSaving] = useState(false);
   const lastMoveRef = useRef<LastMove | null>(null);
 
   useEffect(() => {
@@ -62,6 +66,8 @@ export default function PlayCpuPage() {
             setHistory(prev => [...prev, { board: res.newBoard, turn: nextTurn }]);
             setLastChanged(new Set(res.changed.map(x => x.i)));
             setLastPlaced(pos);
+            const ply = moves.length + 1;
+            setMoves(prev => [...prev, { ply, player: cpuSide, pos, diff: res.changed, board_after: res.newBoard }]);
             if (res.winner) {
               setWinner(res.winner);
               setMsg(res.winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！");
@@ -92,6 +98,9 @@ export default function PlayCpuPage() {
     setLastPlaced(pos);
     setMsg("");
 
+    const ply = moves.length + 1;
+    setMoves(prev => [...prev, { ply, player: playerSide, pos, diff: res.changed, board_after: res.newBoard }]);
+
     if (res.winner) {
       setWinner(res.winner);
       setMsg(res.winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！");
@@ -105,6 +114,7 @@ export default function PlayCpuPage() {
     if (winner) setWinner(null);
     const stepsBack = history.length > 2 && current.turn === playerSide ? 2 : 1;
     setHistory(prev => prev.slice(0, -stepsBack));
+    setMoves(prev => prev.slice(0, -stepsBack));
     setLastChanged(new Set());
     setLastPlaced(undefined);
     setWinningLine(new Set());
@@ -121,8 +131,42 @@ export default function PlayCpuPage() {
     setWinningLine(new Set());
     setMsg("");
     setThinking(false);
+    setMoves([]);
     lastMoveRef.current = null;
     setPlayerSide(null);
+  };
+
+  const save = async () => {
+    if (!winner) {
+      setMsg("勝負が決まってから保存できます。");
+      return;
+    }
+
+    setSaving(true);
+    const protectedIdsSet = new Set<string>();
+    try {
+      const loaded = await loadCurrentProfilePrefsFromProfiles();
+      if (loaded.ok) {
+        for (const id of loaded.prefs.starredIds) protectedIdsSet.add(id);
+        for (const id of loaded.prefs.featuredIds) protectedIdsSet.add(id);
+      }
+    } catch {
+      // ignore
+    }
+
+    const res = await saveMatchToSupabase({
+      winner,
+      final_board: current.board,
+      moves,
+      protectedMatchIds: Array.from(protectedIdsSet),
+    });
+    setSaving(false);
+
+    if (!res.ok) {
+      setMsg(res.reason);
+      return;
+    }
+    setMsg(res.warning ? `保存しました（棋譟ID: ${res.matchId}）。${res.warning}` : `保存しました（棋譟ID: ${res.matchId}）`);
   };
 
   const levelLabels = {
@@ -272,6 +316,9 @@ export default function PlayCpuPage() {
               : thinking ? "CPUが考え中..." : "あなたの手番"}
           </div>
           <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
+          <button onClick={save} disabled={!winner || saving} style={btnStyle}>
+            {saving ? "保存中..." : "棋譟を保存"}
+          </button>
           <button onClick={reset} style={btnStyle}>リセット</button>
           <Link href="/" style={btnStyle}>ホームへ戻る</Link>
         </div>
@@ -286,9 +333,12 @@ export default function PlayCpuPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
-            <button onClick={reset} style={btnStyle}>リセット</button>
+            <button onClick={save} disabled={!winner || saving} style={btnStyle}>
+              {saving ? "保存中..." : "棋譟を保存"}
+            </button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <button onClick={reset} style={btnStyle}>リセット</button>
             <Link href="/" style={{ ...btnStyle, textAlign: "center" }}>ホームへ戻る</Link>
           </div>
         </div>
