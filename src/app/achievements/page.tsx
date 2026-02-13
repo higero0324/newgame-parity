@@ -98,7 +98,7 @@ export default function AchievementsPage() {
             <div
               key={item.id}
               style={{
-                ...achievementCardStyleFor(item.title.rarity),
+                ...achievementCardStyle,
                 ...(item.done && !item.claimed ? achievementClaimableCardStyle : null),
               }}
               onClick={() => {
@@ -166,21 +166,14 @@ const btnStyle: React.CSSProperties = {
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
 };
 
-const achievementCardStyleBase: React.CSSProperties = {
+const achievementCardStyle: React.CSSProperties = {
   border: "1px solid var(--line)",
+  borderRadius: 10,
   padding: 10,
   background: "rgba(255,255,255,0.72)",
   display: "grid",
   gap: 6,
 };
-
-function achievementCardStyleFor(rarity: TitleRarity): React.CSSProperties {
-  const isLower = rarity === "bronze" || rarity === "silver";
-  return {
-    ...achievementCardStyleBase,
-    borderRadius: isLower ? 18 : 8,
-  };
-}
 
 const achievementClaimableCardStyle: React.CSSProperties = {
   cursor: "pointer",
@@ -241,7 +234,12 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
       background: "linear-gradient(180deg, #ffe6ef 0%, #f7bfd1 100%)",
       color: "#6f2d43",
       borderColor: "#d78ea8",
+      borderRadius: 999,
     };
   }
-  return titleChipByRarity[title.rarity];
+  const isUpper = title.rarity === "gold" || title.rarity === "obsidian";
+  return {
+    ...titleChipByRarity[title.rarity],
+    borderRadius: isUpper ? 8 : 999,
+  };
 }

@@ -160,7 +160,7 @@ export default function FriendProfilePage() {
                         ...cardTitleChipAdaptiveStyle,
                         ...titleChipButtonStyle,
                         ...titleChipStyleFor(title),
-                        ...titleChipUpperDisplayStyle,
+                        ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : titleChipLowerDisplayStyle),
                       }}
                       aria-expanded={openTitleId === title.id}
                     >
@@ -446,9 +446,13 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
       background: "linear-gradient(180deg, #ffe6ef 0%, #f7bfd1 100%)",
       color: "#6f2d43",
       borderColor: "#d78ea8",
+      borderRadius: 999,
     };
   }
-  return titleChipByRarity[title.rarity];
+  return {
+    ...titleChipByRarity[title.rarity],
+    borderRadius: isUpperTitle(title) ? 8 : 999,
+  };
 }
 
 function isUpperTitle(title: TitleDef): boolean {
@@ -492,6 +496,13 @@ const titleChipUpperDisplayStyle: React.CSSProperties = {
   lineHeight: 1.25,
   width: "100%",
   minWidth: 0,
+  textAlign: "center",
+  boxSizing: "border-box",
+};
+
+const titleChipLowerDisplayStyle: React.CSSProperties = {
+  width: "fit-content",
+  maxWidth: "100%",
   textAlign: "center",
   boxSizing: "border-box",
 };
