@@ -6,6 +6,7 @@ import {
   buildAchievementProgress,
   getTitleById,
   loadAchievementStateForCurrentUser,
+  type TitleDef,
   type TitleRarity,
 } from "@/lib/achievements";
 
@@ -52,7 +53,7 @@ export default function AchievementsPage() {
         {equippedTitles.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {equippedTitles.map(title => (
-              <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipByRarity[title.rarity] }}>
+              <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipStyleFor(title) }}>
                 {title.name}
               </span>
             ))}
@@ -74,7 +75,7 @@ export default function AchievementsPage() {
                   <b>{item.name}</b>
                   <span style={{ fontSize: 13, color: "#666" }}>{item.description}</span>
                 </div>
-                <span style={{ ...titleChipStyleBase, ...titleChipByRarity[item.title.rarity] }}>
+                <span style={{ ...titleChipStyleBase, ...titleChipStyleFor(item.title) }}>
                   {item.title.name}
                 </span>
               </div>
@@ -182,3 +183,14 @@ const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
     boxShadow: "inset 0 0 0 1px rgba(255,230,180,0.25)",
   },
 };
+
+function titleChipStyleFor(title: TitleDef): React.CSSProperties {
+  if (title.id === "rookie_winner") {
+    return {
+      background: "linear-gradient(180deg, #ffe6ef 0%, #f7bfd1 100%)",
+      color: "#6f2d43",
+      borderColor: "#d78ea8",
+    };
+  }
+  return titleChipByRarity[title.rarity];
+}

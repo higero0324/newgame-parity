@@ -37,6 +37,7 @@ export default function PlayCpuPage() {
   const [saving, setSaving] = useState(false);
   const lastMoveRef = useRef<LastMove | null>(null);
   const resultRecordedRef = useRef(false);
+  const usedUndoThisMatchRef = useRef(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -78,7 +79,7 @@ export default function PlayCpuPage() {
               if (!resultRecordedRef.current) {
                 resultRecordedRef.current = true;
                 const userWon = res.winner === playerSide;
-                recordCpuWinForCurrentUser(cpuLevel, userWon).catch(() => {
+                recordCpuWinForCurrentUser(cpuLevel, userWon, !usedUndoThisMatchRef.current).catch(() => {
                   // ignore
                 });
               }
@@ -118,7 +119,7 @@ export default function PlayCpuPage() {
       if (!resultRecordedRef.current) {
         resultRecordedRef.current = true;
         const userWon = res.winner === playerSide;
-        recordCpuWinForCurrentUser(cpuLevel, userWon).catch(() => {
+        recordCpuWinForCurrentUser(cpuLevel, userWon, !usedUndoThisMatchRef.current).catch(() => {
           // ignore
         });
       }
@@ -127,6 +128,11 @@ export default function PlayCpuPage() {
 
   const undo = () => {
     if (history.length <= 1) return;
+    if (!usedUndoThisMatchRef.current) {
+      const ok = window.confirm("この試合はアチーブメントに記録されませんが、本当によろしいですか？");
+      if (!ok) return;
+      usedUndoThisMatchRef.current = true;
+    }
     if (winner) setWinner(null);
     const stepsBack = history.length > 2 && current.turn === playerSide ? 2 : 1;
     setHistory(prev => prev.slice(0, -stepsBack));
@@ -151,6 +157,7 @@ export default function PlayCpuPage() {
     setMoves([]);
     lastMoveRef.current = null;
     resultRecordedRef.current = false;
+    usedUndoThisMatchRef.current = false;
     setPlayerSide(null);
   };
 

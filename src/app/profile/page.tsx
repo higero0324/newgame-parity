@@ -16,6 +16,7 @@ import {
   getTitleById,
   loadAchievementStateForCurrentUser,
   saveEquippedTitlesForCurrentUser,
+  type TitleDef,
   type TitleRarity,
 } from "@/lib/achievements";
 
@@ -270,7 +271,7 @@ export default function ProfilePage() {
             {equippedTitles.length > 0 && (
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {equippedTitles.map(title => (
-                  <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipByRarity[title.rarity] }}>
+                  <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipStyleFor(title) }}>
                     {title.name}
                   </span>
                 ))}
@@ -329,7 +330,7 @@ export default function ProfilePage() {
                       style={{
                         ...titleSelectButtonStyle,
                         ...(selected ? titleSelectButtonActiveStyle : null),
-                        ...titleChipByRarity[title.rarity],
+                        ...titleChipStyleFor(title),
                       }}
                       onClick={() => {
                         if (selected) {
@@ -788,3 +789,14 @@ const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
     boxShadow: "inset 0 0 0 1px rgba(255,230,180,0.25)",
   },
 };
+
+function titleChipStyleFor(title: TitleDef): React.CSSProperties {
+  if (title.id === "rookie_winner") {
+    return {
+      background: "linear-gradient(180deg, #ffe6ef 0%, #f7bfd1 100%)",
+      color: "#6f2d43",
+      borderColor: "#d78ea8",
+    };
+  }
+  return titleChipByRarity[title.rarity];
+}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { getTitleById, type TitleRarity } from "@/lib/achievements";
+import { getTitleById, type TitleDef, type TitleRarity } from "@/lib/achievements";
 
 type ProfileRow = {
   user_id: string;
@@ -151,7 +151,7 @@ export default function FriendProfilePage() {
                         event.stopPropagation();
                         setOpenTitleId(prev => (prev === title.id ? null : title.id));
                       }}
-                      style={{ ...titleChipStyleBase, ...titleChipButtonStyle, ...titleChipByRarity[title.rarity] }}
+                      style={{ ...titleChipStyleBase, ...titleChipButtonStyle, ...titleChipStyleFor(title) }}
                       aria-expanded={openTitleId === title.id}
                     >
                       {title.name}
@@ -429,3 +429,14 @@ const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
     boxShadow: "inset 0 0 0 1px rgba(255,230,180,0.25)",
   },
 };
+
+function titleChipStyleFor(title: TitleDef): React.CSSProperties {
+  if (title.id === "rookie_winner") {
+    return {
+      background: "linear-gradient(180deg, #ffe6ef 0%, #f7bfd1 100%)",
+      color: "#6f2d43",
+      borderColor: "#d78ea8",
+    };
+  }
+  return titleChipByRarity[title.rarity];
+}

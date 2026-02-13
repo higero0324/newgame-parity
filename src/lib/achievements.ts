@@ -49,31 +49,31 @@ const EMPTY_STATS: AchievementStats = {
 };
 
 const TITLE_DEFS: TitleDef[] = [
-  { id: "rookie_winner", name: "春の訪れ", rarity: "bronze", description: "CPU戦で1回勝利" },
-  { id: "easy_hunter", name: "花の便り", rarity: "bronze", description: "初級に5回勝利" },
-  { id: "medium_breaker", name: "氷菓も溶ける頃", rarity: "silver", description: "中級に5回勝利" },
-  { id: "hard_striker", name: "枯れ葉も風情", rarity: "gold", description: "上級に3回勝利" },
-  { id: "hard_master", name: "紅に染まる河川", rarity: "gold", description: "上級に10回勝利" },
-  { id: "extreme_slayer", name: "まるで銀世界", rarity: "gold", description: "極級に1回勝利" },
-  { id: "extreme_emperor", name: "雪月花", rarity: "obsidian", description: "極級に5回勝利" },
-  { id: "cpu_veteran", name: "研鑽", rarity: "silver", description: "CPU戦で通算30勝" },
-  { id: "cpu_legend", name: "百戦錬磨", rarity: "obsidian", description: "CPU戦で通算100勝" },
-  { id: "record_keeper", name: "文箱の若芽", rarity: "bronze", description: "季譜を1件保存" },
-  { id: "archive_lord", name: "一冊を綴る", rarity: "silver", description: "季譜を10件保存" },
+  { id: "rookie_winner", name: "桜咲く", rarity: "bronze", description: "手を戻さずCPU戦で1勝" },
+  { id: "easy_hunter", name: "若葉の季士", rarity: "bronze", description: "手を戻さず初級に5勝" },
+  { id: "medium_breaker", name: "火もまた涼し", rarity: "silver", description: "手を戻さず中級に5勝" },
+  { id: "hard_striker", name: "秋の静けさ", rarity: "gold", description: "手を戻さず上級に3勝" },
+  { id: "hard_master", name: "紅一点", rarity: "gold", description: "手を戻さず上級に10勝" },
+  { id: "extreme_slayer", name: "雪化粧", rarity: "gold", description: "手を戻さず極級に1勝" },
+  { id: "extreme_emperor", name: "夜と雪月花", rarity: "obsidian", description: "手を戻さず極級に5勝" },
+  { id: "cpu_veteran", name: "日々研鑽", rarity: "silver", description: "手を戻さずCPU戦で通算30勝" },
+  { id: "cpu_legend", name: "百戦錬磨", rarity: "obsidian", description: "手を戻さずCPU戦で通算100勝" },
+  { id: "record_keeper", name: "初心な思い出", rarity: "bronze", description: "季譜を1件保存" },
+  { id: "archive_lord", name: "辿る旅路", rarity: "silver", description: "季譜を10件保存" },
 ];
 
 const TITLE_MAP = new Map(TITLE_DEFS.map(x => [x.id, x]));
 
 const ACHIEVEMENT_DEFS: AchievementDef[] = [
-  { id: "cpu_first_win", name: "春の訪れ", description: "CPU戦で1回勝利", title_id: "rookie_winner", target: () => 1 },
-  { id: "easy_5", name: "花の便り", description: "初級に5回勝利", title_id: "easy_hunter", target: s => s.cpu_wins.easy >= 5 ? 5 : 5 },
-  { id: "medium_5", name: "氷菓も溶ける頃", description: "中級に5回勝利", title_id: "medium_breaker", target: () => 5 },
-  { id: "hard_3", name: "枯れ葉も風情", description: "上級に3回勝利", title_id: "hard_striker", target: () => 3 },
-  { id: "hard_10", name: "紅に染まる河川", description: "上級に10回勝利", title_id: "hard_master", target: () => 10 },
-  { id: "extreme_1", name: "まるで銀世界", description: "極級に1回勝利", title_id: "extreme_slayer", target: () => 1 },
-  { id: "extreme_5", name: "雪月花", description: "極級に5回勝利", title_id: "extreme_emperor", target: () => 5 },
-  { id: "cpu_total_30", name: "研鑽", description: "CPU戦で通算30勝", title_id: "cpu_veteran", target: () => 30 },
-  { id: "cpu_total_100", name: "百戦錬磨", description: "CPU戦で通算100勝", title_id: "cpu_legend", target: () => 100 },
+  { id: "cpu_first_win", name: "春の訪れ", description: "手を戻さずCPU戦で1勝", title_id: "rookie_winner", target: () => 1 },
+  { id: "easy_5", name: "花の便り", description: "手を戻さず初級に5勝", title_id: "easy_hunter", target: () => 5 },
+  { id: "medium_5", name: "氷菓も溶ける頃", description: "手を戻さず中級に5勝", title_id: "medium_breaker", target: () => 5 },
+  { id: "hard_3", name: "枯れ葉も風情", description: "手を戻さず上級に3勝", title_id: "hard_striker", target: () => 3 },
+  { id: "hard_10", name: "紅に染まる河川", description: "手を戻さず上級に10勝", title_id: "hard_master", target: () => 10 },
+  { id: "extreme_1", name: "まるで銀世界", description: "手を戻さず極級に1勝", title_id: "extreme_slayer", target: () => 1 },
+  { id: "extreme_5", name: "雪月花", description: "手を戻さず極級に5勝", title_id: "extreme_emperor", target: () => 5 },
+  { id: "cpu_total_30", name: "研鑽", description: "手を戻さずCPU戦で通算30勝", title_id: "cpu_veteran", target: () => 30 },
+  { id: "cpu_total_100", name: "百戦錬磨", description: "手を戻さずCPU戦で通算100勝", title_id: "cpu_legend", target: () => 100 },
   { id: "saved_10", name: "文箱の若芽", description: "季譜を1件保存", title_id: "record_keeper", target: () => 1 },
   { id: "saved_30", name: "一冊を綴る", description: "季譜を10件保存", title_id: "archive_lord", target: () => 10 },
 ];
@@ -213,8 +213,9 @@ export async function loadAchievementStateForCurrentUser() {
   return { ok: true as const, stats, unlockedTitleIds: unlocked, equippedTitleIds: equipped };
 }
 
-export async function recordCpuWinForCurrentUser(level: AchievementCpuLevel, userWon: boolean) {
+export async function recordCpuWinForCurrentUser(level: AchievementCpuLevel, userWon: boolean, noUndoUsed = true) {
   if (!userWon) return { ok: true as const, unlockedNow: [] as string[] };
+  if (!noUndoUsed) return { ok: true as const, unlockedNow: [] as string[] };
   const loaded = await loadRowForCurrentUser();
   if (!loaded.ok) return loaded;
 
