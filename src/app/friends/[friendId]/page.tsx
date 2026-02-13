@@ -141,6 +141,7 @@ export default function FriendProfilePage() {
             <div style={{ ...profileStatusTextStyle, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
+            <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
             {isFriend && equippedTitles.length > 0 && (
               <div
                 ref={titleAreaRef}
@@ -175,7 +176,6 @@ export default function FriendProfilePage() {
                 ))}
               </div>
             )}
-            <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
           </div>
         </div>
       </section>
@@ -481,7 +481,8 @@ const equippedTitleListStyle: React.CSSProperties = {
 const equippedTitleListUpperStyle: React.CSSProperties = {
   display: "grid",
   gap: 8,
-  justifyItems: "start",
+  justifyItems: "stretch",
+  width: "100%",
 };
 
 const titleChipUpperDisplayStyle: React.CSSProperties = {
@@ -489,8 +490,10 @@ const titleChipUpperDisplayStyle: React.CSSProperties = {
   padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
   fontSize: "clamp(13px, 2.5cqw, 16px)",
   lineHeight: 1.25,
-  minWidth: "min(100%, 220px)",
+  width: "100%",
+  minWidth: 0,
   textAlign: "center",
+  boxSizing: "border-box",
 };
 
 const cardTitleChipAdaptiveStyle: React.CSSProperties = {
