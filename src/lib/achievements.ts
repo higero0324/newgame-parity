@@ -49,31 +49,31 @@ const EMPTY_STATS: AchievementStats = {
 };
 
 const TITLE_DEFS: TitleDef[] = [
-  { id: "rookie_winner", name: "春告の一手", rarity: "bronze", description: "CPU戦で初勝利" },
-  { id: "easy_hunter", name: "花見の達人", rarity: "bronze", description: "初級に5勝" },
-  { id: "medium_breaker", name: "夏風の読み手", rarity: "silver", description: "中級に5勝" },
-  { id: "hard_striker", name: "月見の名手", rarity: "gold", description: "上級に3勝" },
-  { id: "hard_master", name: "紅葉の宗匠", rarity: "gold", description: "上級に10勝" },
-  { id: "extreme_slayer", name: "白暁の刃", rarity: "gold", description: "極級に1勝" },
-  { id: "extreme_emperor", name: "雪月花の覇者", rarity: "obsidian", description: "極級に5勝" },
-  { id: "cpu_veteran", name: "百戦錬磨", rarity: "silver", description: "CPU戦通算30勝" },
-  { id: "record_keeper", name: "書庫の若葉", rarity: "bronze", description: "季譜を10件保存" },
-  { id: "archive_lord", name: "雅文庫の主", rarity: "obsidian", description: "季譜を30件保存" },
+  { id: "rookie_winner", name: "春の訪れ", rarity: "bronze", description: "CPU戦で1回勝利" },
+  { id: "easy_hunter", name: "花の便り", rarity: "bronze", description: "初級に5回勝利" },
+  { id: "medium_breaker", name: "氷菓も溶ける頃", rarity: "silver", description: "中級に5回勝利" },
+  { id: "hard_striker", name: "枯れ葉もまたおかし", rarity: "gold", description: "上級に3回勝利" },
+  { id: "hard_master", name: "紅に染まる河川", rarity: "gold", description: "上級に10回勝利" },
+  { id: "extreme_slayer", name: "まるで銀世界", rarity: "gold", description: "極級に1回勝利" },
+  { id: "extreme_emperor", name: "雪月花", rarity: "obsidian", description: "極級に5回勝利" },
+  { id: "cpu_veteran", name: "研鑽", rarity: "silver", description: "CPU戦で通算30勝" },
+  { id: "record_keeper", name: "文箱の若芽", rarity: "bronze", description: "季譜を10件保存" },
+  { id: "archive_lord", name: "一冊を綴る", rarity: "obsidian", description: "季譜を30件保存" },
 ];
 
 const TITLE_MAP = new Map(TITLE_DEFS.map(x => [x.id, x]));
 
 const ACHIEVEMENT_DEFS: AchievementDef[] = [
-  { id: "cpu_first_win", name: "春の目覚め", description: "CPU戦で1回勝利", title_id: "rookie_winner", target: () => 1 },
-  { id: "easy_5", name: "花便り", description: "初級に5回勝利", title_id: "easy_hunter", target: s => s.cpu_wins.easy >= 5 ? 5 : 5 },
-  { id: "medium_5", name: "青嵐", description: "中級に5回勝利", title_id: "medium_breaker", target: () => 5 },
-  { id: "hard_3", name: "月下の試練", description: "上級に3回勝利", title_id: "hard_striker", target: () => 3 },
-  { id: "hard_10", name: "錦秋の極み", description: "上級に10回勝利", title_id: "hard_master", target: () => 10 },
-  { id: "extreme_1", name: "白暁一閃", description: "極級に1回勝利", title_id: "extreme_slayer", target: () => 1 },
+  { id: "cpu_first_win", name: "春の訪れ", description: "CPU戦で1回勝利", title_id: "rookie_winner", target: () => 1 },
+  { id: "easy_5", name: "花の便り", description: "初級に5回勝利", title_id: "easy_hunter", target: s => s.cpu_wins.easy >= 5 ? 5 : 5 },
+  { id: "medium_5", name: "氷菓も溶ける頃", description: "中級に5回勝利", title_id: "medium_breaker", target: () => 5 },
+  { id: "hard_3", name: "枯れ葉もまたおかし", description: "上級に3回勝利", title_id: "hard_striker", target: () => 3 },
+  { id: "hard_10", name: "紅に染まる河川", description: "上級に10回勝利", title_id: "hard_master", target: () => 10 },
+  { id: "extreme_1", name: "まるで銀世界", description: "極級に1回勝利", title_id: "extreme_slayer", target: () => 1 },
   { id: "extreme_5", name: "雪月花", description: "極級に5回勝利", title_id: "extreme_emperor", target: () => 5 },
-  { id: "cpu_total_30", name: "百戦錬磨", description: "CPU戦で通算30勝", title_id: "cpu_veteran", target: () => 30 },
+  { id: "cpu_total_30", name: "研鑽", description: "CPU戦で通算30勝", title_id: "cpu_veteran", target: () => 30 },
   { id: "saved_10", name: "文箱の若芽", description: "季譜を10件保存", title_id: "record_keeper", target: () => 10 },
-  { id: "saved_30", name: "雅蔵の守り手", description: "季譜を30件保存", title_id: "archive_lord", target: () => 30 },
+  { id: "saved_30", name: "一冊を綴る", description: "季譜を30件保存", title_id: "archive_lord", target: () => 30 },
 ];
 
 function normalizeStringArray(value: unknown): string[] {

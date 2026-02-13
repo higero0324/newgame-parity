@@ -679,9 +679,10 @@ const profileCardBaseStyle: React.CSSProperties = {
 };
 
 const profileCardClosedShapeStyle: React.CSSProperties = {
-  maxWidth: 620,
-  minHeight: "clamp(250px, 52vw, 360px)",
-  aspectRatio: "1.58 / 1",
+  width: "100%",
+  maxWidth: 760,
+  minHeight: "clamp(220px, 42vw, 320px)",
+  aspectRatio: "1.9 / 1",
   alignContent: "space-between",
   gridTemplateRows: "auto 1fr auto",
 };

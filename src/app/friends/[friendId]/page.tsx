@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { getTitleById, type TitleRarity } from "@/lib/achievements";
@@ -36,6 +36,8 @@ export default function FriendProfilePage() {
   const [isFriend, setIsFriend] = useState(false);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [featuredRows, setFeaturedRows] = useState<MatchRow[]>([]);
+  const [openTitleId, setOpenTitleId] = useState<string | null>(null);
+  const titleAreaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -100,6 +102,19 @@ export default function FriendProfilePage() {
     })();
   }, [friendId]);
 
+  useEffect(() => {
+    if (!openTitleId) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (!titleAreaRef.current?.contains(target)) {
+        setOpenTitleId(null);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [openTitleId]);
+
   const displayName = profile?.display_name || "（名前未設定）";
   const cardTemplate = parseTemplate(profile?.profile_card_template);
   const isDarkCard = cardTemplate === "lacquer" || cardTemplate === "modern";
@@ -127,11 +142,27 @@ export default function FriendProfilePage() {
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
             {isFriend && equippedTitles.length > 0 && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div ref={titleAreaRef} style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {equippedTitles.map(title => (
-                  <span key={title.id} style={{ ...titleChipStyleBase, ...titleChipByRarity[title.rarity] }}>
-                    {title.name}
-                  </span>
+                  <div key={title.id} style={titleChipWrapStyle}>
+                    <button
+                      type="button"
+                      onClick={event => {
+                        event.stopPropagation();
+                        setOpenTitleId(prev => (prev === title.id ? null : title.id));
+                      }}
+                      style={{ ...titleChipStyleBase, ...titleChipButtonStyle, ...titleChipByRarity[title.rarity] }}
+                      aria-expanded={openTitleId === title.id}
+                    >
+                      {title.name}
+                    </button>
+                    {openTitleId === title.id && (
+                      <div style={titlePopoverStyle}>
+                        <div style={{ fontWeight: 700, marginBottom: 4 }}>取得条件</div>
+                        <div>{title.description}</div>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -295,9 +326,10 @@ const profileCardBaseStyle: React.CSSProperties = {
 };
 
 const profileCardClosedShapeStyle: React.CSSProperties = {
-  maxWidth: 620,
-  minHeight: "clamp(250px, 52vw, 360px)",
-  aspectRatio: "1.58 / 1",
+  width: "100%",
+  maxWidth: 760,
+  minHeight: "clamp(220px, 42vw, 320px)",
+  aspectRatio: "1.9 / 1",
   alignContent: "space-between",
   gridTemplateRows: "auto 1fr auto",
 };
@@ -343,6 +375,35 @@ const titleChipStyleBase: React.CSSProperties = {
   fontWeight: 700,
   border: "1px solid transparent",
   width: "fit-content",
+};
+
+const titleChipButtonStyle: React.CSSProperties = {
+  cursor: "pointer",
+  textDecoration: "none",
+  outline: "none",
+};
+
+const titleChipWrapStyle: React.CSSProperties = {
+  position: "relative",
+  display: "inline-grid",
+};
+
+const titlePopoverStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "calc(100% + 6px)",
+  left: 0,
+  zIndex: 30,
+  minWidth: 190,
+  maxWidth: 260,
+  padding: "8px 10px",
+  borderRadius: 10,
+  border: "1px solid rgba(90,70,45,0.35)",
+  background: "rgba(255,252,245,0.98)",
+  boxShadow: "0 10px 20px rgba(45, 30, 15, 0.2)",
+  fontSize: 12,
+  lineHeight: 1.5,
+  color: "#46331f",
+  pointerEvents: "none",
 };
 
 const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
