@@ -337,20 +337,19 @@ const setsugekkaFrameStyle: React.CSSProperties = {
   position: "absolute",
   inset: -1,
   borderRadius: "50%",
-  border: "4px solid #c99824",
+  border: "3px solid #cb9926",
   boxShadow:
-    "0 0 0 1px rgba(92, 63, 14, 0.8), 0 2px 6px rgba(90, 62, 18, 0.38), inset 0 1px 2px rgba(255, 248, 220, 0.95), inset 0 -2px 4px rgba(112, 70, 9, 0.6)",
-  background:
-    "conic-gradient(from 25deg, #fff7cf 0deg, #f2c558 45deg, #a46f0e 95deg, #f7d66f 150deg, #8e5f0a 215deg, #ffd978 280deg, #b98317 330deg, #fff7cf 360deg)",
+    "0 0 0 1px rgba(92, 63, 14, 0.82), 0 2px 6px rgba(90, 62, 18, 0.34), inset 0 1px 2px rgba(255, 248, 220, 0.92), inset 0 -2px 4px rgba(112, 70, 9, 0.52)",
+  background: "transparent",
   pointerEvents: "none",
 };
 
 const setsugekkaCrestStyle: React.CSSProperties = {
   position: "absolute",
-  top: -10,
-  right: -10,
-  width: 30,
-  height: 30,
+  top: -4,
+  right: -4,
+  width: 26,
+  height: 26,
   borderRadius: "50%",
   border: "2px solid #8f640f",
   background:
