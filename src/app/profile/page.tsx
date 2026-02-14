@@ -224,6 +224,8 @@ export default function ProfilePage() {
   const isDarkCard = cardTemplate === "lacquer" || cardTemplate === "modern";
   const mutedTextColor = isDarkCard ? "rgba(255,245,230,0.85)" : "#555";
   const lightTextColor = isDarkCard ? "rgba(255,245,230,0.8)" : "#666";
+  const editTextColor = isDarkCard ? "rgba(255,245,230,0.96)" : "#3f2b18";
+  const editSubtleColor = isDarkCard ? "rgba(255,245,230,0.84)" : "#666";
   const equippedTitles = useMemo(() => {
     return equippedTitleIds.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
   }, [equippedTitleIds]);
@@ -299,9 +301,16 @@ export default function ProfilePage() {
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <h2 style={{ margin: 0, fontSize: 20 }}>季士情報</h2>
-          <button style={btnStyle} onClick={() => setProfileEditOpen(v => !v)}>
-            {profileEditOpen ? "編集を閉じる" : "編集"}
-          </button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {profileEditOpen && (
+              <button onClick={saveProfile} disabled={saving} style={btnStyle}>
+                {saving ? "保存中..." : "保存"}
+              </button>
+            )}
+            <button style={btnStyle} onClick={() => setProfileEditOpen(v => !v)}>
+              {profileEditOpen ? "×" : "編集"}
+            </button>
+          </div>
         </div>
         <div style={profileTopStyle}>
           <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
@@ -422,13 +431,13 @@ export default function ProfilePage() {
         </div>
         <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>ログイン中: {email || "(不明)"}</div>
         {profileEditOpen && (
-          <div style={{ display: "grid", gap: 8, borderTop: "1px solid var(--line)", paddingTop: 10 }}>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>名前</span>
+          <div style={{ ...profileEditPanelStyle, color: editTextColor }}>
+            <label style={{ display: "grid", gap: 6, color: editTextColor }}>
+              <span style={{ fontWeight: 700 }}>名前</span>
               <input value={displayName} onChange={e => setDisplayName(e.target.value)} style={inputStyle} placeholder="表示名を入力" />
             </label>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>ステータスメッセージ</span>
+            <label style={{ display: "grid", gap: 6, color: editTextColor }}>
+              <span style={{ fontWeight: 700 }}>ステータスメッセージ</span>
               <textarea
                 value={statusMessage}
                 onChange={e => setStatusMessage(e.target.value)}
@@ -436,12 +445,12 @@ export default function ProfilePage() {
                 placeholder="ひとこと"
               />
             </label>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>アイコン文字（1〜2文字。空欄なら名前の頭文字）</span>
+            <label style={{ display: "grid", gap: 6, color: editTextColor }}>
+              <span style={{ fontWeight: 700 }}>アイコン文字（1〜2文字。空欄なら名前の頭文字）</span>
               <input value={iconText} onChange={e => setIconText(e.target.value)} style={inputStyle} placeholder="例: 😀 / H" />
             </label>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>カードテンプレート</span>
+            <label style={{ display: "grid", gap: 6, color: editTextColor }}>
+              <span style={{ fontWeight: 700 }}>カードテンプレート</span>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {cardTemplateOptions.map(opt => (
                   <button
@@ -458,11 +467,11 @@ export default function ProfilePage() {
                 ))}
               </div>
             </label>
-            <div style={{ fontSize: 12, color: "#666" }}>
+            <div style={{ fontSize: 12, color: editSubtleColor }}>
               称号は上のカード内の「称号枠」をタップして設定できます（最大2つ）。
             </div>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>アイコンフレーム</span>
+            <label style={{ display: "grid", gap: 6, color: editTextColor }}>
+              <span style={{ fontWeight: 700 }}>アイコンフレーム</span>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button
                   type="button"
@@ -488,7 +497,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               {!canUseSnowFrame && (
-                <div style={{ fontSize: 12, color: "#666" }}>
+                <div style={{ fontSize: 12, color: editSubtleColor }}>
                   「雪月花」の称号を回収すると、雪月花フレームが解放されます。
                 </div>
               )}
@@ -504,14 +513,11 @@ export default function ProfilePage() {
               >
                 画像を解除
               </button>
-              <span style={{ fontSize: 12, color: "#666", alignSelf: "center" }}>
+              <span style={{ fontSize: 12, color: editSubtleColor, alignSelf: "center" }}>
                 {iconFileName ? `選択中: ${iconFileName}` : "画像未選択"}
               </span>
-              {iconImageStatus && <span style={{ fontSize: 13, color: "#666" }}>{iconImageStatus}</span>}
+              {iconImageStatus && <span style={{ fontSize: 13, color: editSubtleColor }}>{iconImageStatus}</span>}
             </div>
-            <button onClick={saveProfile} disabled={saving} style={btnStyle}>
-              {saving ? "保存中..." : "プロフィールを保存"}
-            </button>
           </div>
         )}
       </section>
@@ -834,6 +840,18 @@ const profileCardClosedShapeStyle: React.CSSProperties = {
 const profileCardEditOpenStyle: React.CSSProperties = {
   maxWidth: 760,
   minHeight: 0,
+};
+
+const profileEditPanelStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 8,
+  borderTop: "1px solid var(--line)",
+  paddingTop: 10,
+  marginTop: 2,
+  background: "rgba(255,255,255,0.16)",
+  borderRadius: 10,
+  paddingInline: 8,
+  paddingBottom: 8,
 };
 
 const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
