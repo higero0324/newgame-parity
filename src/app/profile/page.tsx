@@ -718,6 +718,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 10,
   border: "1px solid var(--line)",
   background: "rgba(255,255,255,0.9)",
+  color: "#2f1f12",
   width: "100%",
   boxSizing: "border-box",
 };
