@@ -107,7 +107,7 @@ export default function TutorialPage() {
       {
         id: "cornerBridge",
         title: "6. 隣接角の新ルール",
-        description: "一春・一夏を取った側は、間が空の間はその間に置けません。上辺のどこか（四春 / 三春 / 二春）を押して確認してください。",
+        description: "一春・一夏を取った側は、間が空の間はその間に置けません（ただし他に合法手がない終盤は例外）。上辺のどこか（四春 / 三春 / 二春）を押して確認してください。",
         init: () => ({
           board: makeBoard({ 0: 2, 4: 2 }),
           turn: "p1",
@@ -338,7 +338,7 @@ export default function TutorialPage() {
         if (res.reason.includes("隣接角")) {
           setCompleted(true);
           setDoneMsg("OK！ 隣接角ルールを確認しました。");
-          setMsg("この場面では、角を取った側は間が空の間その間に置けません。");
+          setMsg("この場面では、角を取った側は間が空の間その間に置けません（他に合法手がない終盤は例外）。");
           return;
         }
         setMsg(res.reason);
@@ -411,7 +411,7 @@ export default function TutorialPage() {
               <button onClick={() => onClickRule("lock", "5は固定され、挟みでは壁として扱われます。", { 11: 5, 12: 1, 13: 2 })} style={btnStyle}>
                 5ロック
               </button>
-              <button onClick={() => onClickRule("bridge", "新ルール: 同じ辺の両角を取って間が空の間は、その間3マスにその側は置けません。", { 0: 2, 4: 2 })} style={btnStyle}>
+              <button onClick={() => onClickRule("bridge", "新ルール: 同じ辺の両角を取って間が空の間は、その間3マスにその側は置けません（他に合法手がない終盤は例外）。", { 0: 2, 4: 2 })} style={btnStyle}>
                 隣接角ルール
               </button>
               <button onClick={() => onClickRule("win", "縦・横・斜めの1列が偶数または奇数で揃うと勝利です。", undefined, "win")} style={btnStyle}>

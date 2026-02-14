@@ -52,6 +52,16 @@ function isBlockedByCornerBridgeRule(board: number[], pos: number, player: Playe
   return false;
 }
 
+function hasAnyNonBlockedEmptyCell(board: number[], player: Player, exceptPos: number): boolean {
+  for (let i = 0; i < BOARD_LEN; i += 1) {
+    if (i === exceptPos) continue;
+    if (board[i] !== 0) continue;
+    if (isBlockedByCornerBridgeRule(board, i, player)) continue;
+    return true;
+  }
+  return false;
+}
+
 export type ApplyMoveResult =
   | { ok: false; reason: string }
   | {
@@ -65,7 +75,10 @@ export function applyMove(board: number[], pos: number, player: Player): ApplyMo
   if (pos < 0 || pos >= BOARD_LEN) return { ok: false, reason: "範囲外です" };
   if (board[pos] !== 0) return { ok: false, reason: "空マス(0)にしか置けません" };
   if (isBlockedByCornerBridgeRule(board, pos, player)) {
-    return { ok: false, reason: "隣接角を取った側は、間が空の間はその間に置けません" };
+    // 他に合法手が残っていない終盤は、例外として置けるようにする
+    if (hasAnyNonBlockedEmptyCell(board, player, pos)) {
+      return { ok: false, reason: "隣接角を取った側は、間が空の間はその間に置けません" };
+    }
   }
 
   const placeValue = player === "p1" ? 2 : 1;
