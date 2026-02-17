@@ -379,30 +379,16 @@ export default function ProfilePage() {
           </div>
         )}
         <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
-          <div
-            style={
-              cardExpanded
-                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%", overflowWrap: "anywhere", gridColumn: 2 }
-                : { display: "flex", flexDirection: "column", gap: 6, overflowWrap: "anywhere", gridColumn: 2 }
-            }
-          >
+          <div style={profileInfoBlockStyle}>
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
             <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>
               {cardExpanded ? `フレンドID: ${friendId || "-"}` : `ログイン中: ${email || "(不明)"}`}
             </div>
             <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
-            {(equippedTitles.length > 0 || (profileEditOpen && !cardExpanded)) && (
-              <div
-                style={{
-                  ...equippedTitleListStyle,
-                  ...equippedTitleListUpperStyle,
-                  marginTop: "auto",
-                  alignSelf: "flex-end",
-                  justifyItems: "end",
-                  width: "100%",
-                  maxWidth: "100%",
-                }}
-              >
+          </div>
+          {(equippedTitles.length > 0 || (profileEditOpen && !cardExpanded)) && (
+            <div style={profileTitleBlockStyle}>
+              <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, justifyItems: "end" }}>
                 {[0, 1].map(i => {
                   const slot = i as 0 | 1;
                   const titleId = equippedSlots[slot];
@@ -434,56 +420,56 @@ export default function ProfilePage() {
                   );
                 })}
               </div>
-            )}
-            {profileEditOpen && !cardExpanded && titlePickerSlot !== null && (
-              <div style={titlePickerPanelStyle}>
-                <div style={{ fontSize: 13, color: mutedTextColor, fontWeight: 700 }}>
-                  {titlePickerSlot + 1}枠目に設定する称号を選択
+              {profileEditOpen && !cardExpanded && titlePickerSlot !== null && (
+                <div style={titlePickerPanelStyle}>
+                  <div style={{ fontSize: 13, color: mutedTextColor, fontWeight: 700 }}>
+                    {titlePickerSlot + 1}枠目に設定する称号を選択
+                  </div>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    <button
+                      type="button"
+                      style={{ ...titleSelectButtonStyle, ...titleSelectClearStyle }}
+                      onClick={() => {
+                        clearTitleSlot(titlePickerSlot);
+                        setTitlePickerSlot(null);
+                      }}
+                    >
+                      この枠を空にする
+                    </button>
+                    {unlockedTitles.length === 0 && (
+                      <div style={{ fontSize: 13, color: "#666" }}>まだ称号を獲得していません。</div>
+                    )}
+                    {unlockedTitles.map(title => {
+                      const anotherSlot = titlePickerSlot === 0 ? equippedSlots[1] : equippedSlots[0];
+                      const selectedInThisSlot = equippedSlots[titlePickerSlot] === title.id;
+                      const usedInOtherSlot = anotherSlot === title.id;
+                      return (
+                        <button
+                          key={title.id}
+                          type="button"
+                          disabled={usedInOtherSlot}
+                          style={{
+                            ...titleSelectButtonStyle,
+                            ...(selectedInThisSlot ? titleSelectButtonActiveStyle : null),
+                            ...titleChipStyleFor(title),
+                            ...(usedInOtherSlot ? titleSelectButtonDisabledStyle : null),
+                          }}
+                          onClick={() => {
+                            assignTitleToSlot(titlePickerSlot, title.id);
+                            setTitlePickerSlot(null);
+                          }}
+                        >
+                          <span>{title.name}</span>
+                          <span style={{ fontSize: 12, opacity: 0.9 }}>{title.description}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div style={{ display: "grid", gap: 6 }}>
-                  <button
-                    type="button"
-                    style={{ ...titleSelectButtonStyle, ...titleSelectClearStyle }}
-                    onClick={() => {
-                      clearTitleSlot(titlePickerSlot);
-                      setTitlePickerSlot(null);
-                    }}
-                  >
-                    この枠を空にする
-                  </button>
-                  {unlockedTitles.length === 0 && (
-                    <div style={{ fontSize: 13, color: "#666" }}>まだ称号を獲得していません。</div>
-                  )}
-                  {unlockedTitles.map(title => {
-                    const anotherSlot = titlePickerSlot === 0 ? equippedSlots[1] : equippedSlots[0];
-                    const selectedInThisSlot = equippedSlots[titlePickerSlot] === title.id;
-                    const usedInOtherSlot = anotherSlot === title.id;
-                    return (
-                      <button
-                        key={title.id}
-                        type="button"
-                        disabled={usedInOtherSlot}
-                        style={{
-                          ...titleSelectButtonStyle,
-                          ...(selectedInThisSlot ? titleSelectButtonActiveStyle : null),
-                          ...titleChipStyleFor(title),
-                          ...(usedInOtherSlot ? titleSelectButtonDisabledStyle : null),
-                        }}
-                        onClick={() => {
-                          assignTitleToSlot(titlePickerSlot, title.id);
-                          setTitlePickerSlot(null);
-                        }}
-                      >
-                        <span>{title.name}</span>
-                        <span style={{ fontSize: 12, opacity: 0.9 }}>{title.description}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-          <div style={{ display: "grid", gap: 6, justifyItems: "start", justifySelf: "start", alignSelf: "end", gridColumn: 1 }}>
+              )}
+            </div>
+          )}
+          <div style={profileIconBlockStyle}>
             <button
               type="button"
               onClick={() => {
@@ -884,14 +870,42 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
+  gridTemplateColumns: "minmax(0, 1fr) max-content",
+  gridTemplateRows: "auto 1fr",
   gap: 8,
   alignItems: "stretch",
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gridTemplateColumns: "max-content minmax(0, 1fr)",
+  gap: 6,
+};
+
+const profileInfoBlockStyle: React.CSSProperties = {
+  gridColumn: 1,
+  gridRow: 1,
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+  alignSelf: "start",
+};
+
+const profileTitleBlockStyle: React.CSSProperties = {
+  gridColumn: 2,
+  gridRow: 2,
+  alignSelf: "end",
+  justifySelf: "end",
+  width: "min(100%, 360px)",
+  display: "grid",
+  gap: 8,
+};
+
+const profileIconBlockStyle: React.CSSProperties = {
+  gridColumn: 1,
+  gridRow: 2,
+  alignSelf: "end",
+  justifySelf: "start",
+  display: "grid",
   gap: 6,
 };
 
