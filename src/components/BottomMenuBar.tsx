@@ -20,6 +20,7 @@ const MENUS: HomeMenu[] = [
   { id: "learn", icon: "学", label: "学び" },
   { id: "progress", icon: "進", label: "進歩" },
 ];
+const MENU_BAR_HIDDEN_KEY = "hisei_menu_bar_hidden";
 
 export default function BottomMenuBar() {
   const pathname = usePathname();
@@ -30,6 +31,7 @@ export default function BottomMenuBar() {
   const [edgeNoticeSide, setEdgeNoticeSide] = useState<"left" | "right" | null>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [homeActiveMenu, setHomeActiveMenu] = useState<"battle" | "learn">("battle");
+  const [menuHidden, setMenuHidden] = useState(false);
 
   useEffect(() => {
     const refresh = async () => {
@@ -59,6 +61,22 @@ export default function BottomMenuBar() {
   }, []);
 
   const hide = pathname === "/play" || pathname === "/cpu";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setMenuHidden(window.localStorage.getItem(MENU_BAR_HIDDEN_KEY) === "1");
+  }, []);
+
+  const toggleMenuHidden = () => {
+    setMenuHidden(prev => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        if (next) window.localStorage.setItem(MENU_BAR_HIDDEN_KEY, "1");
+        else window.localStorage.removeItem(MENU_BAR_HIDDEN_KEY);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (pathname !== "/") return;
@@ -208,6 +226,14 @@ export default function BottomMenuBar() {
 
   if (hide) return null;
 
+  if (menuHidden) {
+    return (
+      <button style={menuShowButtonStyle} onClick={toggleMenuHidden}>
+        メニュー表示
+      </button>
+    );
+  }
+
   const onTapMenu = (id: MenuId) => {
     if (id === "battle") {
       setHomeActiveMenu("battle");
@@ -261,6 +287,9 @@ export default function BottomMenuBar() {
       </div>
       {edgeNoticeSide === "left" && <span style={{ ...edgeNoticeStyle, left: 6 }}>!</span>}
       {edgeNoticeSide === "right" && <span style={{ ...edgeNoticeStyle, right: 6 }}>!</span>}
+      <button style={menuHideButtonStyle} onClick={toggleMenuHidden}>
+        メニュー非表示
+      </button>
     </nav>
   );
 }
@@ -348,4 +377,35 @@ const edgeNoticeStyle: React.CSSProperties = {
   fontWeight: 800,
   pointerEvents: "none",
   zIndex: 1,
+};
+
+const menuHideButtonStyle: React.CSSProperties = {
+  position: "absolute",
+  right: 10,
+  top: -34,
+  padding: "6px 10px",
+  borderRadius: 10,
+  border: "1px solid var(--line)",
+  background: "rgba(255,255,255,0.82)",
+  color: "var(--ink)",
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.2)",
+};
+
+const menuShowButtonStyle: React.CSSProperties = {
+  position: "fixed",
+  right: 10,
+  bottom: "calc(10px + env(safe-area-inset-bottom))",
+  zIndex: 70,
+  padding: "8px 12px",
+  borderRadius: 12,
+  border: "1px solid var(--line)",
+  background: "rgba(255,255,255,0.86)",
+  color: "var(--ink)",
+  fontSize: 13,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
 };
