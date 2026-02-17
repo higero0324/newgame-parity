@@ -56,7 +56,7 @@ export default function BottomMenuBar() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const hide = pathname === "/play" || pathname === "/cpu";
+  const hide = pathname === "/play" || pathname === "/cpu" || pathname === "/login";
 
   useEffect(() => {
     if (pathname !== "/") return;
