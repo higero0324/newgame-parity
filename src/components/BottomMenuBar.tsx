@@ -184,7 +184,7 @@ const menuIconButtonStyle: React.CSSProperties = {
   position: "relative",
   flex: "1 1 0",
   minWidth: 0,
-  padding: "8px 6px",
+  padding: "10px 6px",
   marginTop: -8,
   borderRadius: 10,
   border: "1px solid var(--line)",
@@ -203,13 +203,13 @@ const menuIconButtonActiveStyle: React.CSSProperties = {
 };
 
 const menuIconStyle: React.CSSProperties = {
-  fontSize: 20,
+  fontSize: 24,
   fontWeight: 900,
   lineHeight: 1,
 };
 
 const menuLabelStyle: React.CSSProperties = {
-  fontSize: "clamp(10px, 2.4vw, 12px)",
+  fontSize: "clamp(11px, 2.8vw, 14px)",
   fontWeight: 700,
   whiteSpace: "nowrap",
 };
