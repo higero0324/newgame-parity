@@ -12,7 +12,6 @@
   --cell: #f5e5c9;
   --cell-ink: #2b2117;
   --shadow: rgba(49, 34, 20, 0.2);
-  --bottom-nav-space: 92px;
 }
 
 @theme inline {
@@ -31,7 +30,6 @@ body {
     repeating-linear-gradient(90deg, rgba(120, 80, 40, 0.08) 0, rgba(120, 80, 40, 0.08) 2px, transparent 2px, transparent 10px),
     linear-gradient(120deg, var(--wood) 0%, #e5c79b 35%, var(--wood-dark) 100%);
   min-height: 100vh;
-  padding-bottom: calc(var(--bottom-nav-space) + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 
