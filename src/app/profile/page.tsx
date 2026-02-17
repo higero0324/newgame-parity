@@ -868,14 +868,14 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
-  gap: 14,
+  gap: 8,
   alignItems: "start",
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
   gridTemplateColumns: "minmax(148px, 240px) minmax(0, 1fr)",
-  gap: 18,
+  gap: 12,
 };
 
 const hiddenFileInputStyle: React.CSSProperties = {

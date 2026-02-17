@@ -207,12 +207,13 @@ export default function FriendProfilePage() {
             拡大
           </button>
         )}
-        <div style={profileTopStyle}>
+        <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
           <Avatar
             iconText={profile?.icon_text ?? ""}
             iconImageDataUrl={profile?.icon_image_data_url ?? ""}
             iconFrameId={profile?.icon_frame_id ?? ""}
             displayName={displayName}
+            expanded={cardExpanded}
           />
           <div style={{ display: "grid", gap: 6 }}>
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
@@ -287,17 +288,20 @@ export default function FriendProfilePage() {
   );
 }
 
-function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId: string; displayName: string }) {
+function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId: string; displayName: string; expanded?: boolean }) {
   const fallback = props.displayName.trim().slice(0, 1).toUpperCase() || "?";
   const text = (props.iconText.trim() || fallback).slice(0, 2);
+  const wrapStyle = props.expanded ? avatarWrapExpandedStyle : avatarWrapStyle;
+  const bodyStyle = props.expanded ? avatarExpandedStyle : avatarStyle;
+  const frameStyle = props.expanded ? setsugekkaFrameExpandedStyle : setsugekkaFrameStyle;
   return (
-    <div style={avatarWrapStyle}>
+    <div style={wrapStyle}>
       {props.iconImageDataUrl ? (
-        <img src={props.iconImageDataUrl} alt="icon" style={{ ...avatarStyle, objectFit: "cover", borderRadius: "50%" }} />
+        <img src={props.iconImageDataUrl} alt="icon" style={{ ...bodyStyle, objectFit: "cover", borderRadius: "50%" }} />
       ) : (
-        <div style={avatarStyle}>{text}</div>
+        <div style={bodyStyle}>{text}</div>
       )}
-      {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaFrameStyle} aria-hidden />}
+      {props.iconFrameId === "setsugekka_frame" && <div style={frameStyle} aria-hidden />}
     </div>
   );
 }
@@ -399,6 +403,18 @@ const avatarWrapStyle: React.CSSProperties = {
   aspectRatio: "1 / 1",
 };
 
+const avatarExpandedStyle: React.CSSProperties = {
+  ...avatarStyle,
+  width: "clamp(148px, 30vw, 216px)",
+  fontSize: "clamp(52px, 9vw, 72px)",
+  borderWidth: 4,
+};
+
+const avatarWrapExpandedStyle: React.CSSProperties = {
+  ...avatarWrapStyle,
+  width: "clamp(148px, 30vw, 216px)",
+};
+
 const setsugekkaFrameStyle: React.CSSProperties = {
   position: "absolute",
   inset: -1,
@@ -410,6 +426,12 @@ const setsugekkaFrameStyle: React.CSSProperties = {
   pointerEvents: "none",
 };
 
+const setsugekkaFrameExpandedStyle: React.CSSProperties = {
+  ...setsugekkaFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
 function parseTemplate(value: string | undefined): CardTemplateId {
   if (value === "lacquer" || value === "paper" || value === "modern" || value === "white") return value;
   return "classic";
@@ -418,6 +440,12 @@ function parseTemplate(value: string | undefined): CardTemplateId {
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
+  gap: 8,
+};
+
+const profileTopExpandedStyle: React.CSSProperties = {
+  ...profileTopStyle,
+  gridTemplateColumns: "minmax(148px, 240px) minmax(0, 1fr)",
   gap: 12,
 };
 
