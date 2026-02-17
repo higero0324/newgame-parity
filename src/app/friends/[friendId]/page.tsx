@@ -459,7 +459,8 @@ const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
   gridTemplateColumns: "max-content minmax(0, 1fr)",
   gap: 6,
-  height: "100%",
+  flex: 1,
+  minHeight: 0,
   alignContent: "stretch",
 };
 
@@ -502,6 +503,8 @@ const profileCardExpandedStyle: React.CSSProperties = {
   margin: 0,
   zIndex: 91,
   overflowY: "auto",
+  display: "flex",
+  flexDirection: "column",
 };
 
 const profileCardExpandedPortraitMobileStyle: React.CSSProperties = {
