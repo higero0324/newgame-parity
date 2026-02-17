@@ -45,8 +45,16 @@ export default function RootLayout({
       <body
         className={`${hiseiSans.variable} ${hiseiSerif.variable} ${hiseiMono.variable} antialiased`}
       >
-        <div style={{ minHeight: "100dvh", display: "grid", gridTemplateRows: "1fr auto" }}>
-          <div>{children}</div>
+        <div style={{ height: "100dvh", display: "grid", gridTemplateRows: "1fr auto", overflow: "hidden" }}>
+          <div
+            style={{
+              overflowY: "auto",
+              overscrollBehaviorY: "contain",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {children}
+          </div>
           <BottomMenuBar />
         </div>
       </body>

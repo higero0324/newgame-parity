@@ -149,9 +149,12 @@ const noticeBadgeStyle: React.CSSProperties = {
 const bottomMenuWrapStyle: React.CSSProperties = {
   position: "sticky",
   bottom: 0,
-  width: "100%",
+  width: "calc(100% - 12px)",
+  margin: "0 6px calc(6px + env(safe-area-inset-bottom))",
+  borderRadius: 14,
   padding: "8px 8px env(safe-area-inset-bottom)",
   borderTop: "1px solid rgba(120, 80, 40, 0.25)",
+  border: "1px solid rgba(120, 80, 40, 0.22)",
   background: "linear-gradient(180deg, rgba(255,250,241,0.66) 0%, rgba(245,230,202,0.72) 100%)",
   backdropFilter: "blur(10px)",
 };

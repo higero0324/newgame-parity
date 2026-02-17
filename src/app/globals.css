@@ -31,6 +31,8 @@ body {
     linear-gradient(120deg, var(--wood) 0%, #e5c79b 35%, var(--wood-dark) 100%);
   min-height: 100vh;
   box-sizing: border-box;
+  overscroll-behavior-y: none;
+  overflow: hidden;
 }
 
 main {
