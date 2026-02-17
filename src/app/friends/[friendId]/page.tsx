@@ -33,7 +33,7 @@ type MatchRow = {
 export default function FriendProfilePage() {
   const params = useParams<{ friendId: string }>();
   const friendId = (params?.friendId ?? "").toUpperCase();
-  const [status, setStatus] = useState("隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...");
+  const [status, setStatus] = useState("読み込み中...");
   const [isFriend, setIsFriend] = useState(false);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [featuredRows, setFeaturedRows] = useState<MatchRow[]>([]);
@@ -56,7 +56,7 @@ export default function FriendProfilePage() {
         .eq("friend_id", friendId)
         .maybeSingle();
       if (targetError) {
-        setStatus(`繝励Ο繝輔ぅ繝ｼ繝ｫ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${targetError.message}`);
+        setStatus(`プロフィール取得に失敗しました。詳細: ${targetError.message}`);
         return;
       }
       if (!target) {
@@ -78,7 +78,7 @@ export default function FriendProfilePage() {
           .eq("user_high_id", high)
           .maybeSingle();
         if (frError) {
-          setStatus(`繝輔Ξ繝ｳ繝牙愛螳壹↓螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${frError.message}`);
+          setStatus(`フレンド判定に失敗しました。詳細: ${frError.message}`);
           return;
         }
         setIsFriend(Boolean(frData));
@@ -96,7 +96,7 @@ export default function FriendProfilePage() {
         .eq("user_id", p.user_id)
         .in("id", ids);
       if (rowsError) {
-        setStatus(`蜴ｳ驕ｸ繧ｯ繝ｪ繝・・蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${rowsError.message}`);
+        setStatus(`厳選クリップ取得に失敗しました。詳細: ${rowsError.message}`);
         return;
       }
       const map = new Map(((rows ?? []) as MatchRow[]).map(r => [r.id, r]));
@@ -197,13 +197,14 @@ export default function FriendProfilePage() {
             type="button"
             onClick={() => setCardExpanded(false)}
             style={profileCardCloseButtonStyle}
-            aria-label="諡｡螟ｧ陦ｨ遉ｺ繧帝哩縺倥ｋ"
+            aria-label="拡大表示を閉じる"
           >
-            ﾃ・          </button>
+            ×
+          </button>
         )}
         {!cardExpanded && (
           <button type="button" onClick={() => setCardExpanded(true)} style={profileCardExpandButtonStyle}>
-            諡｡螟ｧ
+            拡大
           </button>
         )}
         <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
@@ -439,19 +440,18 @@ function parseTemplate(value: string | undefined): CardTemplateId {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "max-content minmax(0, 1fr)",
-  gridTemplateRows: "auto 1fr",
-  gap: 8,
+  gridTemplateColumns: "max-content max-content",
+  gridTemplateRows: "auto minmax(0, 1fr)",
+  gap: 4,
   alignItems: "stretch",
+  alignContent: "space-between",
+  height: "100%",
   position: "relative",
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gap: 6,
-  flex: 1,
-  minHeight: 0,
-  alignContent: "stretch",
+  gap: 4,
 };
 
 const profileInfoBlockStyle: React.CSSProperties = {
@@ -467,10 +467,10 @@ const profileTitleBlockStyle: React.CSSProperties = {
   gridColumn: 2,
   gridRow: 2,
   alignSelf: "end",
-  justifySelf: "end",
-  width: "min(100%, 360px)",
+  justifySelf: "start",
+  width: "min(100%, 300px)",
   display: "grid",
-  gap: 8,
+  gap: 6,
 };
 
 const profileIconBlockStyle: React.CSSProperties = {
@@ -519,8 +519,6 @@ const profileCardExpandedStyle: React.CSSProperties = {
   margin: 0,
   zIndex: 91,
   overflowY: "auto",
-  display: "flex",
-  flexDirection: "column",
 };
 
 const profileCardExpandedPortraitMobileStyle: React.CSSProperties = {

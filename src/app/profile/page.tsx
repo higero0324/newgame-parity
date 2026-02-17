@@ -869,15 +869,17 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "max-content minmax(0, 1fr)",
-  gridTemplateRows: "auto 1fr",
-  gap: 8,
+  gridTemplateColumns: "max-content max-content",
+  gridTemplateRows: "auto minmax(0, 1fr)",
+  gap: 4,
   alignItems: "stretch",
+  alignContent: "space-between",
+  height: "100%",
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gap: 6,
+  gap: 4,
 };
 
 const profileInfoBlockStyle: React.CSSProperties = {
@@ -893,10 +895,10 @@ const profileTitleBlockStyle: React.CSSProperties = {
   gridColumn: 2,
   gridRow: 2,
   alignSelf: "end",
-  justifySelf: "end",
-  width: "min(100%, 360px)",
+  justifySelf: "start",
+  width: "min(100%, 300px)",
   display: "grid",
-  gap: 8,
+  gap: 6,
 };
 
 const profileIconBlockStyle: React.CSSProperties = {
