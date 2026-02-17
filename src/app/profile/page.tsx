@@ -869,7 +869,7 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) max-content",
+  gridTemplateColumns: "max-content minmax(0, 1fr)",
   gridTemplateRows: "auto 1fr",
   gap: 8,
   alignItems: "stretch",
@@ -881,7 +881,7 @@ const profileTopExpandedStyle: React.CSSProperties = {
 };
 
 const profileInfoBlockStyle: React.CSSProperties = {
-  gridColumn: 1,
+  gridColumn: "1 / 3",
   gridRow: 1,
   display: "flex",
   flexDirection: "column",

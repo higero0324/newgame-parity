@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -33,7 +33,7 @@ type MatchRow = {
 export default function FriendProfilePage() {
   const params = useParams<{ friendId: string }>();
   const friendId = (params?.friendId ?? "").toUpperCase();
-  const [status, setStatus] = useState("読み込み中...");
+  const [status, setStatus] = useState("隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...");
   const [isFriend, setIsFriend] = useState(false);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [featuredRows, setFeaturedRows] = useState<MatchRow[]>([]);
@@ -56,7 +56,7 @@ export default function FriendProfilePage() {
         .eq("friend_id", friendId)
         .maybeSingle();
       if (targetError) {
-        setStatus(`プロフィール取得に失敗しました。詳細: ${targetError.message}`);
+        setStatus(`繝励Ο繝輔ぅ繝ｼ繝ｫ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${targetError.message}`);
         return;
       }
       if (!target) {
@@ -78,7 +78,7 @@ export default function FriendProfilePage() {
           .eq("user_high_id", high)
           .maybeSingle();
         if (frError) {
-          setStatus(`フレンド判定に失敗しました。詳細: ${frError.message}`);
+          setStatus(`繝輔Ξ繝ｳ繝牙愛螳壹↓螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${frError.message}`);
           return;
         }
         setIsFriend(Boolean(frData));
@@ -96,7 +96,7 @@ export default function FriendProfilePage() {
         .eq("user_id", p.user_id)
         .in("id", ids);
       if (rowsError) {
-        setStatus(`厳選クリップ取得に失敗しました。詳細: ${rowsError.message}`);
+        setStatus(`蜴ｳ驕ｸ繧ｯ繝ｪ繝・・蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${rowsError.message}`);
         return;
       }
       const map = new Map(((rows ?? []) as MatchRow[]).map(r => [r.id, r]));
@@ -159,7 +159,7 @@ export default function FriendProfilePage() {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [openTitleId]);
 
-  const displayName = profile?.display_name || "（名前未設定）";
+  const displayName = profile?.display_name || "（表示名未設定）";
   const cardTemplate = parseTemplate(profile?.profile_card_template);
   const isDarkCard = cardTemplate === "lacquer" || cardTemplate === "modern";
   const matchNames = profile?.match_names ?? {};
@@ -197,46 +197,26 @@ export default function FriendProfilePage() {
             type="button"
             onClick={() => setCardExpanded(false)}
             style={profileCardCloseButtonStyle}
-            aria-label="拡大表示を閉じる"
+            aria-label="諡｡螟ｧ陦ｨ遉ｺ繧帝哩縺倥ｋ"
           >
-            ×
-          </button>
+            ﾃ・          </button>
         )}
         {!cardExpanded && (
           <button type="button" onClick={() => setCardExpanded(true)} style={profileCardExpandButtonStyle}>
-            拡大
+            諡｡螟ｧ
           </button>
         )}
-        <div
-          style={{
-            ...(cardExpanded ? profileTopExpandedStyle : profileTopStyle),
-          }}
-        >
-          <div
-            style={
-              cardExpanded
-                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%", gridColumn: 1, gridRow: 1 }
-                : { display: "flex", flexDirection: "column", gap: 6, gridColumn: 1, gridRow: 1, ...profileInfoOffsetForExpandButtonStyle }
-            }
-          >
+        <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
+          <div style={{ ...profileInfoBlockStyle, ...(cardExpanded ? null : profileInfoOffsetForExpandButtonStyle) }}>
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
             <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
             <div style={{ ...profileStatusTextStyle, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
-            {isFriend && equippedTitles.length > 0 && (
-              <div
-                ref={titleAreaRef}
-                style={{
-                  ...equippedTitleListStyle,
-                  ...equippedTitleListUpperStyle,
-                  position: "absolute",
-                  right: 0,
-                  bottom: 0,
-                  justifyItems: "end",
-                  width: "min(100%, 360px)",
-                }}
-              >
+          </div>
+          {isFriend && equippedTitles.length > 0 && (
+            <div ref={titleAreaRef} style={profileTitleBlockStyle}>
+              <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, justifyItems: "end" }}>
                 {equippedTitles.map(title => (
                   <div key={title.id} style={titleChipWrapStyle}>
                     <button
@@ -258,16 +238,16 @@ export default function FriendProfilePage() {
                     </button>
                     {openTitleId === title.id && (
                       <div style={titlePopoverStyle}>
-                        <div style={{ fontWeight: 700, marginBottom: 4 }}>取得条件</div>
+                        <div style={{ fontWeight: 700, marginBottom: 4 }}>獲得条件</div>
                         <div>{title.description}</div>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-          <div style={{ justifySelf: "start", alignSelf: "end", gridColumn: 1, gridRow: 2 }}>
+            </div>
+          )}
+          <div style={profileIconBlockStyle}>
             <Avatar
               iconText={profile?.icon_text ?? ""}
               iconImageDataUrl={profile?.icon_image_data_url ?? ""}
@@ -294,7 +274,7 @@ export default function FriendProfilePage() {
                   </>
                 ) : (
                   <div style={{ fontSize: 13, color: "#666", minHeight: 120, display: "grid", placeItems: "center", textAlign: "center" }}>
-                    未設定
+                    まだ設定されていません
                   </div>
                 )}
               </div>
@@ -459,7 +439,7 @@ function parseTemplate(value: string | undefined): CardTemplateId {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) max-content",
+  gridTemplateColumns: "max-content minmax(0, 1fr)",
   gridTemplateRows: "auto 1fr",
   gap: 8,
   alignItems: "stretch",
@@ -472,6 +452,32 @@ const profileTopExpandedStyle: React.CSSProperties = {
   flex: 1,
   minHeight: 0,
   alignContent: "stretch",
+};
+
+const profileInfoBlockStyle: React.CSSProperties = {
+  gridColumn: "1 / 3",
+  gridRow: 1,
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+  alignSelf: "start",
+};
+
+const profileTitleBlockStyle: React.CSSProperties = {
+  gridColumn: 2,
+  gridRow: 2,
+  alignSelf: "end",
+  justifySelf: "end",
+  width: "min(100%, 360px)",
+  display: "grid",
+  gap: 8,
+};
+
+const profileIconBlockStyle: React.CSSProperties = {
+  gridColumn: 1,
+  gridRow: 2,
+  alignSelf: "end",
+  justifySelf: "start",
 };
 
 const profileCardBaseStyle: React.CSSProperties = {
@@ -726,3 +732,4 @@ const expandedTitleChipDisplayStyle: React.CSSProperties = {
   placeItems: "center",
   alignContent: "center",
 };
+
