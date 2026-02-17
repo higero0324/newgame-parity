@@ -172,7 +172,6 @@ export default function FriendProfilePage() {
     for (let i = 0; i < 3; i += 1) slots[i] = featuredRows[i] ?? null;
     return slots;
   }, [featuredRows]);
-  const isMobilePortraitWhileExpanded = cardExpanded && viewport.width <= 900 && viewport.height > viewport.width;
 
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
@@ -189,7 +188,6 @@ export default function FriendProfilePage() {
           ...profileCardTemplateStyles[cardTemplate],
           ...profileCardClosedShapeStyle,
           ...(cardExpanded ? profileCardExpandedStyle : null),
-          ...(isMobilePortraitWhileExpanded ? profileCardExpandedPortraitMobileStyle : null),
         }}
       >
         {cardExpanded && (
@@ -485,7 +483,7 @@ const profileCardBaseStyle: React.CSSProperties = {
   borderWidth: 2,
   padding: "clamp(12px, 3vw, 20px)",
   boxShadow: "0 12px 28px rgba(35, 20, 10, 0.14)",
-  overflow: "hidden",
+  overflow: "visible",
   position: "relative",
   containerType: "inline-size",
 };
@@ -493,8 +491,8 @@ const profileCardBaseStyle: React.CSSProperties = {
 const profileCardClosedShapeStyle: React.CSSProperties = {
   width: "100%",
   maxWidth: 760,
-  minHeight: "clamp(220px, 42vw, 320px)",
-  aspectRatio: "1.9 / 1",
+  minHeight: "clamp(250px, 46vw, 360px)",
+  aspectRatio: "auto",
   alignContent: "space-between",
   gridTemplateRows: "auto 1fr auto",
 };
@@ -519,15 +517,6 @@ const profileCardExpandedStyle: React.CSSProperties = {
   margin: 0,
   zIndex: 91,
   overflowY: "auto",
-};
-
-const profileCardExpandedPortraitMobileStyle: React.CSSProperties = {
-  width: "min(96vh, calc(100dvh - 18px))",
-  maxWidth: "min(96vh, calc(100dvh - 18px))",
-  height: "min(96vw, calc(100vw - 18px))",
-  maxHeight: "min(96vw, calc(100vw - 18px))",
-  transform: "translate(-50%, -50%) rotate(90deg)",
-  transformOrigin: "center center",
 };
 
 const profileCardCloseButtonStyle: React.CSSProperties = {
