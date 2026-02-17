@@ -404,7 +404,6 @@ export default function ProfilePage() {
                       }}
                       style={{
                         ...titleChipStyleBase,
-                        ...cardTitleChipAdaptiveStyle,
                         ...(empty
                           ? emptyTitleSlotStyle
                           : {
@@ -1231,9 +1230,4 @@ const expandedTitleChipDisplayStyle: React.CSSProperties = {
   display: "grid",
   placeItems: "center",
   alignContent: "center",
-};
-
-const cardTitleChipAdaptiveStyle: React.CSSProperties = {
-  padding: "clamp(3px, 1.0cqw, 6px) clamp(8px, 2.2cqw, 12px)",
-  fontSize: "clamp(11px, 2.1cqw, 13px)",
 };
