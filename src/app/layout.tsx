@@ -45,8 +45,10 @@ export default function RootLayout({
       <body
         className={`${hiseiSans.variable} ${hiseiSerif.variable} ${hiseiMono.variable} antialiased`}
       >
-        {children}
-        <BottomMenuBar />
+        <div style={{ minHeight: "100dvh", display: "grid", gridTemplateRows: "1fr auto" }}>
+          <div>{children}</div>
+          <BottomMenuBar />
+        </div>
       </body>
     </html>
   );
