@@ -62,7 +62,6 @@ export default function ProfilePage() {
   const [unlockedTitleIds, setUnlockedTitleIds] = useState<string[]>([]);
   const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
   const [titlePickerSlot, setTitlePickerSlot] = useState<0 | 1 | null>(null);
-  const [achievementNotice, setAchievementNotice] = useState(false);
   const [cardExpanded, setCardExpanded] = useState(false);
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [friendId, setFriendId] = useState("");
@@ -110,7 +109,6 @@ export default function ProfilePage() {
         if (ach.ok) {
           setUnlockedTitleIds(ach.unlockedTitleIds);
           setEquippedTitleIds(ach.equippedTitleIds);
-          setAchievementNotice(ach.claimableTitleIds.length > 0);
         }
 
         const ensured = await ensureFriendIdForCurrentUser();
@@ -651,12 +649,6 @@ export default function ProfilePage() {
         <button onClick={logout} disabled={loggingOut} style={btnStyle}>
           {loggingOut ? "ログアウト中..." : "ログアウト"}
         </button>
-        <Link href="/friends" style={btnStyle}>フレンド</Link>
-        <Link href="/achievements" style={{ ...btnStyle, position: "relative" }}>
-          アチーブメント
-          {achievementNotice && <span style={noticeBadgeStyle}>!</span>}
-        </Link>
-        <Link href="/history" style={btnStyle}>保存季譜へ</Link>
       </div>
 
       {status && (
@@ -765,21 +757,6 @@ const btnStyle: React.CSSProperties = {
   textDecoration: "none",
   color: "var(--ink)",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
-};
-
-const noticeBadgeStyle: React.CSSProperties = {
-  position: "absolute",
-  top: -6,
-  right: -6,
-  width: 18,
-  height: 18,
-  borderRadius: "50%",
-  background: "#d33",
-  color: "#fff",
-  display: "grid",
-  placeItems: "center",
-  fontSize: 12,
-  fontWeight: 800,
 };
 
 const inputStyle: React.CSSProperties = {

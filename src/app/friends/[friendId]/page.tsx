@@ -279,10 +279,6 @@ export default function FriendProfilePage() {
         </section>
       )}
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-        <Link href="/friends" style={btnStyle}>フレンド一覧へ</Link>
-      </div>
-
       {status && <div style={sectionStyle}>{status}</div>}
     </main>
   );

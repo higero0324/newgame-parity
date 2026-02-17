@@ -301,10 +301,6 @@ export default function FriendsPage() {
         </ul>
       </section>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-        <Link href="/profile" style={btnStyle}>プロフィールへ</Link>
-      </div>
-
       {status && (
         <div style={statusStyle}>{status}</div>
       )}

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   buildAchievementProgress,
@@ -157,10 +156,6 @@ export default function AchievementsPage() {
           ))}
         </div>
       </section>
-
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-        <Link href="/profile" style={btnStyle}>プロフィールへ</Link>
-      </div>
 
       {status && <div style={sectionStyle}>{status}</div>}
 
