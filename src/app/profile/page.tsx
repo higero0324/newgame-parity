@@ -875,7 +875,7 @@ const profileTopStyle: React.CSSProperties = {
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
   gridTemplateColumns: "minmax(148px, 240px) minmax(0, 1fr)",
-  gap: 12,
+  gap: 6,
 };
 
 const hiddenFileInputStyle: React.CSSProperties = {
