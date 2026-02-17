@@ -127,16 +127,16 @@ export default function BottomMenuBar() {
     const alignRightInMiddle = () => {
       const segment = scrollEl.scrollWidth / 3;
       if (!Number.isFinite(segment) || segment <= 0) return;
-      const rightAligned = segment * 2 - scrollEl.clientWidth;
-      scrollEl.scrollLeft = Math.max(segment, rightAligned);
+      const rightLean = Math.min(120, Math.max(0, segment * 0.15));
+      scrollEl.scrollLeft = segment + rightLean;
       updateEdgeNotice();
     };
 
     const normalizeLoop = () => {
       const segment = scrollEl.scrollWidth / 3;
       if (!Number.isFinite(segment) || segment <= 0) return;
-      const min = segment * 0.5;
-      const max = segment * 1.5;
+      const min = segment * 0.25;
+      const max = segment * 1.75;
       if (scrollEl.scrollLeft < min) {
         scrollEl.scrollLeft += segment;
       } else if (scrollEl.scrollLeft > max) {
@@ -244,7 +244,6 @@ const bottomMenuScrollStyle: React.CSSProperties = {
   WebkitOverflowScrolling: "touch",
   scrollbarWidth: "thin",
   paddingBottom: 2,
-  justifyContent: "flex-end",
 };
 
 const menuIconButtonStyle: React.CSSProperties = {
