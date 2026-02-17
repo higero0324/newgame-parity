@@ -2,52 +2,80 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
 
+const GUEST_MODE_KEY = "hisei_guest_mode";
+
 export default function Home() {
+  const router = useRouter();
   const [authLink, setAuthLink] = useState<{ href: string; label: string }>({
     href: "/login",
     label: "ログイン",
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const [achievementNotice, setAchievementNotice] = useState(false);
 
   useEffect(() => {
     const refresh = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (!error && data.session?.user) {
+        if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setAuthLink({ href: "/profile", label: "プロフィール" });
         setIsLoggedIn(true);
+        setIsGuestMode(false);
         const ach = await loadAchievementStateForCurrentUser();
         setAchievementNotice(Boolean(ach.ok && ach.claimableTitleIds.length > 0));
       } else {
+        const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
+        if (!guestEnabled) {
+          router.replace("/login");
+          return;
+        }
         setAuthLink({ href: "/login", label: "ログイン" });
         setIsLoggedIn(false);
+        setIsGuestMode(true);
         setAchievementNotice(false);
       }
+      setAuthReady(true);
     };
 
     refresh();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setAuthLink({ href: "/profile", label: "プロフィール" });
         setIsLoggedIn(true);
+        setIsGuestMode(false);
         loadAchievementStateForCurrentUser().then(ach => {
           setAchievementNotice(Boolean(ach.ok && ach.claimableTitleIds.length > 0));
         });
       } else {
+        const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
+        if (!guestEnabled) {
+          router.replace("/login");
+          return;
+        }
         setAuthLink({ href: "/login", label: "ログイン" });
         setIsLoggedIn(false);
+        setIsGuestMode(true);
         setAchievementNotice(false);
       }
+      setAuthReady(true);
     });
 
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
+
+  if (!authReady) {
+    return <main style={{ padding: 24, textAlign: "center", color: "#666" }}>読み込み中...</main>;
+  }
 
   const linkStyle: React.CSSProperties = {
     padding: "10px 14px",
@@ -99,7 +127,9 @@ export default function Home() {
         <Link href="/history" style={linkStyle}>保存季譜（ログイン時）</Link>
       </div>
       <p style={{ color: "#555", textAlign: "center" }}>
-        ※ログインは季譜保存用。ログインなしでも対局できます。
+        {isGuestMode
+          ? "※ゲスト参加中です。プロフィール・フレンド・季譜保存・アチーブメントは利用できません。"
+          : "※ログインは季譜保存用。ログインなしでも対局できます。"}
       </p>
     </main>
   );

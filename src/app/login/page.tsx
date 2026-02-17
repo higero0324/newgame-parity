@@ -4,6 +4,8 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+const GUEST_MODE_KEY = "hisei_guest_mode";
+
 function formatAuthError(err: unknown, fallback: string): string {
   const e = err as { message?: string };
   const raw = e?.message ?? "";
@@ -47,6 +49,7 @@ export default function LoginPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
       await refreshUser();
       setStatus("ログインしました。");
     } catch (err) {
@@ -75,6 +78,7 @@ export default function LoginPage() {
       if (!data.session) {
         setStatus("登録しました。確認メールを開いて認証を完了してください。");
       } else {
+        if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         await refreshUser();
         setStatus("登録してログインしました。");
       }
@@ -98,6 +102,15 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const joinAsGuest = () => {
+    const ok = window.confirm(
+      "一部機能(プロフィール、フレンド、季譜保存、アチーブメント)が制限されますがよろしいですか？？（ゲスト参加後でもログインは可能です）",
+    );
+    if (!ok) return;
+    window.localStorage.setItem(GUEST_MODE_KEY, "1");
+    window.location.href = "/";
   };
 
   return (
@@ -143,8 +156,8 @@ export default function LoginPage() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <button onClick={joinAsGuest} disabled={loading} style={btnStyle}>ゲストで参加</button>
         <button onClick={signOut} disabled={loading} style={btnStyle}>ログアウト</button>
-        <Link href="/" style={{ ...btnStyle, textAlign: "center" }}>戻る</Link>
       </div>
 
       <div style={{ fontSize: 14, color: "#555", textAlign: "center", wordBreak: "break-word" }}>
