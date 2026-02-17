@@ -32,10 +32,19 @@ export default function MatchReplayPage() {
   const params = useParams<{ id: string }>();
   const matchId = params?.id;
 
+  const [isMobile, setIsMobile] = useState(false);
   const [status, setStatus] = useState("読み込み中...");
   const [match, setMatch] = useState<MatchRow | null>(null);
   const [moves, setMoves] = useState<MoveRow[]>([]);
   const [ply, setPly] = useState(0);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     if (!matchId) return;
@@ -119,7 +128,7 @@ export default function MatchReplayPage() {
   const currentMove = ply > 0 ? moves[ply - 1] : null;
 
   return (
-    <main style={{ padding: 24, display: "grid", gap: 12, justifyItems: "center" }}>
+    <main style={{ padding: isMobile ? 12 : 24, display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ fontSize: 24, fontWeight: 800 }}>季譜リプレイ</h1>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
