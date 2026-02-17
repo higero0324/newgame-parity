@@ -58,6 +58,7 @@ export default function ProfilePage() {
   const [iconFileName, setIconFileName] = useState("");
   const [profileEditOpen, setProfileEditOpen] = useState(false);
   const [clipsEditOpen, setClipsEditOpen] = useState(false);
+  const [editingClipSlot, setEditingClipSlot] = useState<0 | 1 | 2 | null>(null);
   const [cardTemplate, setCardTemplate] = useState<CardTemplateId>("classic");
   const [unlockedTitleIds, setUnlockedTitleIds] = useState<string[]>([]);
   const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
@@ -286,23 +287,34 @@ export default function ProfilePage() {
   const isMobilePortraitWhileExpanded = cardExpanded && viewport.width <= 900 && viewport.height > viewport.width;
 
   const onToggleFeaturedWithStar = (matchId: string) => {
-    if (!userId) return;
+    if (!userId || editingClipSlot === null) return;
     const current = [...featuredIds];
-    let next: string[];
-    if (current.includes(matchId)) {
-      next = current.filter(id => id !== matchId);
-    } else {
-      if (current.length >= 3) {
-        setStatus("厳選クリップは3件まで選択できます。");
-        return;
-      }
-      next = [...current, matchId];
-    }
+    const withoutTarget = current.filter(id => id !== matchId);
+    const insertAt = Math.min(editingClipSlot, withoutTarget.length);
+    withoutTarget.splice(insertAt, 0, matchId);
+    const next = withoutTarget.slice(0, 3);
     setFeaturedIds(next);
     saveClipPrefsToSupabase({ starredIds: starredIdsForSave, featuredIds: next }).then(res => {
       if (!res.ok) setStatus(`厳選クリップの保存に失敗しました。詳細: ${res.reason}`);
     });
+    setEditingClipSlot(null);
   };
+
+  const removeFeaturedAtSlot = (slot: 0 | 1 | 2) => {
+    if (!userId) return;
+    const current = [...featuredIds];
+    if (slot >= current.length) return;
+    const next = current.filter((_, idx) => idx !== slot);
+    setFeaturedIds(next);
+    saveClipPrefsToSupabase({ starredIds: starredIdsForSave, featuredIds: next }).then(res => {
+      if (!res.ok) setStatus(`厳選クリップの保存に失敗しました。詳細: ${res.reason}`);
+    });
+    setEditingClipSlot(null);
+  };
+
+  useEffect(() => {
+    if (!clipsEditOpen) setEditingClipSlot(null);
+  }, [clipsEditOpen]);
 
   const assignTitleToSlot = (slot: 0 | 1, titleId: string) => {
     const next: [string, string] = [equippedSlots[0], equippedSlots[1]];
@@ -611,7 +623,32 @@ export default function ProfilePage() {
         <div style={{ fontSize: 14, color: "#666" }}>{featuredRows.length}/3 件</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
           {frameRows.map((row, idx) => (
-            <div key={idx} style={frameStyle}>
+            <div
+              key={idx}
+              style={{
+                ...frameStyle,
+                ...(clipsEditOpen
+                  ? {
+                      cursor: "pointer",
+                      outline: editingClipSlot === idx ? "2px solid #8d6837" : "1px solid rgba(122, 83, 46, 0.25)",
+                      outlineOffset: 1,
+                    }
+                  : null),
+              }}
+              onClick={() => {
+                if (!clipsEditOpen) return;
+                setEditingClipSlot(prev => (prev === idx ? null : (idx as 0 | 1 | 2)));
+              }}
+              onKeyDown={event => {
+                if (!clipsEditOpen) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setEditingClipSlot(prev => (prev === idx ? null : (idx as 0 | 1 | 2)));
+                }
+              }}
+              tabIndex={clipsEditOpen ? 0 : -1}
+              role={clipsEditOpen ? "button" : undefined}
+            >
               <div style={{ fontSize: 12, color: "#6c5331", fontWeight: 700 }}>CLIP {idx + 1}</div>
               {row ? (
                 <>
@@ -619,7 +656,17 @@ export default function ProfilePage() {
                   <MiniBoard board={row.final_board} />
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
                     <Link href={`/history/${row.id}`} style={btnStyle}>再生</Link>
-                    {clipsEditOpen && <button onClick={() => onToggleFeaturedWithStar(row.id)} style={btnStyle}>外す</button>}
+                    {clipsEditOpen && (
+                      <button
+                        onClick={event => {
+                          event.stopPropagation();
+                          removeFeaturedAtSlot(idx as 0 | 1 | 2);
+                        }}
+                        style={btnStyle}
+                      >
+                        外す
+                      </button>
+                    )}
                   </div>
                 </>
               ) : (
@@ -627,33 +674,47 @@ export default function ProfilePage() {
                   まだ設定されていません
                 </div>
               )}
+              {clipsEditOpen && editingClipSlot === idx && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    paddingTop: 8,
+                    borderTop: "1px dashed rgba(122, 83, 46, 0.4)",
+                    display: "grid",
+                    gap: 6,
+                    textAlign: "left",
+                    maxHeight: 220,
+                    overflowY: "auto",
+                  }}
+                  onClick={event => event.stopPropagation()}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#5b4226" }}>入れ替え候補</div>
+                  {rows.length === 0 && <div style={{ fontSize: 12, color: "#666" }}>保存季譜がありません。</div>}
+                  {rows.map(candidate => {
+                    const selectedElsewhere = featuredIds.includes(candidate.id) && featuredIds[idx] !== candidate.id;
+                    return (
+                      <button
+                        key={candidate.id}
+                        onClick={() => onToggleFeaturedWithStar(candidate.id)}
+                        style={{
+                          ...btnStyle,
+                          width: "100%",
+                          textAlign: "left",
+                          opacity: selectedElsewhere ? 0.75 : 1,
+                        }}
+                      >
+                        <div style={{ fontWeight: 700 }}>{matchNames[candidate.id] || "（名前なし）"}</div>
+                        <div style={{ fontSize: 12 }}>
+                          {new Date(candidate.created_at).toLocaleString()} / 勝者: {candidate.winner === "p1" ? "先手" : "後手"} / 手数: {candidate.moves_count}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>
-        {clipsEditOpen && (
-          <>
-            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10, fontWeight: 700 }}>保存季譜から選ぶ</div>
-            <ul style={{ display: "grid", gap: 8, width: "100%", paddingLeft: 18 }}>
-              {rows.map(row => {
-                const selected = featuredIds.includes(row.id);
-                return (
-                  <li key={row.id}>
-                    <div><b>{matchNames[row.id] || "（名前なし）"}</b></div>
-                    <div style={{ fontSize: 13 }}>
-                      {new Date(row.created_at).toLocaleString()} / 勝者: {row.winner === "p1" ? "先手" : "後手"} / 手数: {row.moves_count}
-                    </div>
-                    <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button onClick={() => onToggleFeaturedWithStar(row.id)} style={btnStyle}>
-                        {selected ? "掲載を外す" : "厳選クリップに追加"}
-                      </button>
-                      <Link href={`/history/${row.id}`} style={btnStyle}>再生</Link>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
       </section>
 
       <div style={{ width: "100%", maxWidth: 760, display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", boxSizing: "border-box" }}>
