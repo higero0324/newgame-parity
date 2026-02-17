@@ -216,8 +216,8 @@ export default function FriendProfilePage() {
           <div
             style={
               cardExpanded
-                ? { display: "grid", gap: 6, minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto" }
-                : { display: "grid", gap: 6 }
+                ? { display: "grid", gap: 6, minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto", gridColumn: 2 }
+                : { display: "grid", gap: 6, gridColumn: 2 }
             }
           >
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
@@ -228,7 +228,14 @@ export default function FriendProfilePage() {
             {isFriend && equippedTitles.length > 0 && (
               <div
                 ref={titleAreaRef}
-                style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, ...(cardExpanded ? { alignSelf: "end" } : null) }}
+                style={{
+                  ...equippedTitleListStyle,
+                  ...equippedTitleListUpperStyle,
+                  alignSelf: "end",
+                  justifySelf: "end",
+                  justifyItems: "end",
+                  width: "fit-content",
+                }}
               >
                 {equippedTitles.map(title => (
                   <div key={title.id} style={titleChipWrapStyle}>
@@ -261,7 +268,7 @@ export default function FriendProfilePage() {
               </div>
             )}
           </div>
-          <div style={{ justifySelf: "end" }}>
+          <div style={{ justifySelf: "start", alignSelf: "end", gridColumn: 1 }}>
             <Avatar
               iconText={profile?.icon_text ?? ""}
               iconImageDataUrl={profile?.icon_image_data_url ?? ""}
@@ -453,13 +460,14 @@ function parseTemplate(value: string | undefined): CardTemplateId {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) minmax(72px, 112px)",
+  gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
   gap: 8,
+  alignItems: "stretch",
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gridTemplateColumns: "minmax(0, 1fr) max-content",
+  gridTemplateColumns: "max-content minmax(0, 1fr)",
   gap: 6,
   flex: 1,
   minHeight: 0,

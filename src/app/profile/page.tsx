@@ -382,8 +382,8 @@ export default function ProfilePage() {
           <div
             style={
               cardExpanded
-                ? { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere", minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto" }
-                : { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }
+                ? { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere", minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto", gridColumn: 2 }
+                : { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere", gridColumn: 2 }
             }
           >
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
@@ -392,7 +392,16 @@ export default function ProfilePage() {
             </div>
             <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
             {(equippedTitles.length > 0 || (profileEditOpen && !cardExpanded)) && (
-              <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, ...(cardExpanded ? { alignSelf: "end" } : null) }}>
+              <div
+                style={{
+                  ...equippedTitleListStyle,
+                  ...equippedTitleListUpperStyle,
+                  alignSelf: "end",
+                  justifySelf: "end",
+                  justifyItems: "end",
+                  width: "fit-content",
+                }}
+              >
                 {[0, 1].map(i => {
                   const slot = i as 0 | 1;
                   const titleId = equippedSlots[slot];
@@ -473,7 +482,7 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-          <div style={{ display: "grid", gap: 6, justifyItems: "end", justifySelf: "end" }}>
+          <div style={{ display: "grid", gap: 6, justifyItems: "start", justifySelf: "start", alignSelf: "end", gridColumn: 1 }}>
             <button
               type="button"
               onClick={() => {
@@ -499,7 +508,7 @@ export default function ProfilePage() {
               />
             </button>
             {profileEditOpen && !cardExpanded && (
-              <div style={{ fontSize: 12, color: mutedTextColor, textAlign: "right" }}>
+              <div style={{ fontSize: 12, color: mutedTextColor, textAlign: "left" }}>
                 アイコンをタップして画像変更
               </div>
             )}
@@ -874,14 +883,14 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) minmax(72px, 112px)",
+  gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
   gap: 8,
-  alignItems: "start",
+  alignItems: "stretch",
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gridTemplateColumns: "minmax(0, 1fr) max-content",
+  gridTemplateColumns: "max-content minmax(0, 1fr)",
   gap: 6,
 };
 
