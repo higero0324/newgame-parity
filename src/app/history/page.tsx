@@ -303,6 +303,7 @@ const btnStyle: React.CSSProperties = {
   color: "var(--ink)",
   fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   fontWeight: 700,
+  fontSize: 16,
   textDecoration: "none",
   cursor: "pointer",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
