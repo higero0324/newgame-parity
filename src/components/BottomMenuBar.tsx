@@ -27,6 +27,7 @@ export default function BottomMenuBar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [achievementNotice, setAchievementNotice] = useState(false);
   const [homeActiveMenu, setHomeActiveMenu] = useState<"battle" | "learn">("battle");
+  const [externallyHidden, setExternallyHidden] = useState(false);
 
   useEffect(() => {
     const refresh = async () => {
@@ -68,6 +69,15 @@ export default function BottomMenuBar() {
     return () => window.removeEventListener("popstate", readFromQuery);
   }, [pathname]);
 
+  useEffect(() => {
+    const onVisibility = (event: Event) => {
+      const custom = event as CustomEvent<{ visible?: boolean }>;
+      setExternallyHidden(custom.detail?.visible === false);
+    };
+    window.addEventListener("hisei-bottom-menu-visible", onVisibility as EventListener);
+    return () => window.removeEventListener("hisei-bottom-menu-visible", onVisibility as EventListener);
+  }, []);
+
   const activeMenu = useMemo<MenuId>(() => {
     if (pathname === "/") return homeActiveMenu;
     if (pathname.startsWith("/profile")) return "kishi";
@@ -79,7 +89,7 @@ export default function BottomMenuBar() {
     return "battle";
   }, [pathname, homeActiveMenu]);
 
-  if (hide) return null;
+  if (hide || externallyHidden) return null;
 
   const onTapMenu = (id: MenuId) => {
     if (id === "battle") {

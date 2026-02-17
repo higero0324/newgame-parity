@@ -38,6 +38,8 @@ export default function FriendProfilePage() {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [featuredRows, setFeaturedRows] = useState<MatchRow[]>([]);
   const [openTitleId, setOpenTitleId] = useState<string | null>(null);
+  const [cardExpanded, setCardExpanded] = useState(false);
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const titleAreaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -104,6 +106,47 @@ export default function FriendProfilePage() {
   }, [friendId]);
 
   useEffect(() => {
+    const onResize = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("hisei-bottom-menu-visible", {
+        detail: { visible: !cardExpanded },
+      }),
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("hisei-bottom-menu-visible", {
+          detail: { visible: true },
+        }),
+      );
+    };
+  }, [cardExpanded]);
+
+  useEffect(() => {
+    if (!cardExpanded) return;
+    const screenOrientation = (screen as { orientation?: { lock?: (type: string) => Promise<void>; unlock?: () => void } }).orientation;
+    if (viewport.width <= 900 && screenOrientation?.lock) {
+      screenOrientation.lock("landscape").catch(() => {
+        // iOS Safari fallback is visual rotation below.
+      });
+    }
+    return () => {
+      screenOrientation?.unlock?.();
+    };
+  }, [cardExpanded, viewport.width]);
+
+  useEffect(() => {
     if (!openTitleId) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
@@ -129,12 +172,38 @@ export default function FriendProfilePage() {
     for (let i = 0; i < 3; i += 1) slots[i] = featuredRows[i] ?? null;
     return slots;
   }, [featuredRows]);
+  const isMobilePortraitWhileExpanded = cardExpanded && viewport.width <= 900 && viewport.height > viewport.width;
 
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>フレンドプロフィール</h1>
 
-      <section style={{ ...sectionStyle, ...profileCardBaseStyle, ...profileCardClosedShapeStyle, ...profileCardTemplateStyles[cardTemplate] }}>
+      {cardExpanded && <div style={profileCardBackdropStyle} aria-hidden />}
+      <section
+        style={{
+          ...sectionStyle,
+          ...profileCardBaseStyle,
+          ...profileCardTemplateStyles[cardTemplate],
+          ...profileCardClosedShapeStyle,
+          ...(cardExpanded ? profileCardExpandedStyle : null),
+          ...(isMobilePortraitWhileExpanded ? profileCardExpandedPortraitMobileStyle : null),
+        }}
+      >
+        {cardExpanded && (
+          <button
+            type="button"
+            onClick={() => setCardExpanded(false)}
+            style={profileCardCloseButtonStyle}
+            aria-label="拡大表示を閉じる"
+          >
+            ×
+          </button>
+        )}
+        {!cardExpanded && (
+          <button type="button" onClick={() => setCardExpanded(true)} style={profileCardExpandButtonStyle}>
+            拡大
+          </button>
+        )}
         <div style={profileTopStyle}>
           <Avatar
             iconText={profile?.icon_text ?? ""}
@@ -370,6 +439,61 @@ const profileCardClosedShapeStyle: React.CSSProperties = {
   aspectRatio: "1.9 / 1",
   alignContent: "space-between",
   gridTemplateRows: "auto 1fr auto",
+};
+
+const profileCardBackdropStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(8, 6, 3, 0.55)",
+  backdropFilter: "blur(3px)",
+  zIndex: 90,
+};
+
+const profileCardExpandedStyle: React.CSSProperties = {
+  position: "fixed",
+  left: "50%",
+  top: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "min(1240px, calc(100vw - 20px))",
+  maxWidth: "min(1240px, calc(100vw - 20px))",
+  height: "min(880px, calc(100dvh - 20px))",
+  maxHeight: "min(880px, calc(100dvh - 20px))",
+  margin: 0,
+  zIndex: 91,
+  overflowY: "auto",
+};
+
+const profileCardExpandedPortraitMobileStyle: React.CSSProperties = {
+  width: "min(96vh, calc(100dvh - 18px))",
+  maxWidth: "min(96vh, calc(100dvh - 18px))",
+  height: "min(96vw, calc(100vw - 18px))",
+  maxHeight: "min(96vw, calc(100vw - 18px))",
+  transform: "translate(-50%, -50%) rotate(90deg)",
+  transformOrigin: "center center",
+};
+
+const profileCardCloseButtonStyle: React.CSSProperties = {
+  position: "absolute",
+  right: 10,
+  top: 10,
+  zIndex: 2,
+  width: 34,
+  height: 34,
+  borderRadius: "50%",
+  border: "1px solid rgba(60, 45, 25, 0.4)",
+  background: "rgba(255,255,255,0.9)",
+  color: "#2a1c10",
+  fontSize: 22,
+  lineHeight: 1,
+  cursor: "pointer",
+};
+
+const profileCardExpandButtonStyle: React.CSSProperties = {
+  ...btnStyle,
+  position: "absolute",
+  right: 10,
+  top: 10,
+  zIndex: 1,
 };
 
 const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {

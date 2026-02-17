@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
   ensureFriendIdForCurrentUser,
+  getFriendIdFromUserMetadata,
   loadCurrentProfilePrefsFromProfiles,
   loadIconImageDataUrlFromProfiles,
   getProfilePrefsFromUserMetadata,
@@ -62,6 +63,9 @@ export default function ProfilePage() {
   const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
   const [titlePickerSlot, setTitlePickerSlot] = useState<0 | 1 | null>(null);
   const [achievementNotice, setAchievementNotice] = useState(false);
+  const [cardExpanded, setCardExpanded] = useState(false);
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [friendId, setFriendId] = useState("");
   const iconFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -76,6 +80,7 @@ export default function ProfilePage() {
 
         setUserId(currentUser.id);
         setEmail(currentUser.email ?? "");
+        setFriendId(getFriendIdFromUserMetadata(currentUser.user_metadata));
 
         const meta = (currentUser.user_metadata ?? {}) as UserMeta;
         setDisplayName(meta.display_name ?? "");
@@ -108,6 +113,9 @@ export default function ProfilePage() {
           setAchievementNotice(ach.claimableTitleIds.length > 0);
         }
 
+        const ensured = await ensureFriendIdForCurrentUser();
+        if (ensured.ok) setFriendId(ensured.friendId);
+
         const { data, error } = await supabase
           .from("matches")
           .select("id, created_at, winner, moves_count, final_board")
@@ -129,6 +137,47 @@ export default function ProfilePage() {
       }
     })();
   }, [router]);
+
+  useEffect(() => {
+    const onResize = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("hisei-bottom-menu-visible", {
+        detail: { visible: !cardExpanded },
+      }),
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("hisei-bottom-menu-visible", {
+          detail: { visible: true },
+        }),
+      );
+    };
+  }, [cardExpanded]);
+
+  useEffect(() => {
+    if (!cardExpanded) return;
+    const screenOrientation = (screen as { orientation?: { lock?: (type: string) => Promise<void>; unlock?: () => void } }).orientation;
+    if (viewport.width <= 900 && screenOrientation?.lock) {
+      screenOrientation.lock("landscape").catch(() => {
+        // iOS Safari usually rejects lock; visual fallback is applied below.
+      });
+    }
+    return () => {
+      screenOrientation?.unlock?.();
+    };
+  }, [cardExpanded, viewport.width]);
 
   const featuredRows = useMemo(() => {
     const byId = new Map(rows.map(row => [row.id, row]));
@@ -236,6 +285,7 @@ export default function ProfilePage() {
     return [equippedTitleIds[0] ?? "", equippedTitleIds[1] ?? ""] as [string, string];
   }, [equippedTitleIds]);
   const canUseSnowFrame = unlockedTitleIds.includes("extreme_emperor");
+  const isMobilePortraitWhileExpanded = cardExpanded && viewport.width <= 900 && viewport.height > viewport.width;
 
   const onToggleFeaturedWithStar = (matchId: string) => {
     if (!userId) return;
@@ -291,47 +341,65 @@ export default function ProfilePage() {
         <div style={{ width: "100%", maxWidth: 760, fontSize: 14, color: "#666" }}>読み込み中...</div>
       )}
 
+      {cardExpanded && <div style={profileCardBackdropStyle} aria-hidden />}
       <section
         style={{
           ...sectionStyle,
           ...profileCardBaseStyle,
           ...profileCardTemplateStyles[cardTemplate],
           ...(profileEditOpen ? profileCardEditOpenStyle : profileCardClosedShapeStyle),
+          ...(cardExpanded ? profileCardExpandedStyle : null),
+          ...(isMobilePortraitWhileExpanded ? profileCardExpandedPortraitMobileStyle : null),
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <h2 style={{ margin: 0, fontSize: 20 }}>季士情報</h2>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {profileEditOpen && (
-              <button onClick={saveProfile} disabled={saving} style={btnStyle}>
-                {saving ? "保存中..." : "保存"}
+        {cardExpanded && (
+          <button
+            type="button"
+            onClick={() => setCardExpanded(false)}
+            style={profileCardCloseButtonStyle}
+            aria-label="拡大表示を閉じる"
+          >
+            ×
+          </button>
+        )}
+        {!cardExpanded && (
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <h2 style={{ margin: 0, fontSize: 20 }}>季士情報</h2>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button type="button" onClick={() => setCardExpanded(true)} style={btnStyle}>
+                拡大
               </button>
-            )}
-            <button style={btnStyle} onClick={() => setProfileEditOpen(v => !v)}>
-              {profileEditOpen ? "×" : "編集"}
-            </button>
+              {profileEditOpen && (
+                <button onClick={saveProfile} disabled={saving} style={btnStyle}>
+                  {saving ? "保存中..." : "保存"}
+                </button>
+              )}
+              <button style={btnStyle} onClick={() => setProfileEditOpen(v => !v)}>
+                {profileEditOpen ? "×" : "編集"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
         <div style={profileTopStyle}>
           <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
             <button
               type="button"
               onClick={() => {
-                if (!profileEditOpen) return;
+                if (!profileEditOpen || cardExpanded) return;
                 iconFileInputRef.current?.click();
               }}
               style={{
                 border: "none",
                 background: "transparent",
                 padding: 0,
-                cursor: profileEditOpen ? "pointer" : "default",
+                cursor: profileEditOpen && !cardExpanded ? "pointer" : "default",
                 width: "fit-content",
               }}
-              aria-label={profileEditOpen ? "アイコン画像を変更" : "プロフィールアイコン"}
+              aria-label={profileEditOpen && !cardExpanded ? "アイコン画像を変更" : "プロフィールアイコン"}
             >
               <Avatar iconText={iconText} iconImageDataUrl={iconImageDataUrl} iconFrameId={iconFrameId} displayName={displayName} email={email} />
             </button>
-            {profileEditOpen && (
+            {profileEditOpen && !cardExpanded && (
               <div style={{ fontSize: 12, color: mutedTextColor }}>
                 アイコンをタップして画像変更
               </div>
@@ -347,7 +415,7 @@ export default function ProfilePage() {
           <div style={{ display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }}>
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
             <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
-            {(equippedTitles.length > 0 || profileEditOpen) && (
+            {(equippedTitles.length > 0 || (profileEditOpen && !cardExpanded)) && (
               <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle }}>
                 {[0, 1].map(i => {
                   const slot = i as 0 | 1;
@@ -359,7 +427,7 @@ export default function ProfilePage() {
                       key={slot}
                       type="button"
                       onClick={() => {
-                        if (!profileEditOpen) return;
+                        if (!profileEditOpen || cardExpanded) return;
                         setTitlePickerSlot(prev => (prev === slot ? null : slot));
                       }}
                       style={{
@@ -371,7 +439,7 @@ export default function ProfilePage() {
                               ...titleChipStyleFor(title),
                               ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : titleChipLowerDisplayStyle),
                             }),
-                        cursor: profileEditOpen ? "pointer" : "default",
+                        cursor: profileEditOpen && !cardExpanded ? "pointer" : "default",
                       }}
                     >
                       {empty ? "＋ 称号を設定" : title.name}
@@ -380,7 +448,10 @@ export default function ProfilePage() {
                 })}
               </div>
             )}
-            {profileEditOpen && titlePickerSlot !== null && (
+            <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>
+              {cardExpanded ? `フレンドID: ${friendId || "-"}` : `ログイン中: ${email || "(不明)"}`}
+            </div>
+            {profileEditOpen && !cardExpanded && titlePickerSlot !== null && (
               <div style={titlePickerPanelStyle}>
                 <div style={{ fontSize: 13, color: mutedTextColor, fontWeight: 700 }}>
                   {titlePickerSlot + 1}枠目に設定する称号を選択
@@ -429,8 +500,7 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-        <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>ログイン中: {email || "(不明)"}</div>
-        {profileEditOpen && (
+        {profileEditOpen && !cardExpanded && (
           <div style={{ ...profileEditPanelStyle, color: editTextColor }}>
             <label style={{ display: "grid", gap: 6, color: editTextColor }}>
               <span style={{ fontWeight: 700 }}>名前</span>
@@ -840,6 +910,53 @@ const profileCardClosedShapeStyle: React.CSSProperties = {
 const profileCardEditOpenStyle: React.CSSProperties = {
   maxWidth: 760,
   minHeight: 0,
+};
+
+const profileCardBackdropStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(8, 6, 3, 0.55)",
+  backdropFilter: "blur(3px)",
+  zIndex: 90,
+};
+
+const profileCardExpandedStyle: React.CSSProperties = {
+  position: "fixed",
+  left: "50%",
+  top: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "min(1240px, calc(100vw - 20px))",
+  maxWidth: "min(1240px, calc(100vw - 20px))",
+  height: "min(880px, calc(100dvh - 20px))",
+  maxHeight: "min(880px, calc(100dvh - 20px))",
+  margin: 0,
+  zIndex: 91,
+  overflowY: "auto",
+};
+
+const profileCardExpandedPortraitMobileStyle: React.CSSProperties = {
+  width: "min(96vh, calc(100dvh - 18px))",
+  maxWidth: "min(96vh, calc(100dvh - 18px))",
+  height: "min(96vw, calc(100vw - 18px))",
+  maxHeight: "min(96vw, calc(100vw - 18px))",
+  transform: "translate(-50%, -50%) rotate(90deg)",
+  transformOrigin: "center center",
+};
+
+const profileCardCloseButtonStyle: React.CSSProperties = {
+  position: "absolute",
+  right: 10,
+  top: 10,
+  zIndex: 2,
+  width: 34,
+  height: 34,
+  borderRadius: "50%",
+  border: "1px solid rgba(60, 45, 25, 0.4)",
+  background: "rgba(255,255,255,0.9)",
+  color: "#2a1c10",
+  fontSize: 22,
+  lineHeight: 1,
+  cursor: "pointer",
 };
 
 const profileEditPanelStyle: React.CSSProperties = {
