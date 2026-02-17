@@ -143,16 +143,16 @@ export default function BottomMenuBar() {
 
 const noticeBadgeStyle: React.CSSProperties = {
   position: "absolute",
-  top: 5,
-  right: 5,
-  width: 18,
-  height: 18,
+  top: 4,
+  right: 4,
+  width: 16,
+  height: 16,
   borderRadius: "50%",
   background: "#d33",
   color: "#fff",
   display: "grid",
   placeItems: "center",
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 800,
 };
 
@@ -160,9 +160,9 @@ const bottomMenuWrapStyle: React.CSSProperties = {
   position: "sticky",
   bottom: 0,
   width: "calc(100% - 12px)",
-  margin: "0 6px calc(6px + env(safe-area-inset-bottom))",
+  margin: "0 6px calc(4px + env(safe-area-inset-bottom))",
   borderRadius: 14,
-  padding: "2px 8px calc(4px + env(safe-area-inset-bottom))",
+  padding: "1px 8px calc(2px + env(safe-area-inset-bottom))",
   borderTop: "1px solid rgba(120, 80, 40, 0.25)",
   border: "1px solid rgba(120, 80, 40, 0.22)",
   background: "linear-gradient(180deg, rgba(255,250,241,0.66) 0%, rgba(245,230,202,0.72) 100%)",
@@ -174,7 +174,7 @@ const bottomMenuRowStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "flex-end",
   alignItems: "stretch",
-  gap: 6,
+  gap: 5,
   width: "100%",
   paddingBottom: 0,
   overflow: "visible",
@@ -184,14 +184,14 @@ const menuIconButtonStyle: React.CSSProperties = {
   position: "relative",
   flex: "1 1 0",
   minWidth: 0,
-  padding: "10px 6px",
-  marginTop: -8,
+  padding: "8px 6px",
+  marginTop: -6,
   borderRadius: 10,
   border: "1px solid var(--line)",
   background: "rgba(255,255,255,0.72)",
   color: "var(--ink)",
   display: "grid",
-  gap: 2,
+  gap: 1,
   justifyItems: "center",
   cursor: "pointer",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.2)",
@@ -203,13 +203,13 @@ const menuIconButtonActiveStyle: React.CSSProperties = {
 };
 
 const menuIconStyle: React.CSSProperties = {
-  fontSize: 24,
+  fontSize: 21,
   fontWeight: 900,
   lineHeight: 1,
 };
 
 const menuLabelStyle: React.CSSProperties = {
-  fontSize: "clamp(11px, 2.8vw, 14px)",
+  fontSize: "clamp(10px, 2.4vw, 12px)",
   fontWeight: 700,
   whiteSpace: "nowrap",
 };
