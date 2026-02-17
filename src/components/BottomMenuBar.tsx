@@ -14,7 +14,7 @@ type HomeMenu = {
 };
 
 const MENUS: HomeMenu[] = [
-  { id: "battle", icon: "⚔", label: "対局" },
+  { id: "battle", icon: "🏠", label: "ホーム" },
   { id: "kishi", icon: "季", label: "季士情報" },
   { id: "friend", icon: "友", label: "友人" },
   { id: "learn", icon: "学", label: "学び" },
