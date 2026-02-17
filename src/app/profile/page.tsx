@@ -903,14 +903,14 @@ const avatarWrapStyle: React.CSSProperties = {
 
 const avatarExpandedStyle: React.CSSProperties = {
   ...avatarStyle,
-  width: "clamp(138px, 27vw, 188px)",
-  fontSize: "clamp(48px, 8.2vw, 66px)",
+  width: "clamp(120px, 20vw, 156px)",
+  fontSize: "clamp(40px, 6.8vw, 56px)",
   borderWidth: 4,
 };
 
 const avatarWrapExpandedStyle: React.CSSProperties = {
   ...avatarWrapStyle,
-  width: "clamp(138px, 27vw, 188px)",
+  width: "clamp(120px, 20vw, 156px)",
 };
 
 const setsugekkaFrameStyle: React.CSSProperties = {
