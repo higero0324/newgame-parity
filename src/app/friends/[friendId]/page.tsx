@@ -210,14 +210,13 @@ export default function FriendProfilePage() {
         <div
           style={{
             ...(cardExpanded ? profileTopExpandedStyle : profileTopStyle),
-            ...(cardExpanded ? null : profileTopOffsetForExpandButtonStyle),
           }}
         >
           <div
             style={
               cardExpanded
                 ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%", gridColumn: 2 }
-                : { display: "flex", flexDirection: "column", gap: 6, gridColumn: 2 }
+                : { display: "flex", flexDirection: "column", gap: 6, gridColumn: 2, ...profileInfoOffsetForExpandButtonStyle }
             }
           >
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
@@ -551,7 +550,7 @@ const profileCardExpandButtonStyle: React.CSSProperties = {
   zIndex: 1,
 };
 
-const profileTopOffsetForExpandButtonStyle: React.CSSProperties = {
+const profileInfoOffsetForExpandButtonStyle: React.CSSProperties = {
   paddingTop: 36,
 };
 
