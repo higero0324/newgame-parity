@@ -417,11 +417,20 @@ export default function ProfilePage() {
               onChange={onPickIconImage}
             />
           </div>
-          <div style={{ display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }}>
+          <div
+            style={
+              cardExpanded
+                ? { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere", minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto" }
+                : { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere" }
+            }
+          >
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
+            <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>
+              {cardExpanded ? `フレンドID: ${friendId || "-"}` : `ログイン中: ${email || "(不明)"}`}
+            </div>
             <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
             {(equippedTitles.length > 0 || (profileEditOpen && !cardExpanded)) && (
-              <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle }}>
+              <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, ...(cardExpanded ? { alignSelf: "end" } : null) }}>
                 {[0, 1].map(i => {
                   const slot = i as 0 | 1;
                   const titleId = equippedSlots[slot];
@@ -443,6 +452,7 @@ export default function ProfilePage() {
                           : {
                               ...titleChipStyleFor(title),
                               ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : titleChipLowerDisplayStyle),
+                              ...(cardExpanded ? expandedTitleChipDisplayStyle : null),
                             }),
                         cursor: profileEditOpen && !cardExpanded ? "pointer" : "default",
                       }}
@@ -453,9 +463,6 @@ export default function ProfilePage() {
                 })}
               </div>
             )}
-            <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>
-              {cardExpanded ? `フレンドID: ${friendId || "-"}` : `ログイン中: ${email || "(不明)"}`}
-            </div>
             {profileEditOpen && !cardExpanded && titlePickerSlot !== null && (
               <div style={titlePickerPanelStyle}>
                 <div style={{ fontSize: 13, color: mutedTextColor, fontWeight: 700 }}>
@@ -1193,6 +1200,13 @@ const titleChipLowerDisplayStyle: React.CSSProperties = {
   lineHeight: 1.25,
   textAlign: "center",
   boxSizing: "border-box",
+};
+
+const expandedTitleChipDisplayStyle: React.CSSProperties = {
+  minHeight: "clamp(72px, 11vh, 96px)",
+  display: "grid",
+  placeItems: "center",
+  alignContent: "center",
 };
 
 const cardTitleChipAdaptiveStyle: React.CSSProperties = {

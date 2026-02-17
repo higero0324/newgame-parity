@@ -215,16 +215,22 @@ export default function FriendProfilePage() {
             displayName={displayName}
             expanded={cardExpanded}
           />
-          <div style={{ display: "grid", gap: 6 }}>
+          <div
+            style={
+              cardExpanded
+                ? { display: "grid", gap: 6, minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto" }
+                : { display: "grid", gap: 6 }
+            }
+          >
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
+            <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
             <div style={{ ...profileStatusTextStyle, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
-            <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
             {isFriend && equippedTitles.length > 0 && (
               <div
                 ref={titleAreaRef}
-                style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle }}
+                style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, ...(cardExpanded ? { alignSelf: "end" } : null) }}
               >
                 {equippedTitles.map(title => (
                   <div key={title.id} style={titleChipWrapStyle}>
@@ -240,6 +246,7 @@ export default function FriendProfilePage() {
                         ...titleChipButtonStyle,
                         ...titleChipStyleFor(title),
                         ...(isUpperTitle(title) ? titleChipUpperDisplayStyle : titleChipLowerDisplayStyle),
+                        ...(cardExpanded ? expandedTitleChipDisplayStyle : null),
                       }}
                       aria-expanded={openTitleId === title.id}
                     >
@@ -519,7 +526,7 @@ const profileCardExpandButtonStyle: React.CSSProperties = {
   ...btnStyle,
   position: "absolute",
   right: 10,
-  top: 10,
+  bottom: 10,
   zIndex: 1,
 };
 
@@ -687,6 +694,13 @@ const titleChipLowerDisplayStyle: React.CSSProperties = {
   lineHeight: 1.25,
   textAlign: "center",
   boxSizing: "border-box",
+};
+
+const expandedTitleChipDisplayStyle: React.CSSProperties = {
+  minHeight: "clamp(72px, 11vh, 96px)",
+  display: "grid",
+  placeItems: "center",
+  alignContent: "center",
 };
 
 const cardTitleChipAdaptiveStyle: React.CSSProperties = {
