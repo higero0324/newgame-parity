@@ -217,7 +217,13 @@ export default function BottomMenuBar() {
 
   return (
     <nav style={bottomMenuWrapStyle}>
-      <div ref={setScrollEl} style={bottomMenuScrollStyle}>
+      <div
+        ref={setScrollEl}
+        style={{
+          ...bottomMenuScrollStyle,
+          justifyContent: isOverflowing ? "flex-start" : "flex-end",
+        }}
+      >
         {renderMenus.map((menu, i) => {
           const active = menu.id === activeMenu;
           const showNotice = menu.id === "progress" && isLoggedIn && achievementNotice;
