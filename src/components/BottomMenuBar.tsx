@@ -27,9 +27,6 @@ export default function BottomMenuBar() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [achievementNotice, setAchievementNotice] = useState(false);
-  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
-  const [edgeNoticeSide, setEdgeNoticeSide] = useState<"left" | "right" | null>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
   const [homeActiveMenu, setHomeActiveMenu] = useState<"battle" | "learn">("battle");
   const [menuHidden, setMenuHidden] = useState(false);
 
@@ -100,130 +97,6 @@ export default function BottomMenuBar() {
     return "battle";
   }, [pathname, homeActiveMenu]);
 
-  const renderMenus = isOverflowing ? [...MENUS, ...MENUS, ...MENUS] : MENUS;
-
-  useEffect(() => {
-    if (hide) return;
-    if (!scrollEl) return;
-    const detectOverflow = () => {
-      const total = scrollEl.scrollWidth;
-      const base = isOverflowing ? total / 3 : total;
-      const overflowing = base > scrollEl.clientWidth + 1;
-      setIsOverflowing(prev => (prev === overflowing ? prev : overflowing));
-    };
-    detectOverflow();
-    const raf = requestAnimationFrame(detectOverflow);
-    const t = window.setTimeout(detectOverflow, 120);
-    const ro = new ResizeObserver(detectOverflow);
-    ro.observe(scrollEl);
-    window.addEventListener("resize", detectOverflow);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(t);
-      ro.disconnect();
-      window.removeEventListener("resize", detectOverflow);
-    };
-  }, [scrollEl, hide, isOverflowing]);
-
-  useEffect(() => {
-    if (hide) return;
-    if (!scrollEl) return;
-
-    let raf = 0;
-    const updateEdgeNotice = () => {
-      if (!achievementNotice) {
-        setEdgeNoticeSide(null);
-        return;
-      }
-      const containerRect = scrollEl.getBoundingClientRect();
-      const noticeEls = Array.from(scrollEl.querySelectorAll<HTMLElement>("[data-notice-item='1']"));
-      if (noticeEls.length === 0) {
-        setEdgeNoticeSide(null);
-        return;
-      }
-
-      let visible = false;
-      let nearestLeft = Number.POSITIVE_INFINITY;
-      let nearestRight = Number.POSITIVE_INFINITY;
-
-      for (const el of noticeEls) {
-        const r = el.getBoundingClientRect();
-        if (r.right > containerRect.left && r.left < containerRect.right) {
-          visible = true;
-          break;
-        }
-        if (r.right <= containerRect.left) {
-          nearestLeft = Math.min(nearestLeft, containerRect.left - r.right);
-        } else if (r.left >= containerRect.right) {
-          nearestRight = Math.min(nearestRight, r.left - containerRect.right);
-        }
-      }
-
-      if (visible) {
-        setEdgeNoticeSide(null);
-        return;
-      }
-      if (Number.isFinite(nearestLeft) && Number.isFinite(nearestRight)) {
-        setEdgeNoticeSide(nearestLeft <= nearestRight ? "left" : "right");
-        return;
-      }
-      if (Number.isFinite(nearestLeft)) {
-        setEdgeNoticeSide("left");
-        return;
-      }
-      if (Number.isFinite(nearestRight)) {
-        setEdgeNoticeSide("right");
-        return;
-      }
-      setEdgeNoticeSide(null);
-    };
-
-    const alignRightInMiddle = () => {
-      if (!isOverflowing) {
-        scrollEl.scrollLeft = 0;
-        updateEdgeNotice();
-        return;
-      }
-      const segment = scrollEl.scrollWidth / 3;
-      if (!Number.isFinite(segment) || segment <= 0) return;
-      const rightLean = Math.min(120, Math.max(0, segment * 0.15));
-      scrollEl.scrollLeft = segment + rightLean;
-      updateEdgeNotice();
-    };
-
-    const normalizeLoop = () => {
-      if (!isOverflowing) {
-        updateEdgeNotice();
-        return;
-      }
-      const segment = scrollEl.scrollWidth / 3;
-      if (!Number.isFinite(segment) || segment <= 0) return;
-      const min = segment * 0.25;
-      const max = segment * 1.75;
-      if (scrollEl.scrollLeft < min) {
-        scrollEl.scrollLeft += segment;
-      } else if (scrollEl.scrollLeft > max) {
-        scrollEl.scrollLeft -= segment;
-      }
-      updateEdgeNotice();
-    };
-
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(normalizeLoop);
-    };
-
-    alignRightInMiddle();
-    scrollEl.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", alignRightInMiddle);
-    updateEdgeNotice();
-    return () => {
-      cancelAnimationFrame(raf);
-      scrollEl.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", alignRightInMiddle);
-    };
-  }, [scrollEl, achievementNotice, hide, isOverflowing]);
-
   if (hide) return null;
 
   if (menuHidden) {
@@ -260,21 +133,14 @@ export default function BottomMenuBar() {
 
   return (
     <nav style={bottomMenuWrapStyle}>
-      <div
-        ref={setScrollEl}
-        style={{
-          ...bottomMenuScrollStyle,
-          justifyContent: isOverflowing ? "flex-start" : "flex-end",
-        }}
-      >
-        {renderMenus.map((menu, i) => {
+      <div style={bottomMenuRowStyle}>
+        {MENUS.map(menu => {
           const active = menu.id === activeMenu;
           const showNotice = menu.id === "progress" && isLoggedIn && achievementNotice;
           return (
             <button
-              key={`${menu.id}-${i}`}
+              key={menu.id}
               onClick={() => onTapMenu(menu.id)}
-              data-notice-item={showNotice ? "1" : undefined}
               style={{
                 ...menuIconButtonStyle,
                 ...(active ? menuIconButtonActiveStyle : null),
@@ -287,8 +153,6 @@ export default function BottomMenuBar() {
           );
         })}
       </div>
-      {edgeNoticeSide === "left" && <span style={{ ...edgeNoticeStyle, left: 6 }}>!</span>}
-      {edgeNoticeSide === "right" && <span style={{ ...edgeNoticeStyle, right: 6 }}>!</span>}
       <button style={menuHideButtonStyle} onClick={toggleMenuHidden}>
         メニュー非表示
       </button>
@@ -323,21 +187,21 @@ const bottomMenuWrapStyle: React.CSSProperties = {
   backdropFilter: "blur(10px)",
 };
 
-const bottomMenuScrollStyle: React.CSSProperties = {
+const bottomMenuRowStyle: React.CSSProperties = {
   display: "flex",
-  gap: 8,
-  overflowX: "auto",
-  WebkitOverflowScrolling: "touch",
-  scrollbarWidth: "thin",
+  justifyContent: "flex-end",
+  alignItems: "stretch",
+  gap: 6,
+  width: "100%",
   paddingBottom: 2,
 };
 
 const menuIconButtonStyle: React.CSSProperties = {
   position: "relative",
-  flex: "0 0 auto",
-  minWidth: 84,
-  padding: "8px 10px",
-  borderRadius: 12,
+  flex: "1 1 0",
+  minWidth: 0,
+  padding: "8px 6px",
+  borderRadius: 10,
   border: "1px solid var(--line)",
   background: "rgba(255,255,255,0.72)",
   color: "var(--ink)",
@@ -360,25 +224,9 @@ const menuIconStyle: React.CSSProperties = {
 };
 
 const menuLabelStyle: React.CSSProperties = {
-  fontSize: 12,
+  fontSize: "clamp(10px, 2.4vw, 12px)",
   fontWeight: 700,
   whiteSpace: "nowrap",
-};
-
-const edgeNoticeStyle: React.CSSProperties = {
-  position: "absolute",
-  bottom: "calc(12px + env(safe-area-inset-bottom))",
-  width: 18,
-  height: 18,
-  borderRadius: "50%",
-  background: "#d33",
-  color: "#fff",
-  display: "grid",
-  placeItems: "center",
-  fontSize: 12,
-  fontWeight: 800,
-  pointerEvents: "none",
-  zIndex: 1,
 };
 
 const menuHideButtonStyle: React.CSSProperties = {
