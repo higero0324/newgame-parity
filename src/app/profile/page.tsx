@@ -283,6 +283,7 @@ export default function ProfilePage() {
     return [equippedTitleIds[0] ?? "", equippedTitleIds[1] ?? ""] as [string, string];
   }, [equippedTitleIds]);
   const canUseSnowFrame = unlockedTitleIds.includes("extreme_emperor");
+  const isMobilePortraitWhileExpanded = cardExpanded && viewport.width <= 900 && viewport.height > viewport.width;
 
   const onToggleFeaturedWithStar = (matchId: string) => {
     if (!userId) return;
@@ -346,6 +347,7 @@ export default function ProfilePage() {
           ...profileCardTemplateStyles[cardTemplate],
           ...(profileEditOpen ? profileCardEditOpenStyle : profileCardClosedShapeStyle),
           ...(cardExpanded ? profileCardExpandedStyle : null),
+          ...(isMobilePortraitWhileExpanded ? profileCardExpandedPortraitMobileStyle : null),
         }}
       >
         {cardExpanded && (
@@ -838,14 +840,14 @@ const avatarWrapStyle: React.CSSProperties = {
 
 const avatarExpandedStyle: React.CSSProperties = {
   ...avatarStyle,
-  width: "clamp(148px, 30vw, 216px)",
-  fontSize: "clamp(52px, 9vw, 72px)",
+  width: "clamp(124px, 24vw, 176px)",
+  fontSize: "clamp(44px, 7.2vw, 62px)",
   borderWidth: 4,
 };
 
 const avatarWrapExpandedStyle: React.CSSProperties = {
   ...avatarWrapStyle,
-  width: "clamp(148px, 30vw, 216px)",
+  width: "clamp(124px, 24vw, 176px)",
 };
 
 const setsugekkaFrameStyle: React.CSSProperties = {
@@ -973,6 +975,15 @@ const profileCardExpandedStyle: React.CSSProperties = {
   margin: 0,
   zIndex: 91,
   overflowY: "auto",
+};
+
+const profileCardExpandedPortraitMobileStyle: React.CSSProperties = {
+  width: "min(96vh, calc(100dvh - 18px))",
+  maxWidth: "min(96vh, calc(100dvh - 18px))",
+  height: "min(96vw, calc(100vw - 18px))",
+  maxHeight: "min(96vw, calc(100vw - 18px))",
+  transform: "translate(-50%, -50%) rotate(90deg)",
+  transformOrigin: "center center",
 };
 
 const profileCardCloseButtonStyle: React.CSSProperties = {
