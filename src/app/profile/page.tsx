@@ -1142,6 +1142,7 @@ const titleChipStyleBase: React.CSSProperties = {
   borderRadius: 999,
   fontSize: 12,
   fontWeight: 700,
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   border: "1px solid transparent",
   width: "fit-content",
 };
@@ -1179,6 +1180,7 @@ const emptyTitleSlotStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.45)",
   color: "#6f5a40",
   fontWeight: 700,
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   textAlign: "center",
   boxSizing: "border-box",
   padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
@@ -1281,6 +1283,7 @@ const titleChipUpperDisplayStyle: React.CSSProperties = {
   width: "100%",
   minWidth: 0,
   textAlign: "center",
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   boxSizing: "border-box",
 };
 
@@ -1291,6 +1294,7 @@ const titleChipLowerDisplayStyle: React.CSSProperties = {
   fontSize: "clamp(14px, 2.8cqw, 18px)",
   lineHeight: 1.25,
   textAlign: "center",
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   boxSizing: "border-box",
 };
 

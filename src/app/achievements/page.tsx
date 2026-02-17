@@ -244,6 +244,7 @@ const titleChipStyleBase: React.CSSProperties = {
   borderRadius: 999,
   fontSize: 12,
   fontWeight: 700,
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   border: "1px solid transparent",
   width: "fit-content",
 };
