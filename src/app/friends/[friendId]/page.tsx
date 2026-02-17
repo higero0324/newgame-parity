@@ -622,7 +622,8 @@ const titleChipButtonStyle: React.CSSProperties = {
 
 const titleChipWrapStyle: React.CSSProperties = {
   position: "relative",
-  display: "inline-grid",
+  display: "grid",
+  width: "100%",
 };
 
 const titlePopoverStyle: React.CSSProperties = {
