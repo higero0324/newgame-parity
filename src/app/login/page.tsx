@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
@@ -17,6 +18,7 @@ function formatAuthError(err: unknown, fallback: string): string {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
@@ -52,6 +54,9 @@ export default function LoginPage() {
       if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
       await refreshUser();
       setStatus("ログインしました。");
+      setTimeout(() => {
+        router.replace("/");
+      }, 450);
     } catch (err) {
       setStatus(formatAuthError(err, "ログインに失敗しました。"));
     } finally {
@@ -81,6 +86,9 @@ export default function LoginPage() {
         if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         await refreshUser();
         setStatus("登録してログインしました。");
+        setTimeout(() => {
+          router.replace("/");
+        }, 450);
       }
     } catch (err) {
       setStatus(formatAuthError(err, "登録に失敗しました。"));
