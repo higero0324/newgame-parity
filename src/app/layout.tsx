@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { Noto_Sans_JP, Noto_Serif_JP, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import BottomMenuBar from "@/components/BottomMenuBar";
 
 const hiseiSans = Noto_Sans_JP({
   variable: "--font-hisei-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
         className={`${hiseiSans.variable} ${hiseiSerif.variable} ${hiseiMono.variable} antialiased`}
       >
         {children}
+        <BottomMenuBar />
       </body>
     </html>
   );

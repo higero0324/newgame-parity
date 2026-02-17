@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
 
@@ -27,8 +26,6 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [authReady, setAuthReady] = useState(false);
-  const [achievementNotice, setAchievementNotice] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<MenuId>("battle");
 
   useEffect(() => {
     const refresh = async () => {
@@ -37,8 +34,6 @@ export default function Home() {
         if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setIsLoggedIn(true);
         setIsGuestMode(false);
-        const ach = await loadAchievementStateForCurrentUser();
-        setAchievementNotice(Boolean(ach.ok && ach.claimableTitleIds.length > 0));
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {
@@ -47,7 +42,6 @@ export default function Home() {
         }
         setIsLoggedIn(false);
         setIsGuestMode(true);
-        setAchievementNotice(false);
       }
       setAuthReady(true);
     };
@@ -59,9 +53,6 @@ export default function Home() {
         if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setIsLoggedIn(true);
         setIsGuestMode(false);
-        loadAchievementStateForCurrentUser().then(ach => {
-          setAchievementNotice(Boolean(ach.ok && ach.claimableTitleIds.length > 0));
-        });
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {
@@ -70,7 +61,6 @@ export default function Home() {
         }
         setIsLoggedIn(false);
         setIsGuestMode(true);
-        setAchievementNotice(false);
       }
       setAuthReady(true);
     });
@@ -128,6 +118,10 @@ export default function Home() {
     return <main style={{ padding: 24, textAlign: "center", color: "#666" }}>読み込み中...</main>;
   }
 
+  const activeMenu: MenuId =
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("menu") === "learn"
+      ? "learn"
+      : "battle";
   const selectedMenu = menus.find(m => m.id === activeMenu) ?? menus[0];
 
   const goAction = (action: MenuAction) => {
@@ -138,16 +132,8 @@ export default function Home() {
     router.push(action.href);
   };
 
-  const onTapMenu = (menu: HomeMenu) => {
-    if (menu.actions.length === 1) {
-      goAction(menu.actions[0]);
-      return;
-    }
-    setActiveMenu(menu.id);
-  };
-
   return (
-    <main style={{ padding: 24, paddingBottom: 132, display: "grid", gap: 14, justifyItems: "center" }}>
+    <main style={{ padding: 24, paddingBottom: 96, display: "grid", gap: 14, justifyItems: "center" }}>
       <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
         <span style={{ fontSize: 60, display: "block" }}>一正</span>
         <span style={{ fontSize: 15, display: "block", marginTop: 5, color: "#555" }}>～HISEI～</span>
@@ -174,29 +160,6 @@ export default function Home() {
           ? "※ゲスト参加中です。プロフィール・フレンド・季譜保存・アチーブメントは利用できません。"
           : "※ログインは季譜保存用。ログインなしでも対局できます。"}
       </p>
-
-      <nav style={bottomMenuWrapStyle}>
-        <div style={bottomMenuScrollStyle}>
-          {menus.map(menu => {
-            const active = menu.id === activeMenu;
-            const showNotice = menu.id === "progress" && isLoggedIn && achievementNotice;
-            return (
-              <button
-                key={menu.id}
-                onClick={() => onTapMenu(menu)}
-                style={{
-                  ...menuIconButtonStyle,
-                  ...(active ? menuIconButtonActiveStyle : null),
-                }}
-              >
-                <span style={menuIconStyle}>{menu.icon}</span>
-                <span style={menuLabelStyle}>{menu.label}</span>
-                {showNotice && <span style={noticeBadgeStyle}>!</span>}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
     </main>
   );
 }
@@ -211,72 +174,4 @@ const bigActionButtonStyle: React.CSSProperties = {
   fontSize: 18,
   cursor: "pointer",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
-};
-
-const noticeBadgeStyle: React.CSSProperties = {
-  position: "absolute",
-  top: 5,
-  right: 5,
-  width: 18,
-  height: 18,
-  borderRadius: "50%",
-  background: "#d33",
-  color: "#fff",
-  display: "grid",
-  placeItems: "center",
-  fontSize: 12,
-  fontWeight: 800,
-};
-
-const bottomMenuWrapStyle: React.CSSProperties = {
-  position: "fixed",
-  left: 0,
-  right: 0,
-  bottom: 0,
-  padding: "10px 10px calc(10px + env(safe-area-inset-bottom))",
-  borderTop: "1px solid rgba(120, 80, 40, 0.25)",
-  background: "linear-gradient(180deg, rgba(255,250,241,0.95) 0%, rgba(245,230,202,0.98) 100%)",
-  backdropFilter: "blur(6px)",
-};
-
-const bottomMenuScrollStyle: React.CSSProperties = {
-  display: "flex",
-  gap: 8,
-  overflowX: "auto",
-  WebkitOverflowScrolling: "touch",
-  scrollbarWidth: "thin",
-  paddingBottom: 2,
-};
-
-const menuIconButtonStyle: React.CSSProperties = {
-  position: "relative",
-  flex: "0 0 auto",
-  minWidth: 84,
-  padding: "8px 10px",
-  borderRadius: 12,
-  border: "1px solid var(--line)",
-  background: "rgba(255,255,255,0.72)",
-  color: "var(--ink)",
-  display: "grid",
-  gap: 2,
-  justifyItems: "center",
-  cursor: "pointer",
-  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.2)",
-};
-
-const menuIconButtonActiveStyle: React.CSSProperties = {
-  background: "linear-gradient(180deg, #fff8ec 0%, #f1dfbf 100%)",
-  borderColor: "#ad7f47",
-};
-
-const menuIconStyle: React.CSSProperties = {
-  fontSize: 20,
-  fontWeight: 900,
-  lineHeight: 1,
-};
-
-const menuLabelStyle: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: 700,
-  whiteSpace: "nowrap",
 };
