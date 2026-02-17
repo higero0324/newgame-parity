@@ -238,11 +238,13 @@ export default function BottomMenuBar() {
     if (id === "battle") {
       setHomeActiveMenu("battle");
       router.push("/?menu=battle");
+      window.dispatchEvent(new CustomEvent("hisei-menu-change", { detail: { menu: "battle" } }));
       return;
     }
     if (id === "learn") {
       setHomeActiveMenu("learn");
       router.push("/?menu=learn");
+      window.dispatchEvent(new CustomEvent("hisei-menu-change", { detail: { menu: "learn" } }));
       return;
     }
     if (id === "kishi") {

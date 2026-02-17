@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
@@ -23,10 +23,31 @@ type HomeMenu = {
 
 export default function Home() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [homeMenu, setHomeMenu] = useState<"battle" | "learn">("battle");
+
+  useEffect(() => {
+    const readFromQuery = () => {
+      const q = new URLSearchParams(window.location.search).get("menu");
+      setHomeMenu(q === "learn" ? "learn" : "battle");
+    };
+    const onMenuChange = (event: Event) => {
+      const custom = event as CustomEvent<{ menu?: string }>;
+      const m = custom.detail?.menu;
+      if (m === "learn") setHomeMenu("learn");
+      else if (m === "battle") setHomeMenu("battle");
+      else readFromQuery();
+    };
+    readFromQuery();
+    window.addEventListener("popstate", readFromQuery);
+    window.addEventListener("hisei-menu-change", onMenuChange as EventListener);
+    return () => {
+      window.removeEventListener("popstate", readFromQuery);
+      window.removeEventListener("hisei-menu-change", onMenuChange as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const refresh = async () => {
@@ -119,10 +140,7 @@ export default function Home() {
     return <main style={{ padding: 24, textAlign: "center", color: "#666" }}>読み込み中...</main>;
   }
 
-  const activeMenu: MenuId =
-    searchParams.get("menu") === "learn"
-      ? "learn"
-      : "battle";
+  const activeMenu: MenuId = homeMenu;
   const selectedMenu = menus.find(m => m.id === activeMenu) ?? menus[0];
 
   const goAction = (action: MenuAction) => {
