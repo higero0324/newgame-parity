@@ -29,6 +29,7 @@ export default function BottomMenuBar() {
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const [edgeNoticeSide, setEdgeNoticeSide] = useState<"left" | "right" | null>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
+  const [homeActiveMenu, setHomeActiveMenu] = useState<"battle" | "learn">("battle");
 
   useEffect(() => {
     const refresh = async () => {
@@ -58,8 +59,20 @@ export default function BottomMenuBar() {
   }, []);
 
   const hide = pathname === "/play" || pathname === "/cpu";
+
+  useEffect(() => {
+    if (pathname !== "/") return;
+    const readFromQuery = () => {
+      const q = new URLSearchParams(window.location.search).get("menu");
+      setHomeActiveMenu(q === "learn" ? "learn" : "battle");
+    };
+    readFromQuery();
+    window.addEventListener("popstate", readFromQuery);
+    return () => window.removeEventListener("popstate", readFromQuery);
+  }, [pathname]);
+
   const activeMenu = useMemo<MenuId>(() => {
-    if (pathname === "/") return "battle";
+    if (pathname === "/") return homeActiveMenu;
     if (pathname.startsWith("/profile")) return "kishi";
     if (pathname.startsWith("/friends")) return "friend";
     if (pathname.startsWith("/achievements")) return "progress";
@@ -67,7 +80,7 @@ export default function BottomMenuBar() {
       return "learn";
     }
     return "battle";
-  }, [pathname]);
+  }, [pathname, homeActiveMenu]);
 
   const renderMenus = isOverflowing ? [...MENUS, ...MENUS, ...MENUS] : MENUS;
 
@@ -197,10 +210,12 @@ export default function BottomMenuBar() {
 
   const onTapMenu = (id: MenuId) => {
     if (id === "battle") {
+      setHomeActiveMenu("battle");
       router.push("/?menu=battle");
       return;
     }
     if (id === "learn") {
+      setHomeActiveMenu("learn");
       router.push("/?menu=learn");
       return;
     }
