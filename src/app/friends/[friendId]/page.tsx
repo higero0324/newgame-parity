@@ -203,15 +203,27 @@ export default function FriendProfilePage() {
           </button>
         )}
         {!cardExpanded && (
-          <button type="button" onClick={() => setCardExpanded(true)} style={profileCardExpandButtonStyle}>
-            拡大
-          </button>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <h2 style={{ margin: 0, fontSize: 20 }}>季士情報</h2>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button type="button" onClick={() => setCardExpanded(true)} style={btnStyle}>
+                拡大
+              </button>
+            </div>
+          </div>
         )}
         <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
-          <div style={{ ...profileInfoBlockStyle, ...(cardExpanded ? null : profileInfoOffsetForExpandButtonStyle) }}>
+          <div style={profileInfoBlockStyle}>
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
             <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
-            <div style={{ ...profileStatusTextStyle, color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555", overflowWrap: "anywhere" }}>
+            <div
+              style={{
+                ...profileStatusTextStyle,
+                color: isDarkCard ? "rgba(255,245,230,0.85)" : "#555",
+                overflowWrap: "anywhere",
+                ...(cardExpanded ? profileExpandedStatusReserveStyle : null),
+              }}
+            >
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
           </div>
@@ -546,18 +558,6 @@ const profileCardCloseButtonStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
-const profileCardExpandButtonStyle: React.CSSProperties = {
-  ...btnStyle,
-  position: "absolute",
-  right: 10,
-  top: 10,
-  zIndex: 1,
-};
-
-const profileInfoOffsetForExpandButtonStyle: React.CSSProperties = {
-  paddingTop: 36,
-};
-
 const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
   white: {
     background:
@@ -682,6 +682,10 @@ const profileNameTextStyle: React.CSSProperties = {
 const profileStatusTextStyle: React.CSSProperties = {
   fontSize: "clamp(12px, 2.8cqw, 15px)",
   lineHeight: 1.45,
+};
+
+const profileExpandedStatusReserveStyle: React.CSSProperties = {
+  minHeight: "calc(1.45em * 3)",
 };
 
 const profileMetaTextStyle: React.CSSProperties = {

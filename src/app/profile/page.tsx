@@ -384,7 +384,9 @@ export default function ProfilePage() {
             <div style={{ ...profileMetaTextStyle, color: lightTextColor }}>
               {cardExpanded ? `フレンドID: ${friendId || "-"}` : `ログイン中: ${email || "(不明)"}`}
             </div>
-            <div style={{ ...profileStatusTextStyle, color: mutedTextColor }}>{statusMessage || "（ステータスメッセージ未設定）"}</div>
+            <div style={{ ...profileStatusTextStyle, color: mutedTextColor, ...(cardExpanded ? profileExpandedStatusReserveStyle : null) }}>
+              {statusMessage || "（ステータスメッセージ未設定）"}
+            </div>
           </div>
           {(equippedTitles.length > 0 || (profileEditOpen && !cardExpanded)) && (
             <div style={profileTitleBlockStyle}>
@@ -1185,6 +1187,10 @@ const profileNameTextStyle: React.CSSProperties = {
 const profileStatusTextStyle: React.CSSProperties = {
   fontSize: "clamp(12px, 2.8cqw, 15px)",
   lineHeight: 1.45,
+};
+
+const profileExpandedStatusReserveStyle: React.CSSProperties = {
+  minHeight: "calc(1.45em * 3)",
 };
 
 const profileMetaTextStyle: React.CSSProperties = {
