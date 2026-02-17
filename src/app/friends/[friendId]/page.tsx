@@ -440,7 +440,7 @@ function parseTemplate(value: string | undefined): CardTemplateId {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "max-content max-content",
+  gridTemplateColumns: "max-content minmax(0, 1fr)",
   gridTemplateRows: "auto minmax(0, 1fr)",
   gap: 4,
   alignItems: "stretch",
@@ -467,8 +467,8 @@ const profileTitleBlockStyle: React.CSSProperties = {
   gridColumn: 2,
   gridRow: 2,
   alignSelf: "end",
-  justifySelf: "start",
-  width: "min(100%, 300px)",
+  justifySelf: "stretch",
+  width: "100%",
   display: "grid",
   gap: 6,
 };
@@ -705,8 +705,8 @@ const equippedTitleListUpperStyle: React.CSSProperties = {
 
 const titleChipUpperDisplayStyle: React.CSSProperties = {
   borderRadius: 8,
-  padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
-  fontSize: "clamp(13px, 2.5cqw, 16px)",
+  padding: "clamp(10px, 2.4cqw, 14px) clamp(12px, 3.2cqw, 18px)",
+  fontSize: "clamp(14px, 2.8cqw, 18px)",
   lineHeight: 1.25,
   width: "100%",
   minWidth: 0,
@@ -717,8 +717,8 @@ const titleChipUpperDisplayStyle: React.CSSProperties = {
 const titleChipLowerDisplayStyle: React.CSSProperties = {
   width: "100%",
   minWidth: 0,
-  padding: "clamp(8px, 2cqw, 12px) clamp(10px, 2.8cqw, 16px)",
-  fontSize: "clamp(13px, 2.5cqw, 16px)",
+  padding: "clamp(10px, 2.4cqw, 14px) clamp(12px, 3.2cqw, 18px)",
+  fontSize: "clamp(14px, 2.8cqw, 18px)",
   lineHeight: 1.25,
   textAlign: "center",
   boxSizing: "border-box",
