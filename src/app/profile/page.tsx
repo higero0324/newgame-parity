@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -903,14 +903,14 @@ const avatarWrapStyle: React.CSSProperties = {
 
 const avatarExpandedStyle: React.CSSProperties = {
   ...avatarStyle,
-  width: "clamp(124px, 24vw, 176px)",
-  fontSize: "clamp(44px, 7.2vw, 62px)",
+  width: "clamp(138px, 27vw, 188px)",
+  fontSize: "clamp(48px, 8.2vw, 66px)",
   borderWidth: 4,
 };
 
 const avatarWrapExpandedStyle: React.CSSProperties = {
   ...avatarWrapStyle,
-  width: "clamp(124px, 24vw, 176px)",
+  width: "clamp(138px, 27vw, 188px)",
 };
 
 const setsugekkaFrameStyle: React.CSSProperties = {
@@ -1242,13 +1242,13 @@ function isUpperTitle(title: TitleDef): boolean {
 }
 
 const profileNameTextStyle: React.CSSProperties = {
-  fontSize: "clamp(18px, 4.2cqw, 24px)",
+  fontSize: "clamp(21px, 4.8cqw, 30px)",
   fontWeight: 800,
   lineHeight: 1.2,
 };
 
 const profileStatusTextStyle: React.CSSProperties = {
-  fontSize: "clamp(12px, 2.8cqw, 15px)",
+  fontSize: "clamp(14px, 3.2cqw, 18px)",
   lineHeight: 1.45,
 };
 
@@ -1257,7 +1257,7 @@ const profileExpandedStatusReserveStyle: React.CSSProperties = {
 };
 
 const profileMetaTextStyle: React.CSSProperties = {
-  fontSize: "clamp(11px, 2.2cqw, 13px)",
+  fontSize: "clamp(13px, 2.7cqw, 16px)",
   lineHeight: 1.4,
 };
 
