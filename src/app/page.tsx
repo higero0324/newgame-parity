@@ -174,11 +174,6 @@ export default function Home() {
         )}
       </section>
 
-      <p style={{ color: "#555", textAlign: "center" }}>
-        {isGuestMode
-          ? "※ゲスト参加中です。プロフィール・フレンド・季譜保存・アチーブメントは利用できません。"
-          : "※ログインは季譜保存用。ログインなしでも対局できます。"}
-      </p>
     </main>
   );
 }
