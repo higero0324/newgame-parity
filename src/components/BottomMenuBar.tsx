@@ -152,11 +152,12 @@ const bottomMenuWrapStyle: React.CSSProperties = {
   width: "calc(100% - 12px)",
   margin: "0 6px calc(6px + env(safe-area-inset-bottom))",
   borderRadius: 14,
-  padding: "8px 8px env(safe-area-inset-bottom)",
+  padding: "2px 8px calc(4px + env(safe-area-inset-bottom))",
   borderTop: "1px solid rgba(120, 80, 40, 0.25)",
   border: "1px solid rgba(120, 80, 40, 0.22)",
   background: "linear-gradient(180deg, rgba(255,250,241,0.66) 0%, rgba(245,230,202,0.72) 100%)",
   backdropFilter: "blur(10px)",
+  overflow: "visible",
 };
 
 const bottomMenuRowStyle: React.CSSProperties = {
@@ -165,7 +166,8 @@ const bottomMenuRowStyle: React.CSSProperties = {
   alignItems: "stretch",
   gap: 6,
   width: "100%",
-  paddingBottom: 2,
+  paddingBottom: 0,
+  overflow: "visible",
 };
 
 const menuIconButtonStyle: React.CSSProperties = {
@@ -173,6 +175,7 @@ const menuIconButtonStyle: React.CSSProperties = {
   flex: "1 1 0",
   minWidth: 0,
   padding: "8px 6px",
+  marginTop: -8,
   borderRadius: 10,
   border: "1px solid var(--line)",
   background: "rgba(255,255,255,0.72)",
