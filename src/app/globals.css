@@ -49,6 +49,28 @@ h1, h2, h3 {
   letter-spacing: 0.02em;
 }
 
+/* Apply a stylish Mincho to most bold text without rewriting every inline style. */
+:where(
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  b,
+  [style*="font-weight: 700"],
+  [style*="font-weight:700"],
+  [style*="font-weight: 800"],
+  [style*="font-weight:800"],
+  [style*="font-weight: 900"],
+  [style*="font-weight:900"],
+  [style*="font-weight: bold"],
+  [style*="font-weight:bold"]
+) {
+  font-family: var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif;
+}
+
 a, button {
   font-family: inherit;
 }

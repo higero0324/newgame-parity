@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { Noto_Sans_JP, Noto_Serif_JP, JetBrains_Mono } from "next/font/google";
+import { Noto_Sans_JP, Noto_Serif_JP, JetBrains_Mono, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 import BottomMenuBar from "@/components/BottomMenuBar";
 
@@ -18,6 +18,12 @@ const hiseiSerif = Noto_Serif_JP({
 const hiseiMono = JetBrains_Mono({
   variable: "--font-hisei-mono",
   subsets: ["latin"],
+});
+
+const hiseiMinchoBold = Shippori_Mincho({
+  variable: "--font-hisei-mincho-bold",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -43,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body
-        className={`${hiseiSans.variable} ${hiseiSerif.variable} ${hiseiMono.variable} antialiased`}
+        className={`${hiseiSans.variable} ${hiseiSerif.variable} ${hiseiMinchoBold.variable} ${hiseiMono.variable} antialiased`}
       >
         <div style={{ height: "100dvh", display: "grid", gridTemplateRows: "1fr auto", overflow: "hidden" }}>
           <div
