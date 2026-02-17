@@ -167,6 +167,9 @@ export default function FriendProfilePage() {
     const ids = Array.isArray(profile?.equipped_title_ids) ? profile?.equipped_title_ids : [];
     return ids.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x)).slice(0, 2);
   }, [profile?.equipped_title_ids]);
+  const equippedTitleSlots = useMemo(() => {
+    return [equippedTitles[0] ?? null, equippedTitles[1] ?? null] as const;
+  }, [equippedTitles]);
   const frameRows = useMemo(() => {
     const slots: Array<MatchRow | null> = [null, null, null];
     for (let i = 0; i < 3; i += 1) slots[i] = featuredRows[i] ?? null;
@@ -227,10 +230,18 @@ export default function FriendProfilePage() {
               {isFriend ? profile?.status_message || "（ステータスメッセージ未設定）" : "フレンドになると詳細が見られます。"}
             </div>
           </div>
-          {isFriend && equippedTitles.length > 0 && (
-            <div ref={titleAreaRef} style={profileTitleBlockStyle}>
-              <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, justifyItems: "end" }}>
-                {equippedTitles.map(title => (
+          <div ref={titleAreaRef} style={profileTitleBlockStyle}>
+            <div style={{ ...equippedTitleListStyle, ...equippedTitleListUpperStyle, justifyItems: "end" }}>
+              {[0, 1].map(i => {
+                const title = equippedTitleSlots[i];
+                if (!isFriend || !title) {
+                  return (
+                    <div key={`empty-${i}`} style={{ ...titleChipStyleBase, ...emptyTitleSlotStyle }}>
+                      {!isFriend && i === 0 ? "フレンドで表示" : "称号未設定"}
+                    </div>
+                  );
+                }
+                return (
                   <div key={title.id} style={titleChipWrapStyle}>
                     <button
                       type="button"
@@ -256,10 +267,10 @@ export default function FriendProfilePage() {
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
+          </div>
           <div style={profileIconBlockStyle}>
             <Avatar
               iconText={profile?.icon_text ?? ""}
@@ -490,6 +501,8 @@ const profileIconBlockStyle: React.CSSProperties = {
   gridRow: 2,
   alignSelf: "end",
   justifySelf: "start",
+  display: "grid",
+  gap: 6,
 };
 
 const profileCardBaseStyle: React.CSSProperties = {
@@ -682,6 +695,21 @@ const profileNameTextStyle: React.CSSProperties = {
 const profileStatusTextStyle: React.CSSProperties = {
   fontSize: "clamp(12px, 2.8cqw, 15px)",
   lineHeight: 1.45,
+};
+
+const emptyTitleSlotStyle: React.CSSProperties = {
+  width: "100%",
+  minWidth: 0,
+  borderRadius: 10,
+  border: "1px dashed rgba(90, 60, 30, 0.45)",
+  background: "rgba(255,255,255,0.45)",
+  color: "#6f5a40",
+  fontWeight: 700,
+  textAlign: "center",
+  boxSizing: "border-box",
+  padding: "clamp(10px, 2.4cqw, 14px) clamp(12px, 3.2cqw, 18px)",
+  fontSize: "clamp(14px, 2.8cqw, 18px)",
+  lineHeight: 1.25,
 };
 
 const profileExpandedStatusReserveStyle: React.CSSProperties = {
