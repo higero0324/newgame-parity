@@ -182,10 +182,9 @@ export default function HistoryPage() {
           const isEditing = editingIds.has(r.id);
           const displayName = matchNames[r.id] || "（名前なし）";
           return (
-            <li key={r.id} style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 12, background: "rgba(255,255,255,0.6)", boxSizing: "border-box", width: "100%" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, flexWrap: "wrap" }}>
-                <div style={{ display: "grid", gap: 4 }}>
-                  <b>{displayName}</b>
+            <li key={r.id} style={{ position: "relative", padding: 12, border: "1px solid var(--line)", borderRadius: 12, background: "rgba(255,255,255,0.6)", boxSizing: "border-box", width: "100%" }}>
+              <div style={{ display: "grid", gap: 4, paddingRight: 172, minWidth: 0 }}>
+                  <b style={{ display: "block", overflowWrap: "anywhere", wordBreak: "break-word", lineHeight: 1.35 }}>{displayName}</b>
                   <div style={{ fontSize: 13, color: "#555" }}>{new Date(r.created_at).toLocaleString()}</div>
                   <div style={{ fontSize: 13 }}>
                     勝者: {r.winner === "p1" ? "先手" : "後手"} / 手数: {r.moves_count}
@@ -194,13 +193,12 @@ export default function HistoryPage() {
                     {isStarred && <span style={badgeStyle}>お気に入り</span>}
                     {isFeatured && <span style={badgeStyle}>プロフィール掲載</span>}
                   </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <Link href={`/history/${r.id}`} style={btnStyle}>再生</Link>
-                  <button style={btnStyle} onClick={() => toggleEditPanel(r.id)}>
-                    {isEditing ? "編集を閉じる" : "編集"}
-                  </button>
-                </div>
+              </div>
+              <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 8, flexWrap: "nowrap" }}>
+                <Link href={`/history/${r.id}`} style={btnStyle}>再生</Link>
+                <button style={btnStyle} onClick={() => toggleEditPanel(r.id)}>
+                  {isEditing ? "編集を閉じる" : "編集"}
+                </button>
               </div>
               {isEditing && (
                 <div style={{ marginTop: 10, borderTop: "1px solid var(--line)", paddingTop: 10, display: "grid", gap: 8 }}>
