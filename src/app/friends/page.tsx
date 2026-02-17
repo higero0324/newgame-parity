@@ -303,7 +303,6 @@ export default function FriendsPage() {
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
         <Link href="/profile" style={btnStyle}>プロフィールへ</Link>
-        <Link href="/" style={btnStyle}>ホームへ戻る</Link>
       </div>
 
       {status && (

@@ -445,9 +445,6 @@ export default function TutorialPage() {
         <button onClick={goNext} disabled={!completed || stepIndex === steps.length - 1} style={btnStyle}>
           次へ
         </button>
-        <Link href="/" style={btnStyle}>
-          ホームへ戻る
-        </Link>
       </div>
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>

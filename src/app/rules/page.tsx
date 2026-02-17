@@ -65,7 +65,6 @@ export default function RulesPage() {
       </section>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-        <Link href="/" style={linkStyle}>ホームへ戻る</Link>
         <Link href="/tutorial" style={linkStyle}>体験チュートリアルへ</Link>
       </div>
     </main>

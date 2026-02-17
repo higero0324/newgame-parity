@@ -166,10 +166,6 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-        <Link href="/" style={btnStyle}>ホームへ戻る</Link>
-      </div>
-
       {status && (
         <div style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 12, background: "rgba(255,255,255,0.6)", width: "100%", maxWidth: 720, boxSizing: "border-box" }}>
           {status}

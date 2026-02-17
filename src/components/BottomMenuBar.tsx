@@ -28,6 +28,7 @@ export default function BottomMenuBar() {
   const [achievementNotice, setAchievementNotice] = useState(false);
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const [edgeNoticeSide, setEdgeNoticeSide] = useState<"left" | "right" | null>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
 
   useEffect(() => {
     const refresh = async () => {
@@ -68,11 +69,22 @@ export default function BottomMenuBar() {
     return "battle";
   }, [pathname]);
 
-  if (hide) return null;
-
-  const loopMenus = [...MENUS, ...MENUS, ...MENUS];
+  const renderMenus = isOverflowing ? [...MENUS, ...MENUS, ...MENUS] : MENUS;
 
   useEffect(() => {
+    if (hide) return;
+    if (!scrollEl) return;
+    const detectOverflow = () => {
+      const overflowing = scrollEl.scrollWidth > scrollEl.clientWidth + 1;
+      setIsOverflowing(prev => (prev === overflowing ? prev : overflowing));
+    };
+    detectOverflow();
+    window.addEventListener("resize", detectOverflow);
+    return () => window.removeEventListener("resize", detectOverflow);
+  }, [scrollEl, hide]);
+
+  useEffect(() => {
+    if (hide) return;
     if (!scrollEl) return;
 
     let raf = 0;
@@ -125,6 +137,11 @@ export default function BottomMenuBar() {
     };
 
     const alignRightInMiddle = () => {
+      if (!isOverflowing) {
+        scrollEl.scrollLeft = 0;
+        updateEdgeNotice();
+        return;
+      }
       const segment = scrollEl.scrollWidth / 3;
       if (!Number.isFinite(segment) || segment <= 0) return;
       const rightLean = Math.min(120, Math.max(0, segment * 0.15));
@@ -133,6 +150,10 @@ export default function BottomMenuBar() {
     };
 
     const normalizeLoop = () => {
+      if (!isOverflowing) {
+        updateEdgeNotice();
+        return;
+      }
       const segment = scrollEl.scrollWidth / 3;
       if (!Number.isFinite(segment) || segment <= 0) return;
       const min = segment * 0.25;
@@ -159,7 +180,9 @@ export default function BottomMenuBar() {
       scrollEl.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", alignRightInMiddle);
     };
-  }, [scrollEl, achievementNotice]);
+  }, [scrollEl, achievementNotice, hide, isOverflowing]);
+
+  if (hide) return null;
 
   const onTapMenu = (id: MenuId) => {
     if (id === "battle") {
@@ -184,7 +207,7 @@ export default function BottomMenuBar() {
   return (
     <nav style={bottomMenuWrapStyle}>
       <div ref={setScrollEl} style={bottomMenuScrollStyle}>
-        {loopMenus.map((menu, i) => {
+        {renderMenus.map((menu, i) => {
           const active = menu.id === activeMenu;
           const showNotice = menu.id === "progress" && isLoggedIn && achievementNotice;
           return (
