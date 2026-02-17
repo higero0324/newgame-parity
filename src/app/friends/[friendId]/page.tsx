@@ -177,6 +177,9 @@ export default function FriendProfilePage() {
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>フレンドプロフィール</h1>
+      <div style={{ width: "100%", maxWidth: 760, display: "flex", justifyContent: "center" }}>
+        <Link href="/friends" style={btnStyle}>友人ページへ戻る</Link>
+      </div>
 
       {cardExpanded && <div style={profileCardBackdropStyle} aria-hidden />}
       <section

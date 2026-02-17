@@ -388,6 +388,9 @@ export default function TutorialPage() {
   return (
     <main style={{ padding: 24, display: "grid", gap: 16, justifyItems: "center" }}>
       <h1 style={{ fontSize: 24, fontWeight: 800 }}>一正（hisei）ルール体験</h1>
+      <div style={{ width: "100%", maxWidth: 720, display: "flex", justifyContent: "center" }}>
+        <Link href="/?menu=learn" style={btnStyle}>学びへ戻る</Link>
+      </div>
       <div style={{ width: "100%", maxWidth: 720, display: "grid", gap: 8 }}>
         <div style={{ fontSize: 18, fontWeight: 800 }}>{step.title}</div>
         <p style={{ margin: 0 }}>{step.description}</p>

@@ -165,6 +165,9 @@ export default function HistoryPage() {
           保存数 {rows.length}/30
         </div>
       </div>
+      <div style={{ width: "100%", maxWidth: 720, display: "flex", justifyContent: "center" }}>
+        <Link href="/?menu=learn" style={btnStyle}>学びへ戻る</Link>
+      </div>
 
       {status && (
         <div style={{ padding: 12, border: "1px solid var(--line)", borderRadius: 12, background: "rgba(255,255,255,0.6)", width: "100%", maxWidth: 720, boxSizing: "border-box" }}>

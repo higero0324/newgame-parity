@@ -37,6 +37,9 @@ export default function HajimeniPage() {
       </article>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+        <Link href="/?menu=learn" style={linkStyle}>
+          学びへ戻る
+        </Link>
         <Link href="/tutorial" style={linkStyle}>
           体験チュートリアルへ
         </Link>

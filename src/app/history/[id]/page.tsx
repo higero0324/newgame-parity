@@ -123,6 +123,7 @@ export default function MatchReplayPage() {
       <h1 style={{ fontSize: 24, fontWeight: 800 }}>季譜リプレイ</h1>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+        <Link href="/?menu=learn" style={btnStyle}>学びへ戻る</Link>
         <Link href="/history" style={btnStyle}>一覧に戻る</Link>
       </div>
 
