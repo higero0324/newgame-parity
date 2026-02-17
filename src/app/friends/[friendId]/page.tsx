@@ -216,8 +216,8 @@ export default function FriendProfilePage() {
           <div
             style={
               cardExpanded
-                ? { display: "grid", gap: 6, minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto", gridColumn: 2 }
-                : { display: "grid", gap: 6, gridColumn: 2 }
+                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%" }
+                : { display: "flex", flexDirection: "column", gap: 6 }
             }
           >
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
@@ -231,10 +231,11 @@ export default function FriendProfilePage() {
                 style={{
                   ...equippedTitleListStyle,
                   ...equippedTitleListUpperStyle,
-                  alignSelf: "end",
-                  justifySelf: "end",
+                  marginTop: "auto",
+                  alignSelf: "flex-end",
                   justifyItems: "end",
-                  width: "fit-content",
+                  width: "100%",
+                  maxWidth: "100%",
                 }}
               >
                 {equippedTitles.map(title => (
@@ -268,7 +269,7 @@ export default function FriendProfilePage() {
               </div>
             )}
           </div>
-          <div style={{ justifySelf: "start", alignSelf: "end", gridColumn: 1 }}>
+          <div style={{ justifySelf: "start", alignSelf: "end" }}>
             <Avatar
               iconText={profile?.icon_text ?? ""}
               iconImageDataUrl={profile?.icon_image_data_url ?? ""}

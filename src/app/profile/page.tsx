@@ -382,8 +382,8 @@ export default function ProfilePage() {
           <div
             style={
               cardExpanded
-                ? { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere", minHeight: "100%", gridTemplateRows: "auto auto auto 1fr auto", gridColumn: 2 }
-                : { display: "grid", gap: 6, alignContent: "start", overflowWrap: "anywhere", gridColumn: 2 }
+                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%", overflowWrap: "anywhere" }
+                : { display: "flex", flexDirection: "column", gap: 6, overflowWrap: "anywhere" }
             }
           >
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
@@ -396,10 +396,11 @@ export default function ProfilePage() {
                 style={{
                   ...equippedTitleListStyle,
                   ...equippedTitleListUpperStyle,
-                  alignSelf: "end",
-                  justifySelf: "end",
+                  marginTop: "auto",
+                  alignSelf: "flex-end",
                   justifyItems: "end",
-                  width: "fit-content",
+                  width: "100%",
+                  maxWidth: "100%",
                 }}
               >
                 {[0, 1].map(i => {
@@ -482,7 +483,7 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-          <div style={{ display: "grid", gap: 6, justifyItems: "start", justifySelf: "start", alignSelf: "end", gridColumn: 1 }}>
+          <div style={{ display: "grid", gap: 6, justifyItems: "start", justifySelf: "start", alignSelf: "end" }}>
             <button
               type="button"
               onClick={() => {
