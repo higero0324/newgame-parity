@@ -216,8 +216,8 @@ export default function FriendProfilePage() {
           <div
             style={
               cardExpanded
-                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%" }
-                : { display: "flex", flexDirection: "column", gap: 6 }
+                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%", gridColumn: 2 }
+                : { display: "flex", flexDirection: "column", gap: 6, gridColumn: 2 }
             }
           >
             <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
@@ -269,7 +269,7 @@ export default function FriendProfilePage() {
               </div>
             )}
           </div>
-          <div style={{ justifySelf: "start", alignSelf: "end" }}>
+          <div style={{ justifySelf: "start", alignSelf: "end", gridColumn: 1 }}>
             <Avatar
               iconText={profile?.icon_text ?? ""}
               iconImageDataUrl={profile?.icon_image_data_url ?? ""}

@@ -382,8 +382,8 @@ export default function ProfilePage() {
           <div
             style={
               cardExpanded
-                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%", overflowWrap: "anywhere" }
-                : { display: "flex", flexDirection: "column", gap: 6, overflowWrap: "anywhere" }
+                ? { display: "flex", flexDirection: "column", gap: 6, minHeight: "100%", overflowWrap: "anywhere", gridColumn: 2 }
+                : { display: "flex", flexDirection: "column", gap: 6, overflowWrap: "anywhere", gridColumn: 2 }
             }
           >
             <div style={profileNameTextStyle}>{displayName || "（未設定）"}</div>
@@ -483,7 +483,7 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-          <div style={{ display: "grid", gap: 6, justifyItems: "start", justifySelf: "start", alignSelf: "end" }}>
+          <div style={{ display: "grid", gap: 6, justifyItems: "start", justifySelf: "start", alignSelf: "end", gridColumn: 1 }}>
             <button
               type="button"
               onClick={() => {
