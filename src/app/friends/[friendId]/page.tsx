@@ -207,7 +207,12 @@ export default function FriendProfilePage() {
             拡大
           </button>
         )}
-        <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
+        <div
+          style={{
+            ...(cardExpanded ? profileTopExpandedStyle : profileTopStyle),
+            ...(cardExpanded ? null : profileTopOffsetForExpandButtonStyle),
+          }}
+        >
           <Avatar
             iconText={profile?.icon_text ?? ""}
             iconImageDataUrl={profile?.icon_image_data_url ?? ""}
@@ -454,6 +459,8 @@ const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
   gridTemplateColumns: "max-content minmax(0, 1fr)",
   gap: 6,
+  height: "100%",
+  alignContent: "stretch",
 };
 
 const profileCardBaseStyle: React.CSSProperties = {
@@ -526,8 +533,12 @@ const profileCardExpandButtonStyle: React.CSSProperties = {
   ...btnStyle,
   position: "absolute",
   right: 10,
-  bottom: 10,
+  top: 10,
   zIndex: 1,
+};
+
+const profileTopOffsetForExpandButtonStyle: React.CSSProperties = {
+  paddingTop: 36,
 };
 
 const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
