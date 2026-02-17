@@ -874,7 +874,7 @@ const profileTopStyle: React.CSSProperties = {
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gridTemplateColumns: "minmax(148px, 240px) minmax(0, 1fr)",
+  gridTemplateColumns: "max-content minmax(0, 1fr)",
   gap: 6,
 };
 
