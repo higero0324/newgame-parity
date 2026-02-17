@@ -213,13 +213,6 @@ export default function FriendProfilePage() {
             ...(cardExpanded ? null : profileTopOffsetForExpandButtonStyle),
           }}
         >
-          <Avatar
-            iconText={profile?.icon_text ?? ""}
-            iconImageDataUrl={profile?.icon_image_data_url ?? ""}
-            iconFrameId={profile?.icon_frame_id ?? ""}
-            displayName={displayName}
-            expanded={cardExpanded}
-          />
           <div
             style={
               cardExpanded
@@ -267,6 +260,15 @@ export default function FriendProfilePage() {
                 ))}
               </div>
             )}
+          </div>
+          <div style={{ justifySelf: "end" }}>
+            <Avatar
+              iconText={profile?.icon_text ?? ""}
+              iconImageDataUrl={profile?.icon_image_data_url ?? ""}
+              iconFrameId={profile?.icon_frame_id ?? ""}
+              displayName={displayName}
+              expanded={cardExpanded}
+            />
           </div>
         </div>
       </section>
@@ -451,13 +453,13 @@ function parseTemplate(value: string | undefined): CardTemplateId {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
+  gridTemplateColumns: "minmax(0, 1fr) minmax(72px, 112px)",
   gap: 8,
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gridTemplateColumns: "max-content minmax(0, 1fr)",
+  gridTemplateColumns: "minmax(0, 1fr) max-content",
   gap: 6,
   flex: 1,
   minHeight: 0,

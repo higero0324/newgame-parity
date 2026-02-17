@@ -379,44 +379,6 @@ export default function ProfilePage() {
           </div>
         )}
         <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
-          <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
-            <button
-              type="button"
-              onClick={() => {
-                if (!profileEditOpen || cardExpanded) return;
-                iconFileInputRef.current?.click();
-              }}
-              style={{
-                border: "none",
-                background: "transparent",
-                padding: 0,
-                cursor: profileEditOpen && !cardExpanded ? "pointer" : "default",
-                width: "fit-content",
-              }}
-              aria-label={profileEditOpen && !cardExpanded ? "アイコン画像を変更" : "プロフィールアイコン"}
-            >
-              <Avatar
-                iconText={iconText}
-                iconImageDataUrl={iconImageDataUrl}
-                iconFrameId={iconFrameId}
-                displayName={displayName}
-                email={email}
-                expanded={cardExpanded}
-              />
-            </button>
-            {profileEditOpen && !cardExpanded && (
-              <div style={{ fontSize: 12, color: mutedTextColor }}>
-                アイコンをタップして画像変更
-              </div>
-            )}
-            <input
-              ref={iconFileInputRef}
-              type="file"
-              accept="image/*"
-              style={hiddenFileInputStyle}
-              onChange={onPickIconImage}
-            />
-          </div>
           <div
             style={
               cardExpanded
@@ -510,6 +472,44 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+          </div>
+          <div style={{ display: "grid", gap: 6, justifyItems: "end", justifySelf: "end" }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (!profileEditOpen || cardExpanded) return;
+                iconFileInputRef.current?.click();
+              }}
+              style={{
+                border: "none",
+                background: "transparent",
+                padding: 0,
+                cursor: profileEditOpen && !cardExpanded ? "pointer" : "default",
+                width: "fit-content",
+              }}
+              aria-label={profileEditOpen && !cardExpanded ? "アイコン画像を変更" : "プロフィールアイコン"}
+            >
+              <Avatar
+                iconText={iconText}
+                iconImageDataUrl={iconImageDataUrl}
+                iconFrameId={iconFrameId}
+                displayName={displayName}
+                email={email}
+                expanded={cardExpanded}
+              />
+            </button>
+            {profileEditOpen && !cardExpanded && (
+              <div style={{ fontSize: 12, color: mutedTextColor, textAlign: "right" }}>
+                アイコンをタップして画像変更
+              </div>
+            )}
+            <input
+              ref={iconFileInputRef}
+              type="file"
+              accept="image/*"
+              style={hiddenFileInputStyle}
+              onChange={onPickIconImage}
+            />
           </div>
         </div>
         {profileEditOpen && !cardExpanded && (
@@ -874,14 +874,14 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
+  gridTemplateColumns: "minmax(0, 1fr) minmax(72px, 112px)",
   gap: 8,
   alignItems: "start",
 };
 
 const profileTopExpandedStyle: React.CSSProperties = {
   ...profileTopStyle,
-  gridTemplateColumns: "max-content minmax(0, 1fr)",
+  gridTemplateColumns: "minmax(0, 1fr) max-content",
   gap: 6,
 };
 
