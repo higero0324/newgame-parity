@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
@@ -23,6 +23,7 @@ type HomeMenu = {
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -119,7 +120,7 @@ export default function Home() {
   }
 
   const activeMenu: MenuId =
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("menu") === "learn"
+    searchParams.get("menu") === "learn"
       ? "learn"
       : "battle";
   const selectedMenu = menus.find(m => m.id === activeMenu) ?? menus[0];
