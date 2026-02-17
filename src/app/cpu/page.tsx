@@ -216,7 +216,6 @@ export default function PlayCpuPage() {
     lastMoveRef.current = null;
     resultRecordedRef.current = false;
     usedUndoThisMatchRef.current = false;
-    setPlayerSide(null);
     setShowExtremeNotice(false);
     if (extremeNoticeTimerRef.current !== null) {
       window.clearTimeout(extremeNoticeTimerRef.current);
@@ -422,7 +421,7 @@ export default function PlayCpuPage() {
           <button onClick={save} disabled={!winner || saving} style={btnStyle}>
             {saving ? "保存中..." : "季譜を保存"}
           </button>
-          <button onClick={reset} style={btnStyle}>リセット</button>
+          <button onClick={reset} style={btnStyle}>再挑戦</button>
           <Link href="/" style={btnStyle}>ホームへ戻る</Link>
         </div>
       )}
@@ -441,7 +440,7 @@ export default function PlayCpuPage() {
             </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <button onClick={reset} style={btnStyle}>リセット</button>
+            <button onClick={reset} style={btnStyle}>再挑戦</button>
             <Link href="/" style={{ ...btnStyle, textAlign: "center" }}>ホームへ戻る</Link>
           </div>
         </div>
