@@ -378,7 +378,7 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-        <div style={profileTopStyle}>
+        <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
           <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
             <button
               type="button"
@@ -395,7 +395,14 @@ export default function ProfilePage() {
               }}
               aria-label={profileEditOpen && !cardExpanded ? "アイコン画像を変更" : "プロフィールアイコン"}
             >
-              <Avatar iconText={iconText} iconImageDataUrl={iconImageDataUrl} iconFrameId={iconFrameId} displayName={displayName} email={email} />
+              <Avatar
+                iconText={iconText}
+                iconImageDataUrl={iconImageDataUrl}
+                iconFrameId={iconFrameId}
+                displayName={displayName}
+                email={email}
+                expanded={cardExpanded}
+              />
             </button>
             {profileEditOpen && !cardExpanded && (
               <div style={{ fontSize: 12, color: mutedTextColor }}>
@@ -660,23 +667,26 @@ export default function ProfilePage() {
   );
 }
 
-function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId: string; displayName: string; email: string }) {
+function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId: string; displayName: string; email: string; expanded?: boolean }) {
   const trimmed = props.iconText.trim();
   const fallbackSource = props.displayName.trim() || props.email.trim() || "?";
   const fallback = fallbackSource.slice(0, 1).toUpperCase();
   const text = (trimmed || fallback).slice(0, 2);
+  const wrapStyle = props.expanded ? avatarWrapExpandedStyle : avatarWrapStyle;
+  const bodyStyle = props.expanded ? avatarExpandedStyle : avatarStyle;
+  const frameStyle = props.expanded ? setsugekkaFrameExpandedStyle : setsugekkaFrameStyle;
   return (
-    <div style={avatarWrapStyle}>
+    <div style={wrapStyle}>
       {props.iconImageDataUrl ? (
         <img
           src={props.iconImageDataUrl}
           alt="icon"
-          style={{ ...avatarStyle, objectFit: "cover", borderRadius: "50%" }}
+          style={{ ...bodyStyle, objectFit: "cover", borderRadius: "50%" }}
         />
       ) : (
-        <div style={avatarStyle}>{text}</div>
+        <div style={bodyStyle}>{text}</div>
       )}
-      {props.iconFrameId === "setsugekka_frame" && <div style={setsugekkaFrameStyle} aria-hidden />}
+      {props.iconFrameId === "setsugekka_frame" && <div style={frameStyle} aria-hidden />}
     </div>
   );
 }
@@ -826,6 +836,18 @@ const avatarWrapStyle: React.CSSProperties = {
   aspectRatio: "1 / 1",
 };
 
+const avatarExpandedStyle: React.CSSProperties = {
+  ...avatarStyle,
+  width: "clamp(148px, 30vw, 216px)",
+  fontSize: "clamp(52px, 9vw, 72px)",
+  borderWidth: 4,
+};
+
+const avatarWrapExpandedStyle: React.CSSProperties = {
+  ...avatarWrapStyle,
+  width: "clamp(148px, 30vw, 216px)",
+};
+
 const setsugekkaFrameStyle: React.CSSProperties = {
   position: "absolute",
   inset: -1,
@@ -837,11 +859,23 @@ const setsugekkaFrameStyle: React.CSSProperties = {
   pointerEvents: "none",
 };
 
+const setsugekkaFrameExpandedStyle: React.CSSProperties = {
+  ...setsugekkaFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "minmax(72px, 112px) minmax(0, 1fr)",
   gap: 14,
   alignItems: "start",
+};
+
+const profileTopExpandedStyle: React.CSSProperties = {
+  ...profileTopStyle,
+  gridTemplateColumns: "minmax(148px, 240px) minmax(0, 1fr)",
+  gap: 18,
 };
 
 const hiddenFileInputStyle: React.CSSProperties = {
@@ -870,7 +904,7 @@ const profileCardBaseStyle: React.CSSProperties = {
   borderWidth: 2,
   padding: "clamp(12px, 3vw, 20px)",
   boxShadow: "0 12px 28px rgba(35, 20, 10, 0.14)",
-  overflow: "hidden",
+  overflow: "visible",
   position: "relative",
   containerType: "inline-size",
 };
@@ -878,8 +912,8 @@ const profileCardBaseStyle: React.CSSProperties = {
 const profileCardClosedShapeStyle: React.CSSProperties = {
   width: "100%",
   maxWidth: 760,
-  minHeight: "clamp(220px, 42vw, 320px)",
-  aspectRatio: "1.9 / 1",
+  minHeight: "clamp(250px, 46vw, 360px)",
+  aspectRatio: "auto",
   alignContent: "space-between",
   gridTemplateRows: "auto 1fr auto",
 };
