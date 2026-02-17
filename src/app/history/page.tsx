@@ -301,6 +301,8 @@ const btnStyle: React.CSSProperties = {
   border: "1px solid var(--line)",
   background: "linear-gradient(180deg, #fff8ec 0%, #f1dfbf 100%)",
   color: "var(--ink)",
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
+  fontWeight: 700,
   textDecoration: "none",
   cursor: "pointer",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",

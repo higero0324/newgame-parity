@@ -186,6 +186,7 @@ const bigActionButtonStyle: React.CSSProperties = {
   color: "var(--ink)",
   fontWeight: 800,
   fontSize: 18,
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   cursor: "pointer",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
 };
