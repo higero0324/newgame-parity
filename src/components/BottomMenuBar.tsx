@@ -75,13 +75,24 @@ export default function BottomMenuBar() {
     if (hide) return;
     if (!scrollEl) return;
     const detectOverflow = () => {
-      const overflowing = scrollEl.scrollWidth > scrollEl.clientWidth + 1;
+      const total = scrollEl.scrollWidth;
+      const base = isOverflowing ? total / 3 : total;
+      const overflowing = base > scrollEl.clientWidth + 1;
       setIsOverflowing(prev => (prev === overflowing ? prev : overflowing));
     };
     detectOverflow();
+    const raf = requestAnimationFrame(detectOverflow);
+    const t = window.setTimeout(detectOverflow, 120);
+    const ro = new ResizeObserver(detectOverflow);
+    ro.observe(scrollEl);
     window.addEventListener("resize", detectOverflow);
-    return () => window.removeEventListener("resize", detectOverflow);
-  }, [scrollEl, hide]);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(t);
+      ro.disconnect();
+      window.removeEventListener("resize", detectOverflow);
+    };
+  }, [scrollEl, hide, isOverflowing]);
 
   useEffect(() => {
     if (hide) return;

@@ -586,7 +586,6 @@ export default function ProfilePage() {
           アチーブメント
           {achievementNotice && <span style={noticeBadgeStyle}>!</span>}
         </Link>
-        <Link href="/" style={btnStyle}>ホームへ戻る</Link>
         <Link href="/history" style={btnStyle}>保存季譜へ</Link>
       </div>
 

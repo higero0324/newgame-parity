@@ -124,7 +124,6 @@ export default function MatchReplayPage() {
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
         <Link href="/history" style={btnStyle}>一覧に戻る</Link>
-        <Link href="/" style={btnStyle}>ホームへ戻る</Link>
       </div>
 
       {status && (
