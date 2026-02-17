@@ -10,6 +10,28 @@ export type MoveRecord = {
   board_after: number[];
 };
 
+export async function getCurrentUserSavedMatchCount(): Promise<{ ok: true; count: number } | { ok: false; reason: string }> {
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    return { ok: false, reason: mapSaveError(authError.message) };
+  }
+  const user = auth.user;
+  if (!user) {
+    return { ok: false, reason: "未ログインのため保存件数を確認できません。" };
+  }
+
+  const { count, error } = await supabase
+    .from("matches")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { ok: false, reason: mapSaveError(error.message) };
+  }
+
+  return { ok: true, count: count ?? 0 };
+}
+
 function mapSaveError(message: string): string {
   if (message.includes("Could not find the table") && message.includes("public.matches")) {
     return "保存に失敗しました。Supabase に public.matches テーブルがありません。";

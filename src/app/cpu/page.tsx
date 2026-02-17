@@ -6,7 +6,7 @@ import Board from "@/components/Board";
 import { applyMove, emptyBoard, getAllWinningLines, type Player } from "@/lib/gameLogic";
 import { findCpuMove, type CpuLevel } from "@/lib/cpuPlayer";
 import { calculateAnimationDuration } from "@/lib/animationTiming";
-import { saveMatchToSupabase, type MoveRecord } from "@/lib/saveMatch";
+import { getCurrentUserSavedMatchCount, saveMatchToSupabase, type MoveRecord } from "@/lib/saveMatch";
 import { loadCurrentProfilePrefsFromProfiles } from "@/lib/profilePrefs";
 import { recordCpuWinForCurrentUser } from "@/lib/achievements";
 
@@ -227,6 +227,19 @@ export default function PlayCpuPage() {
     if (!winner) {
       setMsg("勝負が決まってから保存できます。");
       return;
+    }
+
+    const countRes = await getCurrentUserSavedMatchCount();
+    if (!countRes.ok) {
+      setMsg(countRes.reason);
+      return;
+    }
+    if (countRes.count > 25) {
+      const remaining = Math.max(0, 30 - countRes.count);
+      const ok = window.confirm(
+        `あと${remaining}個で、保存季譜のストレージが上限に到達します。30を超えると、お気に入りに設定されていない古い季譜から自動的に削除されていきます。保存しますか？`,
+      );
+      if (!ok) return;
     }
 
     setSaving(true);
