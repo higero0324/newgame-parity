@@ -36,8 +36,8 @@ export default function Board({ board, onClickCell, lastChanged, lastPlaced, dis
   const topLabels = ["一", "二", "三", "四", "五"];
   const sideLabels = ["春", "夏", "秋", "冬", "廻"];
 
-  // Desktop values are preserved. Mobile overrides are applied below.
-  const gridCell = isMobile ? "52px" : "min(64px, 12vw)";
+  // On mobile, shrink cells according to viewport width before horizontal scrolling is needed.
+  const gridCell = isMobile ? "clamp(36px, calc((100vw - 96px) / 5), 52px)" : "min(64px, 12vw)";
   const gap = isMobile ? "4px" : "min(8px, 2vw)";
   const pad = isMobile ? "8px" : "min(10px, 2.5vw)";
 
@@ -80,16 +80,25 @@ export default function Board({ board, onClickCell, lastChanged, lastPlaced, dis
   };
 
   return (
-    <div style={{ width: "100%", overflowX: isMobile ? "auto" : "visible" }}>
+    <div style={{ width: "100%", overflowX: "auto", overflowY: "visible" }}>
       <style>{STROKE_ANIMATION}</style>
-      <div style={{ display: "grid", gap: isMobile ? "4px" : "min(6px, 1.6vw)", justifyItems: "center", width: "fit-content", margin: "0 auto" }}>
+      <div
+        style={{
+          display: "grid",
+          gap: isMobile ? "4px" : "min(6px, 1.6vw)",
+          justifyItems: "center",
+          width: "fit-content",
+          margin: "0 auto",
+          paddingInline: isMobile ? 4 : 0,
+          minWidth: "fit-content",
+        }}
+      >
         <div
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${SIZE}, ${gridCell})`,
             gap,
             width: "fit-content",
-            transform: isMobile ? "translateX(-2px)" : "translateX(-6px)",
           }}
         >
           {[...topLabels].reverse().map(label => (
@@ -170,7 +179,6 @@ export default function Board({ board, onClickCell, lastChanged, lastPlaced, dis
               gridTemplateRows: `repeat(${SIZE}, ${gridCell})`,
               gap,
               alignItems: "center",
-              transform: isMobile ? "translateY(2px)" : "translateY(6px)",
             }}
           >
             {sideLabels.map(label => (
