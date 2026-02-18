@@ -13,6 +13,7 @@ export type PresentItem = {
 };
 
 const PRESENT_BOX_KEY = "present_box_items";
+const PRESENT_FLAGS_KEY = "present_flags";
 const WELCOME_PRESENT_ID = "welcome_thanks_20260218";
 const WELCOME_PRESENT: PresentItem = {
   id: WELCOME_PRESENT_ID,
@@ -64,19 +65,34 @@ function getPresentBoxFromMetadata(metadata: unknown): PresentItem[] {
   return deduped;
 }
 
+function getPresentFlagsFromMetadata(metadata: unknown): Record<string, boolean> {
+  const meta = (metadata ?? {}) as Record<string, unknown>;
+  const raw = meta[PRESENT_FLAGS_KEY];
+  if (!raw || typeof raw !== "object") return {};
+  const src = raw as Record<string, unknown>;
+  const out: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(src)) {
+    if (typeof v === "boolean") out[k] = v;
+  }
+  return out;
+}
+
 export async function ensureWelcomePresentForCurrentUser() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return { ok: false as const, reason: error?.message ?? "not logged in" };
 
+  const flags = getPresentFlagsFromMetadata(data.user.user_metadata);
   const currentPresents = getPresentBoxFromMetadata(data.user.user_metadata);
-  if (currentPresents.some(p => p.id === WELCOME_PRESENT_ID)) {
+  if (flags[WELCOME_PRESENT_ID] || currentPresents.some(p => p.id === WELCOME_PRESENT_ID)) {
     return { ok: true as const, changed: false, presents: currentPresents };
   }
 
   const nextPresents = [WELCOME_PRESENT, ...currentPresents];
+  const nextFlags = { ...flags, [WELCOME_PRESENT_ID]: true };
   const { error: updateError } = await supabase.auth.updateUser({
     data: {
       [PRESENT_BOX_KEY]: nextPresents,
+      [PRESENT_FLAGS_KEY]: nextFlags,
     },
   });
   if (updateError) return { ok: false as const, reason: updateError.message };
