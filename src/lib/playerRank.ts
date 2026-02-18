@@ -13,7 +13,7 @@ const MAX_RANK = 99;
 const BASE_REQUIRED_XP = 1000;
 const REQUIRED_XP_STEP = 2000;
 const STEP_LEVEL = 10;
-const LEVEL_UP_KISEKI_REWARD = 300;
+const LEVEL_UP_KISEKI_REWARD = 500;
 const ACHIEVEMENT_KISEKI_REWARD = 250;
 const ACHIEVEMENT_KISEKI_CLAIMED_KEY = "achievement_kiseki_claimed_title_ids";
 
