@@ -154,9 +154,9 @@ export default function Home() {
   };
 
   return (
-    <main style={{ padding: 24, display: "grid", gap: 14, justifyItems: "center" }}>
+    <>
       <section style={statusBarWrapStyle}>
-        <div style={statusItemRowStyle}>
+        <div style={{ ...statusItemRowStyle, ...statusRankItemStyle }}>
           <span style={statusLabelStyle}>ランク</span>
           <strong style={statusValueStyle}>0</strong>
         </div>
@@ -174,6 +174,7 @@ export default function Home() {
         </div>
       </section>
 
+      <main style={{ padding: "72px 24px 24px", display: "grid", gap: 14, justifyItems: "center" }}>
       <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
         <span style={{ fontSize: 60, display: "block" }}>一正</span>
         <span style={{ fontSize: 15, display: "block", marginTop: 5, color: "#555" }}>～HISEI～</span>
@@ -195,7 +196,8 @@ export default function Home() {
         )}
       </section>
 
-    </main>
+      </main>
+    </>
   );
 }
 
@@ -213,12 +215,13 @@ const bigActionButtonStyle: React.CSSProperties = {
 };
 
 const statusBarWrapStyle: React.CSSProperties = {
-  position: "sticky",
+  position: "fixed",
   top: "max(6px, env(safe-area-inset-top))",
-  zIndex: 5,
+  left: "50%",
+  transform: "translateX(-50%)",
+  zIndex: 30,
   width: "calc(100% - 12px)",
   maxWidth: 760,
-  margin: "0 6px 8px",
   display: "flex",
   alignItems: "stretch",
   gap: 5,
@@ -246,6 +249,10 @@ const statusItemRowStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.72)",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.2)",
   minHeight: 38,
+};
+
+const statusRankItemStyle: React.CSSProperties = {
+  flex: "0 0 112px",
 };
 
 const statusLabelStyle: React.CSSProperties = {
