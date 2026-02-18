@@ -160,13 +160,7 @@ export default function Home() {
           <span style={statusRankLabelStyle}>ランク</span>
           <strong style={statusRankValueStyle}>0</strong>
         </div>
-        <div style={{ ...statusItemRowStyle, ...statusWideItemStyle, ...statusRightAlignedItemStyle }}>
-          <span style={statusIconLabelStyle} aria-label="所持通貨" title="所持通貨">
-            🪙
-          </span>
-          <strong style={{ ...statusValueStyle, ...statusLongValueStyle }}>0</strong>
-        </div>
-        <div style={{ ...statusItemRowStyle, ...statusWideItemStyle, ...statusRightAlignedItemStyle }}>
+        <div style={{ ...statusItemRowStyle, ...statusWideItemStyle, ...statusKisekiItemStyle }}>
           <span style={statusIconLabelStyle} aria-label="所持季石" title="所持季石">
             <Image src={kisekiIcon} alt="季石" width={28} height={28} />
           </span>
@@ -278,6 +272,11 @@ const statusWideItemStyle: React.CSSProperties = {
 
 const statusRightAlignedItemStyle: React.CSSProperties = {
   justifyContent: "flex-end",
+};
+
+const statusKisekiItemStyle: React.CSSProperties = {
+  justifyContent: "space-between",
+  paddingLeft: 2,
 };
 
 const statusLabelStyle: React.CSSProperties = {
