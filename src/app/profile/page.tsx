@@ -1011,7 +1011,7 @@ const sakuraFrameStyle: React.CSSProperties = {
   border: "none",
   boxShadow: "0 0 10px rgba(237, 176, 205, 0.7)",
   backgroundImage: `url(${sakuraIcon.src})`,
-  backgroundSize: "122%",
+  backgroundSize: "116%",
   backgroundPosition: "center",
   backgroundRepeat: "no-repeat",
   backgroundBlendMode: "screen",
