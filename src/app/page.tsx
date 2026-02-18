@@ -216,13 +216,13 @@ const statusBarWrapStyle: React.CSSProperties = {
   position: "sticky",
   top: 8,
   zIndex: 5,
-  width: "100%",
+  width: "calc(100% - 12px)",
   maxWidth: 760,
-  margin: "0 auto",
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  margin: "0 6px 8px",
+  display: "flex",
+  alignItems: "stretch",
   gap: 5,
-  padding: "4px 8px",
+  padding: "1px 8px 2px",
   borderRadius: 14,
   borderTop: "1px solid rgba(120, 80, 40, 0.25)",
   border: "1px solid rgba(120, 80, 40, 0.22)",
@@ -231,37 +231,41 @@ const statusBarWrapStyle: React.CSSProperties = {
 };
 
 const statusItemRowStyle: React.CSSProperties = {
+  position: "relative",
+  flex: "1 1 0",
+  minWidth: 0,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: 8,
+  gap: 6,
   padding: "8px 6px",
+  marginTop: -4,
   borderRadius: 10,
   border: "1px solid var(--line)",
   background: "rgba(255,255,255,0.72)",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.2)",
-  minHeight: 42,
+  minHeight: 38,
 };
 
 const statusLabelStyle: React.CSSProperties = {
-  fontSize: 14,
+  fontSize: 12,
   color: "#5b4d39",
   lineHeight: 1.2,
   whiteSpace: "nowrap",
 };
 
 const statusIconLabelStyle: React.CSSProperties = {
-  minHeight: 28,
+  minHeight: 20,
   display: "inline-grid",
   placeItems: "center",
   color: "#5b4d39",
   lineHeight: 1,
-  fontSize: 20,
+  fontSize: 18,
   whiteSpace: "nowrap",
 };
 
 const statusValueStyle: React.CSSProperties = {
-  fontSize: 22,
+  fontSize: 20,
   lineHeight: 1,
   whiteSpace: "nowrap",
 };
