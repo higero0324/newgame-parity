@@ -166,6 +166,8 @@ const gridStyle: React.CSSProperties = {
 };
 
 const slotStyle: React.CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box",
   border: "1px solid rgba(90, 60, 30, 0.25)",
   borderRadius: 10,
   background: "rgba(255,255,255,0.78)",
@@ -200,6 +202,7 @@ const previewWrapStyle: React.CSSProperties = {
 };
 
 const slotAnchorStyle: React.CSSProperties = {
+  width: "100%",
   position: "relative",
   overflow: "visible",
 };
