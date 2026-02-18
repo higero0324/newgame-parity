@@ -226,9 +226,9 @@ const statusBarWrapStyle: React.CSSProperties = {
   maxWidth: 760,
   display: "flex",
   alignItems: "stretch",
-  justifyContent: "center",
+  justifyContent: "space-between",
   gap: 5,
-  padding: "1px 8px",
+  padding: "1px 4px",
   borderRadius: 14,
   borderTop: "1px solid rgba(120, 80, 40, 0.25)",
   border: "1px solid rgba(120, 80, 40, 0.22)",
@@ -277,6 +277,7 @@ const statusRightAlignedItemStyle: React.CSSProperties = {
 const statusKisekiItemStyle: React.CSSProperties = {
   justifyContent: "space-between",
   paddingLeft: 2,
+  marginLeft: "auto",
 };
 
 const statusLabelStyle: React.CSSProperties = {
