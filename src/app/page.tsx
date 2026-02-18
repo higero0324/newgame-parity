@@ -157,7 +157,7 @@ export default function Home() {
     <main style={{ padding: 24, display: "grid", gap: 14, justifyItems: "center" }}>
       <section style={statusBarWrapStyle}>
         <div style={statusItemRowStyle}>
-          <span style={statusLabelStyle}>季士ランク</span>
+          <span style={statusLabelStyle}>ランク</span>
           <strong style={statusValueStyle}>0</strong>
         </div>
         <div style={statusItemRowStyle}>
@@ -214,7 +214,7 @@ const bigActionButtonStyle: React.CSSProperties = {
 
 const statusBarWrapStyle: React.CSSProperties = {
   position: "sticky",
-  top: 8,
+  top: "max(6px, env(safe-area-inset-top))",
   zIndex: 5,
   width: "calc(100% - 12px)",
   maxWidth: 760,
@@ -222,12 +222,13 @@ const statusBarWrapStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "stretch",
   gap: 5,
-  padding: "1px 8px 2px",
+  padding: "1px 8px 1px",
   borderRadius: 14,
   borderTop: "1px solid rgba(120, 80, 40, 0.25)",
   border: "1px solid rgba(120, 80, 40, 0.22)",
   background: "linear-gradient(180deg, rgba(255,250,241,0.66) 0%, rgba(245,230,202,0.72) 100%)",
   backdropFilter: "blur(10px)",
+  overflow: "visible",
 };
 
 const statusItemRowStyle: React.CSSProperties = {
@@ -239,7 +240,7 @@ const statusItemRowStyle: React.CSSProperties = {
   justifyContent: "space-between",
   gap: 6,
   padding: "8px 6px",
-  marginTop: -4,
+  marginTop: -6,
   borderRadius: 10,
   border: "1px solid var(--line)",
   background: "rgba(255,255,255,0.72)",
