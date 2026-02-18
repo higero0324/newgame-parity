@@ -86,6 +86,22 @@ export default function WishPage() {
     };
   }, []);
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent("hisei-bottom-menu-visible", {
+        detail: { visible: !resultOverlayOpen },
+      }),
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("hisei-bottom-menu-visible", {
+          detail: { visible: true },
+        }),
+      );
+    };
+  }, [resultOverlayOpen]);
+
   const draw = async (count: 1 | 10) => {
     if (drawing) return;
     const cost = getGachaCost(count);
