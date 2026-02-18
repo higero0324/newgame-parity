@@ -51,6 +51,7 @@ export default function WishPage() {
   const [opening, setOpening] = useState(false);
   const [rareCutIn, setRareCutIn] = useState(false);
   const [revealCount, setRevealCount] = useState(0);
+  const [resultOverlayOpen, setResultOverlayOpen] = useState(false);
   const revealTimerRef = useRef<number | null>(null);
 
   const clearRevealTimer = () => {
@@ -91,6 +92,7 @@ export default function WishPage() {
     clearRevealTimer();
     setResults([]);
     setRevealCount(0);
+    setResultOverlayOpen(false);
     setOpening(true);
     setRareCutIn(false);
     setDrawing(true);
@@ -114,6 +116,7 @@ export default function WishPage() {
     }
 
     setResults(pulled);
+    setResultOverlayOpen(true);
     setRevealCount(Math.min(1, pulled.length));
     if (pulled.length > 1) {
       revealTimerRef.current = window.setInterval(() => {
@@ -227,32 +230,37 @@ export default function WishPage() {
         )}
       </section>
 
-      {(results.length > 0 || opening || rareCutIn) && (
-        <section style={sectionStyle}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>祈願結果</h2>
-          <div style={{ display: "grid", gap: 8, gridTemplateColumns: resultColumns }}>
-            {results.map((result, i) => (
-              i < revealCount ? (
-                <div
-                  key={`${result.item.id}-${i}`}
-                  style={{ ...resultSlotStyle, ...(result.item.tier === "rare" ? rareSlotStyle : null) }}
-                >
-                  <div style={resultPreviewWrapStyle}>{renderItemPreview(result.item)}</div>
-                  <div style={{ fontSize: 12, fontWeight: 800, textAlign: "center", lineHeight: 1.3 }}>{result.item.name}</div>
-                  {!result.duplicated && <div style={newBadgeStyle}>NEW</div>}
-                  {result.duplicated && <div style={dupBadgeStyle}>DUP +{result.refundKiseki}</div>}
-                </div>
-              ) : (
-                <div key={`back-${i}`} style={resultBackSlotStyle}>
-                  <div style={resultBackCoreStyle}>?</div>
-                </div>
-              )
-            ))}
-          </div>
-        </section>
-      )}
-
       {status && <div style={sectionStyle}>{status}</div>}
+
+      {resultOverlayOpen && results.length > 0 && (
+        <div style={resultOverlayStyle}>
+          <div style={resultOverlayInnerStyle}>
+            <button type="button" aria-label="祈願結果を閉じる" style={resultCloseButtonStyle} onClick={() => setResultOverlayOpen(false)}>
+              ×
+            </button>
+            <h2 style={{ margin: 0, fontSize: 22, color: "#fff5dd" }}>祈願結果</h2>
+            <div style={{ width: "100%", display: "grid", gap: 10, gridTemplateColumns: resultColumns }}>
+              {results.map((result, i) => (
+                i < revealCount ? (
+                  <div
+                    key={`${result.item.id}-${i}`}
+                    style={{ ...resultSlotStyle, ...(result.item.tier === "rare" ? rareSlotStyle : null) }}
+                  >
+                    <div style={resultPreviewWrapStyle}>{renderItemPreview(result.item)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, textAlign: "center", lineHeight: 1.3 }}>{result.item.name}</div>
+                    {!result.duplicated && <div style={newBadgeStyle}>NEW</div>}
+                    {result.duplicated && <div style={dupBadgeStyle}>DUP +{result.refundKiseki}</div>}
+                  </div>
+                ) : (
+                  <div key={`back-${i}`} style={resultBackSlotStyle}>
+                    <div style={resultBackCoreStyle}>?</div>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {opening && (
         <div style={openingOverlayStyle}>
@@ -573,6 +581,47 @@ const resultBackCoreStyle: React.CSSProperties = {
   color: "rgba(255, 235, 186, 0.95)",
   border: "1px solid rgba(255, 221, 146, 0.4)",
   boxShadow: "0 0 20px rgba(255, 218, 133, 0.22)",
+};
+
+const resultOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 69,
+  display: "grid",
+  placeItems: "center",
+  padding: "max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))",
+  background: "radial-gradient(circle at 50% 15%, rgba(255,212,130,0.24) 0%, rgba(17,10,5,0.94) 72%)",
+  backdropFilter: "blur(2px)",
+};
+
+const resultOverlayInnerStyle: React.CSSProperties = {
+  position: "relative",
+  width: "min(980px, 100%)",
+  maxHeight: "100%",
+  overflow: "auto",
+  display: "grid",
+  gap: 12,
+  alignContent: "start",
+  padding: "20px 14px 14px",
+  borderRadius: 16,
+  border: "1px solid rgba(255, 213, 126, 0.45)",
+  boxShadow: "inset 0 0 0 1px rgba(255, 232, 182, 0.18), 0 20px 44px rgba(0, 0, 0, 0.5)",
+  background: "linear-gradient(180deg, rgba(80,46,18,0.95) 0%, rgba(39,23,10,0.96) 100%)",
+};
+
+const resultCloseButtonStyle: React.CSSProperties = {
+  position: "absolute",
+  top: 8,
+  right: 8,
+  width: 34,
+  height: 34,
+  borderRadius: 10,
+  border: "1px solid rgba(255, 220, 146, 0.55)",
+  background: "rgba(255, 246, 222, 0.2)",
+  color: "#fff5df",
+  fontSize: 24,
+  lineHeight: 1,
+  cursor: "pointer",
 };
 
 const openingOverlayStyle: React.CSSProperties = {
