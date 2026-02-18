@@ -389,7 +389,7 @@ function renderItemPreview(item: GachaItemDef) {
         <div style={sakuraFramePreviewWrapStyle}>
           <div style={sakuraFramePreviewGlowCircleStyle} />
           <div style={sakuraFramePreviewStyle}>
-            <Image src={sakuraIcon} alt="桜フレーム" fill sizes="40px" style={{ objectFit: "fill", opacity: 1 }} />
+            <Image src={sakuraIcon} alt="桜フレーム" fill sizes="40px" style={{ objectFit: "cover", transform: "scale(1.05)", opacity: 1 }} />
           </div>
         </div>
       );

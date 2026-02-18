@@ -654,7 +654,7 @@ const sakuraFrameStyle: React.CSSProperties = {
   borderRadius: 0,
   border: "none",
   backgroundImage: `url(${sakuraIcon.src})`,
-  backgroundSize: "100% 100%",
+  backgroundSize: "105% 105%",
   backgroundPosition: "center",
   backgroundRepeat: "no-repeat",
   pointerEvents: "none",
