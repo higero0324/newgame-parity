@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabaseClient";
 import { ensureFriendIdForCurrentUser, getFriendIdFromUserMetadata } from "@/lib/profilePrefs";
+import {
+  getAchievementKisekiReward,
+  getClaimedAchievementKisekiTitleIdsFromMetadata,
+  grantAchievementKisekiForCurrentUser,
+} from "@/lib/playerRank";
 
 export type AchievementCpuLevel = "easy" | "medium" | "hard" | "extreme";
 export type TitleRarity = "bronze" | "silver" | "gold" | "obsidian";
@@ -158,7 +163,7 @@ async function getCurrentUserAndFriendId() {
     if (!ensured.ok) return ensured;
     friendId = ensured.friendId;
   }
-  return { ok: true as const, userId: data.user.id, friendId };
+  return { ok: true as const, userId: data.user.id, friendId, userMetadata: data.user.user_metadata };
 }
 
 async function loadRowForCurrentUser() {
@@ -212,8 +217,18 @@ export async function loadAchievementStateForCurrentUser() {
   const unlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
   const achieved = achievedTitleIds(stats);
   const claimableTitleIds = achieved.filter(id => !unlocked.includes(id));
+  const claimedKisekiTitleIds = getClaimedAchievementKisekiTitleIdsFromMetadata(loaded.auth.userMetadata);
+  const claimableKisekiTitleIds = unlocked.filter(id => !claimedKisekiTitleIds.includes(id));
   const equipped = clampEquipped(unlocked, normalizeStringArray(loaded.row.equipped_title_ids));
-  return { ok: true as const, stats, unlockedTitleIds: unlocked, equippedTitleIds: equipped, claimableTitleIds };
+  return {
+    ok: true as const,
+    stats,
+    unlockedTitleIds: unlocked,
+    equippedTitleIds: equipped,
+    claimableTitleIds,
+    claimableKisekiTitleIds,
+    achievementKisekiReward: getAchievementKisekiReward(),
+  };
 }
 
 export async function recordCpuWinForCurrentUser(level: AchievementCpuLevel, userWon: boolean, noUndoUsed = true) {
@@ -296,9 +311,10 @@ export async function claimTitleForCurrentUser(titleId: string) {
   }
 
   const unlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
-  if (!unlocked.includes(titleId)) unlocked.push(titleId);
+  const titleAlreadyClaimed = unlocked.includes(titleId);
+  if (!titleAlreadyClaimed) unlocked.push(titleId);
   const equipped = clampEquipped(unlocked, normalizeStringArray(loaded.row.equipped_title_ids));
-  if (equipped.length < 2 && !equipped.includes(titleId)) equipped.push(titleId);
+  if (!titleAlreadyClaimed && equipped.length < 2 && !equipped.includes(titleId)) equipped.push(titleId);
 
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -311,5 +327,13 @@ export async function claimTitleForCurrentUser(titleId: string) {
     { onConflict: "user_id" },
   );
   if (error) return { ok: false as const, reason: error.message };
-  return { ok: true as const };
+
+  const kiseki = await grantAchievementKisekiForCurrentUser(titleId);
+  if (!kiseki.ok) return kiseki;
+  return {
+    ok: true as const,
+    titleClaimedNow: !titleAlreadyClaimed,
+    kisekiClaimedNow: kiseki.granted,
+    kisekiReward: getAchievementKisekiReward(),
+  };
 }

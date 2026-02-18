@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import {
   buildAchievementProgress,
   claimTitleForCurrentUser,
@@ -9,18 +10,21 @@ import {
   type TitleDef,
   type TitleRarity,
 } from "@/lib/achievements";
+import kisekiIcon from "@/app/kiseki.png";
 
 export default function AchievementsPage() {
   const [status, setStatus] = useState("読み込み中...");
   const [unlockedTitleIds, setUnlockedTitleIds] = useState<string[]>([]);
   const [equippedTitleIds, setEquippedTitleIds] = useState<string[]>([]);
   const [claimableTitleIds, setClaimableTitleIds] = useState<string[]>([]);
+  const [claimableKisekiTitleIds, setClaimableKisekiTitleIds] = useState<string[]>([]);
+  const [achievementKisekiReward, setAchievementKisekiReward] = useState(250);
   const [statsLoaded, setStatsLoaded] = useState<{
     cpu_wins: { easy: number; medium: number; hard: number; extreme: number };
     total_cpu_wins: number;
     saved_matches: number;
   } | null>(null);
-  const [claimReveal, setClaimReveal] = useState<{ title: TitleDef; items: Array<{ id: string; label: string; kind: "title" | "frame" }> } | null>(null);
+  const [claimReveal, setClaimReveal] = useState<{ title: TitleDef; items: Array<{ id: string; label: string; kind: "title" | "frame" | "kiseki" }> } | null>(null);
   const revealTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -33,6 +37,8 @@ export default function AchievementsPage() {
       setUnlockedTitleIds(loaded.unlockedTitleIds);
       setEquippedTitleIds(loaded.equippedTitleIds);
       setClaimableTitleIds(loaded.claimableTitleIds);
+      setClaimableKisekiTitleIds(loaded.claimableKisekiTitleIds);
+      setAchievementKisekiReward(loaded.achievementKisekiReward);
       setStatsLoaded(loaded.stats);
       setStatus("");
     })();
@@ -56,6 +62,12 @@ export default function AchievementsPage() {
     return buildAchievementProgress(statsLoaded, unlockedTitleIds);
   }, [statsLoaded, unlockedTitleIds]);
 
+  const claimableKisekiSet = useMemo(() => new Set(claimableKisekiTitleIds), [claimableKisekiTitleIds]);
+  const claimableAnyCount = useMemo(
+    () => new Set([...claimableTitleIds, ...claimableKisekiTitleIds]).size,
+    [claimableTitleIds, claimableKisekiTitleIds],
+  );
+
   const claim = async (titleId: string) => {
     const res = await claimTitleForCurrentUser(titleId);
     if (!res.ok) {
@@ -70,13 +82,15 @@ export default function AchievementsPage() {
     setUnlockedTitleIds(loaded.unlockedTitleIds);
     setEquippedTitleIds(loaded.equippedTitleIds);
     setClaimableTitleIds(loaded.claimableTitleIds);
+    setClaimableKisekiTitleIds(loaded.claimableKisekiTitleIds);
+    setAchievementKisekiReward(loaded.achievementKisekiReward);
     setStatsLoaded(loaded.stats);
-    setStatus("称号を回収しました。");
+    setStatus(res.kisekiClaimedNow ? `報酬を回収しました（季石 +${res.kisekiReward}）。` : "称号を回収しました。");
     const title = getTitleById(titleId);
     if (title) {
       setClaimReveal({
         title,
-        items: buildClaimRevealItems(title),
+        items: buildClaimRevealItems(title, res.titleClaimedNow, res.kisekiClaimedNow, res.kisekiReward),
       });
       if (revealTimerRef.current !== null) {
         window.clearTimeout(revealTimerRef.current);
@@ -112,9 +126,9 @@ export default function AchievementsPage() {
       <section style={sectionStyle}>
         <h2 style={{ margin: 0, fontSize: 18 }}>達成状況</h2>
         <div style={{ fontSize: 14, color: "#555" }}>回収済み: {unlockedTitleIds.length} / {progressList.length}</div>
-        {claimableTitleIds.length > 0 && (
+        {claimableAnyCount > 0 && (
           <div style={{ fontSize: 13, color: "#8b3d4d", fontWeight: 700 }}>
-            回収待ちの称号があります（{claimableTitleIds.length}件）
+            回収待ちの報酬があります（{claimableAnyCount}件）
           </div>
         )}
         <div style={{ display: "grid", gap: 8 }}>
@@ -124,21 +138,28 @@ export default function AchievementsPage() {
               style={{
                 ...achievementCardStyle,
                 ...(item.done && !item.claimed ? achievementClaimableCardStyle : null),
+                ...((item.done && claimableKisekiSet.has(item.title.id)) ? achievementClaimableCardStyle : null),
               }}
               onClick={() => {
-                if (item.done && !item.claimed) claim(item.title.id);
+                if (item.done && (!item.claimed || claimableKisekiSet.has(item.title.id))) claim(item.title.id);
               }}
-              role={item.done && !item.claimed ? "button" : undefined}
-              aria-label={item.done && !item.claimed ? `${item.name} の称号を回収` : undefined}
+              role={item.done && (!item.claimed || claimableKisekiSet.has(item.title.id)) ? "button" : undefined}
+              aria-label={item.done && (!item.claimed || claimableKisekiSet.has(item.title.id)) ? `${item.name} の報酬を回収` : undefined}
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <div style={{ display: "grid", gap: 2 }}>
                   <b>{item.name}</b>
                   <span style={{ fontSize: 13, color: "#666" }}>{item.description}</span>
                 </div>
-                <span style={{ ...titleChipStyleBase, ...titleChipStyleFor(item.title) }}>
-                  {item.title.name}
-                </span>
+                <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
+                  <span style={{ ...titleChipStyleBase, ...titleChipStyleFor(item.title) }}>
+                    {item.title.name}
+                  </span>
+                  <span style={kisekiRewardChipStyle}>
+                    <Image src={kisekiIcon} alt="季石" width={12} height={12} />
+                    +{achievementKisekiReward}
+                  </span>
+                </div>
               </div>
               <div style={progressTrackStyle}>
                 <div
@@ -150,7 +171,11 @@ export default function AchievementsPage() {
                 />
               </div>
               <div style={{ fontSize: 12, color: "#555" }}>
-                {!item.done ? `${item.progress} / ${item.target}` : item.claimed ? "達成・回収済み" : "達成済み（タップで回収）"}
+                {!item.done
+                  ? `${item.progress} / ${item.target}`
+                  : (!item.claimed || claimableKisekiSet.has(item.title.id))
+                    ? "達成済み（タップで回収）"
+                    : "達成・回収済み"}
               </div>
             </div>
           ))}
@@ -172,10 +197,15 @@ export default function AchievementsPage() {
                   key={item.id}
                   style={{
                     ...claimRevealItemStyle,
-                    ...(item.kind === "title" ? titleChipStyleFor(claimReveal.title) : claimRevealFrameItemStyle),
+                    ...(item.kind === "title"
+                      ? titleChipStyleFor(claimReveal.title)
+                      : item.kind === "frame"
+                        ? claimRevealFrameItemStyle
+                        : claimRevealKisekiItemStyle),
                   }}
                 >
-                  {item.kind === "title" ? "称号: " : "フレーム: "}
+                  {item.kind === "title" ? "称号: " : item.kind === "frame" ? "フレーム: " : ""}
+                  {item.kind === "kiseki" && <Image src={kisekiIcon} alt="季石" width={14} height={14} style={{ marginRight: 4, verticalAlign: "middle" }} />}
                   {item.label}
                 </div>
               ))}
@@ -249,6 +279,19 @@ const titleChipStyleBase: React.CSSProperties = {
   width: "fit-content",
 };
 
+const kisekiRewardChipStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  padding: "2px 8px",
+  borderRadius: 999,
+  fontSize: 11,
+  fontWeight: 800,
+  border: "1px solid #b8891f",
+  background: "linear-gradient(180deg, #fff4c7 0%, #e2b63f 100%)",
+  color: "#4b3510",
+};
+
 const claimRevealOverlayStyle: React.CSSProperties = {
   position: "fixed",
   inset: 0,
@@ -284,6 +327,12 @@ const claimRevealFrameItemStyle: React.CSSProperties = {
   color: "#fff",
   borderColor: "#7c67b2",
   boxShadow: "inset 0 0 0 1px rgba(240, 228, 255, 0.35)",
+};
+
+const claimRevealKisekiItemStyle: React.CSSProperties = {
+  background: "linear-gradient(180deg, #fff4c7 0%, #e2b63f 100%)",
+  color: "#4b3510",
+  borderColor: "#b8891f",
 };
 
 const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
@@ -326,12 +375,24 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
   };
 }
 
-function buildClaimRevealItems(title: TitleDef): Array<{ id: string; label: string; kind: "title" | "frame" }> {
-  const items: Array<{ id: string; label: string; kind: "title" | "frame" }> = [
-    { id: `title:${title.id}`, label: title.name, kind: "title" },
-  ];
-  if (title.id === "extreme_emperor") {
+function buildClaimRevealItems(
+  title: TitleDef,
+  titleClaimedNow: boolean,
+  kisekiClaimedNow: boolean,
+  kisekiReward: number,
+): Array<{ id: string; label: string; kind: "title" | "frame" | "kiseki" }> {
+  const items: Array<{ id: string; label: string; kind: "title" | "frame" | "kiseki" }> = [];
+  if (titleClaimedNow) {
+    items.push({ id: `title:${title.id}`, label: title.name, kind: "title" });
+  }
+  if (title.id === "extreme_emperor" && titleClaimedNow) {
     items.push({ id: "frame:setsugekka_frame", label: "雪月花フレーム", kind: "frame" });
+  }
+  if (kisekiClaimedNow) {
+    items.push({ id: `kiseki:${title.id}`, label: `季石 +${kisekiReward}`, kind: "kiseki" });
+  }
+  if (items.length === 0) {
+    items.push({ id: `title:${title.id}:noop`, label: "回収済み", kind: "title" });
   }
   return items;
 }

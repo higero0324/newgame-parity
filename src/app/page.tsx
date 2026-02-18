@@ -238,7 +238,6 @@ export default function Home() {
       </section>
 
       </main>
-      {rankPopoverOpen && <button type="button" aria-label="閉じる" style={rankPopoverBackdropStyle} onClick={() => setRankPopoverOpen(false)} />}
     </>
   );
 }
@@ -274,7 +273,7 @@ const statusBarWrapStyle: React.CSSProperties = {
   border: "1px solid rgba(120, 80, 40, 0.22)",
   background: "linear-gradient(180deg, rgba(255,250,241,0.66) 0%, rgba(245,230,202,0.72) 100%)",
   backdropFilter: "blur(10px)",
-  overflow: "hidden",
+  overflow: "visible",
 };
 
 const statusItemRowStyle: React.CSSProperties = {
@@ -351,7 +350,7 @@ const statusLongValueStyle: React.CSSProperties = {
 };
 
 const statusRankLabelStyle: React.CSSProperties = {
-  fontSize: 24,
+  fontSize: 16,
   color: "#4b3a27",
   lineHeight: 1.2,
   letterSpacing: "0.04em",
@@ -367,22 +366,11 @@ const statusRankValueStyle: React.CSSProperties = {
   fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
 };
 
-const rankPopoverBackdropStyle: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background: "transparent",
-  border: "none",
-  padding: 0,
-  margin: 0,
-  zIndex: 34,
-  cursor: "default",
-};
-
 const rankPopoverStyle: React.CSSProperties = {
-  position: "fixed",
-  top: "calc(max(6px, env(safe-area-inset-top)) + 40px)",
-  left: 12,
-  zIndex: 35,
+  position: "absolute",
+  top: "calc(100% + 6px)",
+  left: 0,
+  zIndex: 40,
   display: "grid",
   gap: 4,
   padding: "8px 10px",
