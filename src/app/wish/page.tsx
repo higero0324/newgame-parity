@@ -36,6 +36,9 @@ export default function WishPage() {
 
   const draw = async (count: 1 | 10) => {
     if (drawing) return;
+    const cost = getGachaCost(count);
+    const ok = window.confirm(`季石を${cost}個消費しますがよろしいですか？`);
+    if (!ok) return;
     setDrawing(true);
     setStatus("");
     const res = await pullGachaForCurrentUser(count);
