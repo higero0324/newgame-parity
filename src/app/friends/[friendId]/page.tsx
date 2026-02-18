@@ -648,21 +648,20 @@ const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
 
 const sakuraFrameStyle: React.CSSProperties = {
   position: "absolute",
-  inset: -2,
-  borderRadius: "50%",
+  inset: 0,
+  borderRadius: 0,
   border: "none",
   boxShadow: "0 0 10px rgba(237, 176, 205, 0.7)",
   backgroundImage: `url(${sakuraIcon.src})`,
-  backgroundSize: "116%",
+  backgroundSize: "100% 100%",
   backgroundPosition: "center",
   backgroundRepeat: "no-repeat",
-  backgroundBlendMode: "screen",
   pointerEvents: "none",
 };
 
 const sakuraFrameExpandedStyle: React.CSSProperties = {
   ...sakuraFrameStyle,
-  inset: -3,
+  inset: 0,
 };
 
 const glowRedFrameStyle: React.CSSProperties = {
