@@ -157,16 +157,16 @@ export default function Home() {
     <>
       <section style={statusBarWrapStyle}>
         <div style={{ ...statusItemRowStyle, ...statusRankItemStyle }}>
-          <span style={statusLabelStyle}>ランク</span>
-          <strong style={statusValueStyle}>0</strong>
+          <span style={statusRankLabelStyle}>ランク</span>
+          <strong style={statusRankValueStyle}>0</strong>
         </div>
-        <div style={{ ...statusItemRowStyle, ...statusRightAlignedItemStyle }}>
+        <div style={{ ...statusItemRowStyle, ...statusWideItemStyle, ...statusRightAlignedItemStyle }}>
           <span style={statusIconLabelStyle} aria-label="所持通貨" title="所持通貨">
             🪙
           </span>
           <strong style={{ ...statusValueStyle, ...statusLongValueStyle }}>0</strong>
         </div>
-        <div style={{ ...statusItemRowStyle, ...statusRightAlignedItemStyle }}>
+        <div style={{ ...statusItemRowStyle, ...statusWideItemStyle, ...statusRightAlignedItemStyle }}>
           <span style={statusIconLabelStyle} aria-label="所持季石" title="所持季石">
             <Image src={kisekiIcon} alt="季石" width={28} height={28} />
           </span>
@@ -228,9 +228,11 @@ const statusBarWrapStyle: React.CSSProperties = {
   left: "50%",
   transform: "translateX(-50%)",
   zIndex: 30,
-  width: "min(560px, calc(100% - 16px))",
+  width: "calc(100% - 12px)",
+  maxWidth: 760,
   display: "flex",
   alignItems: "stretch",
+  justifyContent: "center",
   gap: 5,
   padding: "1px 8px",
   borderRadius: 14,
@@ -243,8 +245,7 @@ const statusBarWrapStyle: React.CSSProperties = {
 
 const statusItemRowStyle: React.CSSProperties = {
   position: "relative",
-  flex: "1 1 0",
-  minWidth: 0,
+  flex: "0 0 auto",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -260,6 +261,16 @@ const statusItemRowStyle: React.CSSProperties = {
 
 const statusRankItemStyle: React.CSSProperties = {
   flex: "0 0 112px",
+  justifyContent: "flex-start",
+  gap: 10,
+  border: "none",
+  background: "transparent",
+  boxShadow: "none",
+  padding: "2px 2px",
+};
+
+const statusWideItemStyle: React.CSSProperties = {
+  flex: "0 0 148px",
 };
 
 const statusRightAlignedItemStyle: React.CSSProperties = {
@@ -292,4 +303,21 @@ const statusValueStyle: React.CSSProperties = {
 const statusLongValueStyle: React.CSSProperties = {
   minWidth: "6ch",
   textAlign: "right",
+};
+
+const statusRankLabelStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: "#4b3a27",
+  lineHeight: 1.2,
+  letterSpacing: "0.04em",
+  whiteSpace: "nowrap",
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
+};
+
+const statusRankValueStyle: React.CSSProperties = {
+  fontSize: 19,
+  lineHeight: 1,
+  color: "#2f2318",
+  whiteSpace: "nowrap",
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
 };
