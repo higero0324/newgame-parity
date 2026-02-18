@@ -245,7 +245,8 @@ const statusBarWrapStyle: React.CSSProperties = {
 
 const statusItemRowStyle: React.CSSProperties = {
   position: "relative",
-  flex: "0 0 auto",
+  flex: "0 1 auto",
+  minWidth: 0,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -260,7 +261,8 @@ const statusItemRowStyle: React.CSSProperties = {
 };
 
 const statusRankItemStyle: React.CSSProperties = {
-  flex: "0 0 112px",
+  flex: "0 1 112px",
+  minWidth: 82,
   justifyContent: "flex-start",
   gap: 10,
   border: "none",
@@ -270,7 +272,8 @@ const statusRankItemStyle: React.CSSProperties = {
 };
 
 const statusWideItemStyle: React.CSSProperties = {
-  flex: "0 0 148px",
+  flex: "0 1 148px",
+  minWidth: 126,
 };
 
 const statusRightAlignedItemStyle: React.CSSProperties = {
@@ -303,6 +306,7 @@ const statusValueStyle: React.CSSProperties = {
 const statusLongValueStyle: React.CSSProperties = {
   minWidth: "6ch",
   textAlign: "right",
+  fontVariantNumeric: "tabular-nums",
 };
 
 const statusRankLabelStyle: React.CSSProperties = {
