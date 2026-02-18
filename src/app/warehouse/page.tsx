@@ -99,55 +99,45 @@ export default function WarehousePage() {
       templateId: t.id,
     }));
 
-    return [...titleItems, ...frameItems, ...templateItems];
+    return [...titleItems, ...frameItems, ...templateItems].filter(item => item.unlocked);
   }, [equippedFrameId, equippedTemplate, equippedTitleIds, unlockedTitleIds]);
-
-  const selectedItem = useMemo(
-    () => items.find(x => x.id === selectedItemId) ?? null,
-    [items, selectedItemId],
-  );
 
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>倉庫</h1>
 
       <section style={sectionStyle}>
-        <div style={{ fontSize: 13, color: "#666" }}>アイテムを押すと詳細が表示されます。</div>
+        <div style={{ fontSize: 13, color: "#666" }}>アイテムを押すとその場で詳細が表示されます。</div>
         <div style={gridStyle}>
           {items.map(item => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setSelectedItemId(item.id)}
-              style={{
-                ...slotStyle,
-                ...(item.unlocked ? null : lockedSlotStyle),
-                ...(selectedItemId === item.id ? selectedSlotStyle : null),
-              }}
-            >
-              <span style={slotTypeStyle}>{item.type === "title" ? "称号" : item.type === "frame" ? "枠" : "札"}</span>
-              <span style={previewWrapStyle}>{renderSlotPreview(item)}</span>
-              <span style={slotNameStyle}>{item.name}</span>
-              {item.equipped && <span style={slotBadgeStyle}>使用中</span>}
-              {!item.unlocked && <span style={slotLockStyle}>未解放</span>}
-            </button>
+            <div key={item.id} style={slotAnchorStyle}>
+              <button
+                type="button"
+                onClick={() => setSelectedItemId(prev => (prev === item.id ? null : item.id))}
+                style={{
+                  ...slotStyle,
+                  ...(selectedItemId === item.id ? selectedSlotStyle : null),
+                }}
+              >
+                <span style={previewWrapStyle}>{renderSlotPreview(item)}</span>
+                {item.equipped && <span style={slotBadgeStyle}>使用中</span>}
+              </button>
+              {selectedItemId === item.id && (
+                <div style={slotPopoverStyle}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontWeight: 800, fontSize: 13, lineHeight: 1.25 }}>
+                      {item.type === "title" ? "称号" : item.type === "frame" ? "フレーム" : "カードテンプレート"}
+                      {" / "}
+                      {item.name}
+                    </div>
+                    <button type="button" onClick={() => setSelectedItemId(null)} style={miniCloseBtnStyle}>×</button>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#555" }}>{item.summary}</div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
-
-        {selectedItem && (
-          <div style={detailCardStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <div style={{ fontWeight: 800, fontSize: 18 }}>{selectedItem.name}</div>
-              <button type="button" onClick={() => setSelectedItemId(null)} style={closeBtnStyle}>閉じる</button>
-            </div>
-            <div style={{ fontSize: 14, color: "#555" }}>{selectedItem.summary}</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <span style={chipStyle}>{selectedItem.type === "title" ? "称号" : selectedItem.type === "frame" ? "フレーム" : "カードテンプレート"}</span>
-              <span style={chipStyle}>{selectedItem.unlocked ? "解放済み" : "未解放"}</span>
-              {selectedItem.equipped && <span style={chipStyle}>現在使用中</span>}
-            </div>
-          </div>
-        )}
       </section>
 
       {status && <div style={sectionStyle}>{status}</div>}
@@ -169,8 +159,10 @@ const sectionStyle: React.CSSProperties = {
 
 const gridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(104px, 1fr))",
-  gap: 8,
+  gridTemplateColumns: "repeat(auto-fill, minmax(72px, 72px))",
+  justifyContent: "start",
+  gap: 7,
+  overflow: "visible",
 };
 
 const slotStyle: React.CSSProperties = {
@@ -178,9 +170,11 @@ const slotStyle: React.CSSProperties = {
   borderRadius: 10,
   background: "rgba(255,255,255,0.78)",
   aspectRatio: "1 / 1",
-  padding: 8,
+  width: 72,
+  height: 72,
+  padding: 6,
   display: "grid",
-  alignContent: "space-between",
+  alignContent: "center",
   justifyItems: "center",
   textAlign: "left",
   cursor: "pointer",
@@ -190,71 +184,54 @@ const selectedSlotStyle: React.CSSProperties = {
   boxShadow: "inset 0 0 0 2px rgba(173, 127, 71, 0.42)",
 };
 
-const lockedSlotStyle: React.CSSProperties = {
-  opacity: 0.55,
-};
-
-const slotTypeStyle: React.CSSProperties = {
-  fontSize: 11,
-  color: "#6c5331",
-  fontWeight: 700,
-};
-
-const slotNameStyle: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: 800,
-  lineHeight: 1.25,
-  overflowWrap: "anywhere",
-  textAlign: "center",
-};
-
 const slotBadgeStyle: React.CSSProperties = {
-  justifySelf: "start",
-  fontSize: 11,
+  justifySelf: "center",
+  fontSize: 9,
   borderRadius: 999,
   border: "1px solid rgba(90, 60, 30, 0.35)",
   background: "rgba(245, 223, 187, 0.48)",
-  padding: "2px 8px",
+  padding: "1px 6px",
   fontWeight: 700,
-};
-
-const slotLockStyle: React.CSSProperties = {
-  justifySelf: "start",
-  fontSize: 11,
-  color: "#666",
 };
 
 const previewWrapStyle: React.CSSProperties = {
   width: "100%",
   display: "grid",
   placeItems: "center",
-  minHeight: 40,
+  minHeight: 32,
 };
 
-const detailCardStyle: React.CSSProperties = {
-  borderTop: "1px solid var(--line)",
-  paddingTop: 10,
-  display: "grid",
-  gap: 8,
+const slotAnchorStyle: React.CSSProperties = {
+  position: "relative",
+  overflow: "visible",
 };
 
-const chipStyle: React.CSSProperties = {
-  fontSize: 12,
-  borderRadius: 999,
-  border: "1px solid rgba(90, 60, 30, 0.35)",
-  background: "rgba(245, 223, 187, 0.48)",
-  padding: "2px 8px",
-  fontWeight: 700,
-};
-
-const closeBtnStyle: React.CSSProperties = {
-  padding: "6px 10px",
+const slotPopoverStyle: React.CSSProperties = {
+  position: "absolute",
+  zIndex: 20,
+  top: "calc(100% + 6px)",
+  left: 0,
+  width: 200,
+  maxWidth: "min(72vw, 220px)",
   borderRadius: 10,
+  border: "1px solid rgba(120, 80, 40, 0.38)",
+  background: "rgba(255, 252, 245, 0.98)",
+  boxShadow: "0 10px 24px rgba(40, 24, 12, 0.25)",
+  padding: 8,
+  display: "grid",
+  gap: 6,
+};
+
+const miniCloseBtnStyle: React.CSSProperties = {
+  width: 24,
+  height: 24,
+  borderRadius: 8,
   border: "1px solid var(--line)",
   background: "linear-gradient(180deg, #fff8ec 0%, #f1dfbf 100%)",
   cursor: "pointer",
   color: "var(--ink)",
-  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
+  fontWeight: 800,
+  lineHeight: 1,
 };
 
 const tinyTitleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
@@ -295,8 +272,8 @@ const tinyTitleChipStyle: React.CSSProperties = {
 };
 
 const framePreviewBaseStyle: React.CSSProperties = {
-  width: 42,
-  height: 42,
+  width: 32,
+  height: 32,
   borderRadius: "50%",
   border: "2px solid #8f6337",
   background: "linear-gradient(180deg, #f8e9d3 0%, #e7c39a 100%)",
@@ -313,8 +290,8 @@ const framePreviewSetsugekkaStyle: React.CSSProperties = {
 };
 
 const templatePreviewBaseStyle: React.CSSProperties = {
-  width: 56,
-  height: 36,
+  width: 44,
+  height: 28,
   borderRadius: 6,
   border: "1px solid rgba(90, 60, 30, 0.35)",
   boxShadow: "0 2px 4px rgba(35, 20, 10, 0.18)",

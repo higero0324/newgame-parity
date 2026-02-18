@@ -17,9 +17,9 @@ const MENUS: HomeMenu[] = [
   { id: "battle", icon: "🏠", label: "ホーム" },
   { id: "learn", icon: "学", label: "学び" },
   { id: "kishi", icon: "季", label: "季士情報" },
-  { id: "warehouse", icon: "倉", label: "倉庫" },
   { id: "friend", icon: "友", label: "友人" },
   { id: "progress", icon: "進", label: "進歩" },
+  { id: "warehouse", icon: "倉", label: "倉庫" },
 ];
 
 export default function BottomMenuBar() {
