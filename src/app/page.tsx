@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import kisekiIcon from "@/app/kiseki.png";
+import { getLevelUpKisekiReward, getRequiredXpForNextRank, loadPlayerRankStateForCurrentUser, type PlayerRankState } from "@/lib/playerRank";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
 
@@ -29,6 +30,8 @@ export default function Home() {
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [homeMenu, setHomeMenu] = useState<"battle" | "learn">("battle");
+  const [rankState, setRankState] = useState<PlayerRankState>({ rank: 1, xp: 0, kiseki: 0 });
+  const [rankPopoverOpen, setRankPopoverOpen] = useState(false);
 
   useEffect(() => {
     const readFromQuery = () => {
@@ -94,6 +97,23 @@ export default function Home() {
     };
   }, [router]);
 
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      if (!isLoggedIn) {
+        if (alive) setRankState({ rank: 1, xp: 0, kiseki: 0 });
+        return;
+      }
+      const loaded = await loadPlayerRankStateForCurrentUser();
+      if (!alive || !loaded.ok) return;
+      setRankState(loaded.state);
+    };
+    if (authReady) load();
+    return () => {
+      alive = false;
+    };
+  }, [authReady, isLoggedIn]);
+
   const menus = useMemo<HomeMenu[]>(
     () => [
       {
@@ -144,6 +164,9 @@ export default function Home() {
 
   const activeMenu: MenuId = homeMenu;
   const selectedMenu = menus.find(m => m.id === activeMenu) ?? menus[0];
+  const requiredXp = getRequiredXpForNextRank(rankState.rank);
+  const xpToNext = Math.max(0, requiredXp - rankState.xp);
+  const isMaxRank = rankState.rank >= 99;
 
   const goAction = (action: MenuAction) => {
     if (action.requiresAuth && !isLoggedIn) {
@@ -156,16 +179,32 @@ export default function Home() {
   return (
     <>
       <section style={statusBarWrapStyle}>
-        <div style={{ ...statusItemRowStyle, ...statusRankItemStyle }}>
+        <button
+          type="button"
+          onClick={() => setRankPopoverOpen(prev => !prev)}
+          style={{ ...statusItemRowStyle, ...statusRankItemStyle }}
+        >
           <span style={statusRankLabelStyle}>ランク</span>
-          <strong style={statusRankValueStyle}>0</strong>
-        </div>
+          <strong style={statusRankValueStyle}>{rankState.rank}</strong>
+        </button>
         <div style={{ ...statusItemRowStyle, ...statusWideItemStyle, ...statusKisekiItemStyle }}>
           <span style={statusIconLabelStyle} aria-label="所持季石" title="所持季石">
             <Image src={kisekiIcon} alt="季石" width={28} height={28} />
           </span>
-          <strong style={{ ...statusValueStyle, ...statusLongValueStyle }}>0</strong>
+          <strong style={{ ...statusValueStyle, ...statusLongValueStyle }}>{rankState.kiseki}</strong>
         </div>
+        {rankPopoverOpen && (
+          <div style={rankPopoverStyle}>
+            {isMaxRank ? (
+              <div style={{ fontSize: 13 }}>ランク上限（99）に到達しています。</div>
+            ) : (
+              <>
+                <div style={{ fontSize: 13 }}>次のランクまで: {xpToNext} EXP</div>
+                <div style={{ fontSize: 13 }}>ランクアップ報酬: 季石 +{getLevelUpKisekiReward()}</div>
+              </>
+            )}
+          </div>
+        )}
       </section>
 
       <main
@@ -199,6 +238,7 @@ export default function Home() {
       </section>
 
       </main>
+      {rankPopoverOpen && <button type="button" aria-label="閉じる" style={rankPopoverBackdropStyle} onClick={() => setRankPopoverOpen(false)} />}
     </>
   );
 }
@@ -255,6 +295,7 @@ const statusItemRowStyle: React.CSSProperties = {
 };
 
 const statusRankItemStyle: React.CSSProperties = {
+  cursor: "pointer",
   flex: "0 1 112px",
   minWidth: 82,
   justifyContent: "flex-start",
@@ -310,7 +351,7 @@ const statusLongValueStyle: React.CSSProperties = {
 };
 
 const statusRankLabelStyle: React.CSSProperties = {
-  fontSize: 12,
+  fontSize: 24,
   color: "#4b3a27",
   lineHeight: 1.2,
   letterSpacing: "0.04em",
@@ -324,4 +365,29 @@ const statusRankValueStyle: React.CSSProperties = {
   color: "#2f2318",
   whiteSpace: "nowrap",
   fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
+};
+
+const rankPopoverBackdropStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "transparent",
+  border: "none",
+  padding: 0,
+  margin: 0,
+  zIndex: 34,
+  cursor: "default",
+};
+
+const rankPopoverStyle: React.CSSProperties = {
+  position: "fixed",
+  top: "calc(max(6px, env(safe-area-inset-top)) + 40px)",
+  left: 12,
+  zIndex: 35,
+  display: "grid",
+  gap: 4,
+  padding: "8px 10px",
+  borderRadius: 10,
+  border: "1px solid rgba(120, 80, 40, 0.35)",
+  background: "rgba(255, 252, 245, 0.98)",
+  boxShadow: "0 10px 24px rgba(40, 24, 12, 0.22)",
 };

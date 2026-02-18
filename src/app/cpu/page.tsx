@@ -9,6 +9,7 @@ import { calculateAnimationDuration } from "@/lib/animationTiming";
 import { getCurrentUserSavedMatchCount, saveMatchToSupabase, type MoveRecord } from "@/lib/saveMatch";
 import { loadCurrentProfilePrefsFromProfiles } from "@/lib/profilePrefs";
 import { recordCpuWinForCurrentUser } from "@/lib/achievements";
+import { grantCpuWinXpForCurrentUser } from "@/lib/playerRank";
 
 type Snapshot = {
   board: number[];
@@ -76,6 +77,23 @@ export default function PlayCpuPage() {
   const usedUndoThisMatchRef = useRef(false);
   const extremeNoticeTimerRef = useRef<number | null>(null);
 
+  const recordResultProgress = (userWon: boolean) => {
+    const noUndoUsed = !usedUndoThisMatchRef.current;
+    recordCpuWinForCurrentUser(cpuLevel, userWon, noUndoUsed).catch(() => {
+      // ignore
+    });
+    grantCpuWinXpForCurrentUser(cpuLevel, userWon, noUndoUsed).then(res => {
+      if (!res.ok || !userWon || res.gainedXp <= 0) return;
+      setMsg(prev => {
+        const base = prev.trim();
+        const levelUpText = res.levelUps > 0 ? ` / ランクアップ +${res.levelUps}` : "";
+        return `${base}${base ? " " : ""}(EXP +${res.gainedXp}${levelUpText})`;
+      });
+    }).catch(() => {
+      // ignore
+    });
+  };
+
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
     const apply = () => setIsMobile(mq.matches);
@@ -130,9 +148,7 @@ export default function PlayCpuPage() {
               if (!resultRecordedRef.current) {
                 resultRecordedRef.current = true;
                 const userWon = res.winner === playerSide;
-                recordCpuWinForCurrentUser(cpuLevel, userWon, !usedUndoThisMatchRef.current).catch(() => {
-                  // ignore
-                });
+                recordResultProgress(userWon);
               }
             }
           }
@@ -177,9 +193,7 @@ export default function PlayCpuPage() {
       if (!resultRecordedRef.current) {
         resultRecordedRef.current = true;
         const userWon = res.winner === playerSide;
-        recordCpuWinForCurrentUser(cpuLevel, userWon, !usedUndoThisMatchRef.current).catch(() => {
-          // ignore
-        });
+        recordResultProgress(userWon);
       }
     }
   };
