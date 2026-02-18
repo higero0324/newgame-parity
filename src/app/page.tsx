@@ -156,19 +156,19 @@ export default function Home() {
   return (
     <main style={{ padding: 24, display: "grid", gap: 14, justifyItems: "center" }}>
       <section style={statusBarWrapStyle}>
-        <div style={statusItemStyle}>
+        <div style={statusItemRowStyle}>
           <span style={statusLabelStyle}>季士ランク</span>
           <strong style={statusValueStyle}>0</strong>
         </div>
-        <div style={statusItemStyle}>
+        <div style={statusItemRowStyle}>
           <span style={statusIconLabelStyle} aria-label="所持通貨" title="所持通貨">
             🪙
           </span>
           <strong style={statusValueStyle}>0</strong>
         </div>
-        <div style={statusItemStyle}>
+        <div style={statusItemRowStyle}>
           <span style={statusIconLabelStyle} aria-label="所持季石" title="所持季石">
-            <Image src={kisekiIcon} alt="季石" width={14} height={14} />
+            <Image src={kisekiIcon} alt="季石" width={28} height={28} />
           </span>
           <strong style={statusValueStyle}>0</strong>
         </div>
@@ -213,43 +213,55 @@ const bigActionButtonStyle: React.CSSProperties = {
 };
 
 const statusBarWrapStyle: React.CSSProperties = {
+  position: "sticky",
+  top: 8,
+  zIndex: 5,
   width: "100%",
   maxWidth: 760,
+  margin: "0 auto",
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-  gap: 8,
-  padding: 8,
-  borderRadius: 12,
-  border: "1px solid rgba(90, 60, 30, 0.3)",
-  background: "linear-gradient(180deg, rgba(255,248,236,0.92) 0%, rgba(241,223,191,0.86) 100%)",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: 5,
+  padding: "4px 8px",
+  borderRadius: 14,
+  borderTop: "1px solid rgba(120, 80, 40, 0.25)",
+  border: "1px solid rgba(120, 80, 40, 0.22)",
+  background: "linear-gradient(180deg, rgba(255,250,241,0.66) 0%, rgba(245,230,202,0.72) 100%)",
+  backdropFilter: "blur(10px)",
 };
 
-const statusItemStyle: React.CSSProperties = {
-  display: "grid",
-  justifyItems: "center",
-  gap: 2,
-  padding: "6px 8px",
+const statusItemRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 8,
+  padding: "8px 6px",
   borderRadius: 10,
-  border: "1px solid rgba(90, 60, 30, 0.24)",
-  background: "rgba(255,255,255,0.7)",
+  border: "1px solid var(--line)",
+  background: "rgba(255,255,255,0.72)",
+  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.2)",
+  minHeight: 42,
 };
 
 const statusLabelStyle: React.CSSProperties = {
-  fontSize: 12,
+  fontSize: 14,
   color: "#5b4d39",
   lineHeight: 1.2,
+  whiteSpace: "nowrap",
 };
 
 const statusIconLabelStyle: React.CSSProperties = {
-  minHeight: 16,
+  minHeight: 28,
   display: "inline-grid",
   placeItems: "center",
   color: "#5b4d39",
   lineHeight: 1,
-  fontSize: 14,
+  fontSize: 20,
+  whiteSpace: "nowrap",
 };
 
 const statusValueStyle: React.CSSProperties = {
   fontSize: 22,
   lineHeight: 1,
+  whiteSpace: "nowrap",
 };
