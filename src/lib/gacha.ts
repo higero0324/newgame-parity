@@ -11,6 +11,12 @@ export type GachaItemDef = {
   tier: GachaTier;
 };
 
+export type GachaPullResult = {
+  item: GachaItemDef;
+  duplicated: boolean;
+  refundKiseki: number;
+};
+
 export type OwnedGachaItems = {
   frameIds: string[];
   templateIds: string[];
@@ -18,6 +24,11 @@ export type OwnedGachaItems = {
 };
 
 const GACHA_COST_PER_PULL = 250;
+const DUPLICATE_REFUND_BY_TIER: Record<GachaTier, number> = {
+  odd: 10,
+  premium: 50,
+  rare: 250,
+};
 
 const RARE_FRAME: GachaItemDef = {
   id: "sakura_frame",
@@ -97,9 +108,13 @@ export function getOwnedGachaItemsFromMetadata(metadata: unknown): OwnedGachaIte
 
 function drawOne(): GachaItemDef {
   const roll = Math.random() * 100;
-  if (roll < 3) return RARE_FRAME;
+  if (roll < 1.5) return RARE_FRAME;
   if (roll < 20) return PREMIUM_ITEMS[Math.floor(Math.random() * PREMIUM_ITEMS.length)];
   return ODD_TITLES[Math.floor(Math.random() * ODD_TITLES.length)];
+}
+
+function getDuplicateRefundByTier(tier: GachaTier): number {
+  return DUPLICATE_REFUND_BY_TIER[tier] ?? 0;
 }
 
 export async function pullGachaForCurrentUser(drawCount: number) {
@@ -121,27 +136,41 @@ export async function pullGachaForCurrentUser(drawCount: number) {
   const nextOwnedTitles = new Set(owned.titleIds);
 
   const newlyObtainedIds: string[] = [];
+  const pullResults: GachaPullResult[] = [];
+  let refundTotal = 0;
   for (const item of rewards) {
+    let duplicated = false;
     if (item.kind === "frame") {
-      const before = nextOwnedFrames.size;
-      nextOwnedFrames.add(item.id);
-      if (nextOwnedFrames.size > before) newlyObtainedIds.push(item.id);
+      duplicated = nextOwnedFrames.has(item.id);
+      if (!duplicated) {
+        nextOwnedFrames.add(item.id);
+        newlyObtainedIds.push(item.id);
+      }
     } else if (item.kind === "template") {
-      const before = nextOwnedTemplates.size;
-      nextOwnedTemplates.add(item.id);
-      if (nextOwnedTemplates.size > before) newlyObtainedIds.push(item.id);
+      duplicated = nextOwnedTemplates.has(item.id);
+      if (!duplicated) {
+        nextOwnedTemplates.add(item.id);
+        newlyObtainedIds.push(item.id);
+      }
     } else {
-      const before = nextOwnedTitles.size;
-      nextOwnedTitles.add(item.id);
-      if (nextOwnedTitles.size > before) newlyObtainedIds.push(item.id);
+      duplicated = nextOwnedTitles.has(item.id);
+      if (!duplicated) {
+        nextOwnedTitles.add(item.id);
+        newlyObtainedIds.push(item.id);
+      }
     }
+    const refundKiseki = duplicated ? getDuplicateRefundByTier(item.tier) : 0;
+    refundTotal += refundKiseki;
+    pullResults.push({ item, duplicated, refundKiseki });
   }
+
+  const remainingKiseki = rankState.kiseki - cost + refundTotal;
 
   const { error: updateError } = await supabase.auth.updateUser({
     data: {
       player_rank: rankState.rank,
       player_xp: rankState.xp,
-      player_kiseki: rankState.kiseki - cost,
+      player_kiseki: remainingKiseki,
       owned_gacha_frame_ids: Array.from(nextOwnedFrames),
       owned_gacha_template_ids: Array.from(nextOwnedTemplates),
       owned_gacha_title_ids: Array.from(nextOwnedTitles),
@@ -152,9 +181,11 @@ export async function pullGachaForCurrentUser(drawCount: number) {
   return {
     ok: true as const,
     rewards,
+    pullResults,
     newlyObtainedIds,
     cost,
-    remainingKiseki: rankState.kiseki - cost,
+    refundTotal,
+    remainingKiseki,
     owned: {
       frameIds: Array.from(nextOwnedFrames),
       templateIds: Array.from(nextOwnedTemplates),
@@ -162,4 +193,3 @@ export async function pullGachaForCurrentUser(drawCount: number) {
     },
   };
 }
-

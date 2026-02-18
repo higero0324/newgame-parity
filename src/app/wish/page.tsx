@@ -4,12 +4,18 @@ import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import sakuraIcon from "@/app/sakura.png";
 import { loadPlayerRankStateForCurrentUser } from "@/lib/playerRank";
-import { getAllGachaItems, getGachaCost, pullGachaForCurrentUser, type GachaItemDef } from "@/lib/gacha";
+import {
+  getAllGachaItems,
+  getGachaCost,
+  pullGachaForCurrentUser,
+  type GachaItemDef,
+  type GachaPullResult,
+} from "@/lib/gacha";
 import HomeTopStatusBar from "@/components/HomeTopStatusBar";
 
 const RATES = [
-  { label: "★★★", description: "レアアイコンフレーム", rate: 3 },
-  { label: "★★", description: "光フレーム / おしゃれカード", rate: 17 },
+  { label: "★★★", description: "レアアイコンフレーム", rate: 1.5 },
+  { label: "★★", description: "光フレーム / おしゃれカード", rate: 18.5 },
   { label: "★", description: "変な称号", rate: 80 },
 ];
 
@@ -20,8 +26,7 @@ export default function WishPage() {
   const [loading, setLoading] = useState(true);
   const [drawing, setDrawing] = useState(false);
   const [status, setStatus] = useState("");
-  const [results, setResults] = useState<GachaItemDef[]>([]);
-  const [newlyObtained, setNewlyObtained] = useState<Set<string>>(new Set());
+  const [results, setResults] = useState<GachaPullResult[]>([]);
   const [showRates, setShowRates] = useState(false);
 
   React.useEffect(() => {
@@ -52,10 +57,9 @@ export default function WishPage() {
       setStatus(res.reason);
       return;
     }
-    setResults(res.rewards);
-    setNewlyObtained(new Set(res.newlyObtainedIds));
+    setResults(res.pullResults);
     setKiseki(res.remainingKiseki);
-    setStatus(`祈願完了（-${res.cost} 季石）`);
+    setStatus(`祈願完了（消費 ${res.cost} 季石 / 返還 ${res.refundTotal} 季石）`);
   };
 
   const canSingle = !drawing && kiseki >= getGachaCost(1);
@@ -64,7 +68,7 @@ export default function WishPage() {
   const perItemRateMap = useMemo(() => {
     const totalByTier: Record<string, number> = { rare: 0, premium: 0, odd: 0 };
     for (const item of allItems) totalByTier[item.tier] = (totalByTier[item.tier] ?? 0) + 1;
-    const tierRate: Record<string, number> = { rare: 3, premium: 17, odd: 80 };
+    const tierRate: Record<string, number> = { rare: 1.5, premium: 18.5, odd: 80 };
     const map = new Map<string, number>();
     for (const item of allItems) {
       const denom = totalByTier[item.tier] || 1;
@@ -134,11 +138,15 @@ export default function WishPage() {
         <section style={sectionStyle}>
           <h2 style={{ margin: 0, fontSize: 18 }}>祈願結果</h2>
           <div style={{ display: "grid", gap: 8, gridTemplateColumns: resultColumns }}>
-            {results.map((item, i) => (
-              <div key={`${item.id}-${i}`} style={{ ...resultSlotStyle, ...(item.tier === "rare" ? rareSlotStyle : null) }}>
-                <div style={resultPreviewWrapStyle}>{renderItemPreview(item)}</div>
-                <div style={{ fontSize: 12, fontWeight: 800, textAlign: "center", lineHeight: 1.3 }}>{item.name}</div>
-                {newlyObtained.has(item.id) && <div style={newBadgeStyle}>NEW</div>}
+            {results.map((result, i) => (
+              <div
+                key={`${result.item.id}-${i}`}
+                style={{ ...resultSlotStyle, ...(result.item.tier === "rare" ? rareSlotStyle : null) }}
+              >
+                <div style={resultPreviewWrapStyle}>{renderItemPreview(result.item)}</div>
+                <div style={{ fontSize: 12, fontWeight: 800, textAlign: "center", lineHeight: 1.3 }}>{result.item.name}</div>
+                {!result.duplicated && <div style={newBadgeStyle}>NEW</div>}
+                {result.duplicated && <div style={dupBadgeStyle}>DUP +{result.refundKiseki}</div>}
               </div>
             ))}
           </div>
@@ -280,6 +288,19 @@ const newBadgeStyle: React.CSSProperties = {
   border: "1px solid #8a571d",
   background: "#fff6d7",
   color: "#6d4318",
+  fontSize: 10,
+  fontWeight: 900,
+  padding: "1px 6px",
+};
+
+const dupBadgeStyle: React.CSSProperties = {
+  position: "absolute",
+  top: 6,
+  right: 6,
+  borderRadius: 999,
+  border: "1px solid #8f611d",
+  background: "#fff0a8",
+  color: "#6a430f",
   fontSize: 10,
   fontWeight: 900,
   padding: "1px 6px",
