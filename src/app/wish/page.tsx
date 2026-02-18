@@ -7,6 +7,7 @@ import { loadPlayerRankStateForCurrentUser } from "@/lib/playerRank";
 import {
   getAllGachaItems,
   getGachaCost,
+  getGachaItemById,
   pullGachaForCurrentUser,
   type GachaItemDef,
   type GachaPullResult,
@@ -65,6 +66,13 @@ export default function WishPage() {
   const canSingle = !drawing && kiseki >= getGachaCost(1);
   const canTen = !drawing && kiseki >= getGachaCost(10);
   const allItems = useMemo(() => getAllGachaItems(), []);
+  const spotlightItems = useMemo(
+    () =>
+      ["sakura_frame", "glow_blue_frame", "gacha_template_kinran"]
+        .map(id => getGachaItemById(id))
+        .filter((item): item is GachaItemDef => Boolean(item)),
+    [],
+  );
   const perItemRateMap = useMemo(() => {
     const totalByTier: Record<string, number> = { rare: 0, premium: 0, odd: 0 };
     for (const item of allItems) totalByTier[item.tier] = (totalByTier[item.tier] ?? 0) + 1;
@@ -94,6 +102,23 @@ export default function WishPage() {
     >
       <HomeTopStatusBar rank={rank} xp={xp} kiseki={kiseki} />
       <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900 }}>祈願</h1>
+
+      <section style={spotlightSectionStyle}>
+        <div style={spotlightHeaderStyle}>
+          <span style={spotlightEyebrowStyle}>注目祈願</span>
+          <strong style={spotlightTitleStyle}>今だけの目玉景品</strong>
+        </div>
+        <div style={spotlightGridStyle}>
+          {spotlightItems.map(item => (
+            <div key={item.id} style={spotlightCardStyle}>
+              <div style={spotlightGlowStyle} />
+              <div style={spotlightPreviewWrapStyle}>{renderItemPreview(item)}</div>
+              <div style={spotlightNameStyle}>{item.name}</div>
+              <div style={spotlightTierStyle}>{item.tier === "rare" ? "★★★ ピックアップ" : "★★ 注目景品"}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section style={sectionStyle}>
         <div style={{ fontSize: 12, color: "#6a5338", textAlign: "right" }}>1回: 250季石</div>
@@ -193,6 +218,92 @@ const sectionStyle: React.CSSProperties = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.5), 0 10px 20px rgba(50, 28, 12, 0.12)",
 };
 
+const spotlightSectionStyle: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 760,
+  display: "grid",
+  gap: 10,
+  padding: 14,
+  border: "1px solid rgba(95, 65, 34, 0.35)",
+  borderRadius: 16,
+  background:
+    "radial-gradient(circle at 15% 20%, rgba(255,228,168,0.35) 0%, rgba(255,228,168,0) 40%), radial-gradient(circle at 85% 0%, rgba(255,189,214,0.25) 0%, rgba(255,189,214,0) 38%), linear-gradient(170deg, rgba(255,250,240,0.94) 0%, rgba(246,224,179,0.86) 100%)",
+  boxSizing: "border-box",
+  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.58), 0 14px 26px rgba(50, 28, 12, 0.14)",
+};
+
+const spotlightHeaderStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 4,
+};
+
+const spotlightEyebrowStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: "#6f4c23",
+  letterSpacing: "0.08em",
+  fontWeight: 800,
+};
+
+const spotlightTitleStyle: React.CSSProperties = {
+  fontSize: 18,
+  color: "#43290f",
+  lineHeight: 1.2,
+};
+
+const spotlightGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: 10,
+};
+
+const spotlightCardStyle: React.CSSProperties = {
+  position: "relative",
+  display: "grid",
+  justifyItems: "center",
+  gap: 6,
+  padding: 10,
+  borderRadius: 12,
+  border: "1px solid rgba(130, 90, 38, 0.35)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,241,214,0.9) 100%)",
+  boxShadow: "0 6px 14px rgba(54, 29, 10, 0.16)",
+  overflow: "hidden",
+};
+
+const spotlightGlowStyle: React.CSSProperties = {
+  position: "absolute",
+  top: -16,
+  width: 90,
+  height: 50,
+  borderRadius: "50%",
+  background: "radial-gradient(circle, rgba(255,223,145,0.65) 0%, rgba(255,223,145,0) 70%)",
+  pointerEvents: "none",
+};
+
+const spotlightPreviewWrapStyle: React.CSSProperties = {
+  minHeight: 64,
+  width: "100%",
+  display: "grid",
+  placeItems: "center",
+};
+
+const spotlightNameStyle: React.CSSProperties = {
+  fontSize: 13,
+  fontWeight: 900,
+  color: "#412a12",
+  textAlign: "center",
+  lineHeight: 1.25,
+};
+
+const spotlightTierStyle: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 800,
+  color: "#7c5325",
+  borderRadius: 999,
+  border: "1px solid rgba(138, 92, 37, 0.38)",
+  background: "rgba(255,247,226,0.92)",
+  padding: "2px 8px",
+};
+
 const drawButtonStyle: React.CSSProperties = {
   padding: "10px 16px",
   borderRadius: 12,
@@ -200,6 +311,7 @@ const drawButtonStyle: React.CSSProperties = {
   background: "linear-gradient(180deg, #fff3d1 0%, #dfb553 100%)",
   color: "#3a270f",
   fontWeight: 900,
+  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   cursor: "pointer",
   boxShadow: "0 2px 0 rgba(107, 74, 35, 0.38), 0 6px 14px rgba(40, 20, 8, 0.2)",
 };
