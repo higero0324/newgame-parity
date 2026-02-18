@@ -1006,12 +1006,12 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 
 const sakuraFrameStyle: React.CSSProperties = {
   position: "absolute",
-  inset: -4,
+  inset: -2,
   borderRadius: "50%",
-  border: "2px solid #d79db7",
-  boxShadow: "0 0 0 1px rgba(106, 58, 74, 0.72), 0 0 12px rgba(237, 176, 205, 0.7)",
+  border: "none",
+  boxShadow: "0 0 10px rgba(237, 176, 205, 0.7)",
   backgroundImage: `url(${sakuraIcon.src})`,
-  backgroundSize: "155%",
+  backgroundSize: "122%",
   backgroundPosition: "center",
   backgroundRepeat: "no-repeat",
   backgroundBlendMode: "screen",
@@ -1020,8 +1020,7 @@ const sakuraFrameStyle: React.CSSProperties = {
 
 const sakuraFrameExpandedStyle: React.CSSProperties = {
   ...sakuraFrameStyle,
-  inset: -6,
-  borderWidth: 4,
+  inset: -3,
 };
 
 const glowRedFrameStyle: React.CSSProperties = {
