@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import sakuraIcon from "@/app/sakura.png";
 import { loadPlayerRankStateForCurrentUser } from "@/lib/playerRank";
@@ -10,7 +10,7 @@ import {
   getGachaItemById,
   pullGachaForCurrentUser,
   type GachaItemDef,
-  type GachaPullResult,
+type GachaPullResult,
 } from "@/lib/gacha";
 import HomeTopStatusBar from "@/components/HomeTopStatusBar";
 
@@ -19,6 +19,12 @@ const RATES = [
   { label: "★★", description: "光フレーム / おしゃれカード", rate: 13.5 },
   { label: "★", description: "変な称号", rate: 85 },
 ];
+
+const TIER_ORDER: Record<GachaItemDef["tier"], number> = {
+  odd: 0,
+  premium: 1,
+  rare: 2,
+};
 
 export default function WishPage() {
   const [rank, setRank] = useState(1);
@@ -29,6 +35,19 @@ export default function WishPage() {
   const [status, setStatus] = useState("");
   const [results, setResults] = useState<GachaPullResult[]>([]);
   const [showRates, setShowRates] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [rareCutIn, setRareCutIn] = useState(false);
+  const [revealCount, setRevealCount] = useState(0);
+  const revealTimerRef = useRef<number | null>(null);
+
+  const clearRevealTimer = () => {
+    if (revealTimerRef.current !== null) {
+      window.clearInterval(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+  };
+
+  const sleep = (ms: number) => new Promise<void>(resolve => window.setTimeout(resolve, ms));
 
   React.useEffect(() => {
     (async () => {
@@ -45,21 +64,58 @@ export default function WishPage() {
     })();
   }, []);
 
+  React.useEffect(() => {
+    return () => {
+      clearRevealTimer();
+    };
+  }, []);
+
   const draw = async (count: 1 | 10) => {
     if (drawing) return;
     const cost = getGachaCost(count);
     const ok = window.confirm(`季石を${cost}個消費しますがよろしいですか？`);
     if (!ok) return;
+    clearRevealTimer();
+    setResults([]);
+    setRevealCount(0);
+    setOpening(true);
+    setRareCutIn(false);
     setDrawing(true);
-    setStatus("");
+    setStatus("祈願中...");
     const res = await pullGachaForCurrentUser(count);
-    setDrawing(false);
     if (!res.ok) {
+      setDrawing(false);
+      setOpening(false);
       setStatus(res.reason);
       return;
     }
-    setResults(res.pullResults);
     setKiseki(res.remainingKiseki);
+    const pulled = [...res.pullResults].sort((a, b) => TIER_ORDER[a.item.tier] - TIER_ORDER[b.item.tier]);
+    const hasRare = pulled.some(x => x.item.tier === "rare");
+    await sleep(700);
+    setOpening(false);
+    if (hasRare) {
+      setRareCutIn(true);
+      await sleep(900);
+      setRareCutIn(false);
+    }
+
+    setResults(pulled);
+    setRevealCount(Math.min(1, pulled.length));
+    if (pulled.length > 1) {
+      revealTimerRef.current = window.setInterval(() => {
+        setRevealCount(prev => {
+          const next = prev + 1;
+          if (next >= pulled.length) {
+            clearRevealTimer();
+            return pulled.length;
+          }
+          return next;
+        });
+      }, 110);
+    }
+
+    setDrawing(false);
     setStatus(`祈願完了（消費 ${res.cost} 季石 / 返還 ${res.refundTotal} 季石）`);
   };
 
@@ -158,26 +214,51 @@ export default function WishPage() {
         )}
       </section>
 
-      {results.length > 0 && (
+      {(results.length > 0 || opening || rareCutIn) && (
         <section style={sectionStyle}>
           <h2 style={{ margin: 0, fontSize: 18 }}>祈願結果</h2>
           <div style={{ display: "grid", gap: 8, gridTemplateColumns: resultColumns }}>
             {results.map((result, i) => (
-              <div
-                key={`${result.item.id}-${i}`}
-                style={{ ...resultSlotStyle, ...(result.item.tier === "rare" ? rareSlotStyle : null) }}
-              >
-                <div style={resultPreviewWrapStyle}>{renderItemPreview(result.item)}</div>
-                <div style={{ fontSize: 12, fontWeight: 800, textAlign: "center", lineHeight: 1.3 }}>{result.item.name}</div>
-                {!result.duplicated && <div style={newBadgeStyle}>NEW</div>}
-                {result.duplicated && <div style={dupBadgeStyle}>DUP +{result.refundKiseki}</div>}
-              </div>
+              i < revealCount ? (
+                <div
+                  key={`${result.item.id}-${i}`}
+                  style={{ ...resultSlotStyle, ...(result.item.tier === "rare" ? rareSlotStyle : null) }}
+                >
+                  <div style={resultPreviewWrapStyle}>{renderItemPreview(result.item)}</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, textAlign: "center", lineHeight: 1.3 }}>{result.item.name}</div>
+                  {!result.duplicated && <div style={newBadgeStyle}>NEW</div>}
+                  {result.duplicated && <div style={dupBadgeStyle}>DUP +{result.refundKiseki}</div>}
+                </div>
+              ) : (
+                <div key={`back-${i}`} style={resultBackSlotStyle}>
+                  <div style={resultBackCoreStyle}>?</div>
+                </div>
+              )
             ))}
           </div>
         </section>
       )}
 
       {status && <div style={sectionStyle}>{status}</div>}
+
+      {opening && (
+        <div style={openingOverlayStyle}>
+          <div style={openingCardStyle}>
+            <div style={openingPulseStyle} />
+            <div style={{ fontSize: 28, fontWeight: 900 }}>祈願中...</div>
+            <div style={{ fontSize: 13, opacity: 0.92 }}>静かに光が満ちていく</div>
+          </div>
+        </div>
+      )}
+
+      {rareCutIn && (
+        <div style={rareOverlayStyle}>
+          <div style={rareCardStyle}>
+            <div style={{ fontSize: 12, letterSpacing: "0.08em", opacity: 0.92 }}>SPECIAL</div>
+            <div style={{ fontSize: 30, fontWeight: 900 }}>★★★ 出現</div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -415,6 +496,81 @@ const dupBadgeStyle: React.CSSProperties = {
   fontSize: 10,
   fontWeight: 900,
   padding: "1px 6px",
+};
+
+const resultBackSlotStyle: React.CSSProperties = {
+  ...resultSlotStyle,
+  background: "linear-gradient(145deg, rgba(90,67,47,0.94) 0%, rgba(49,33,21,0.94) 100%)",
+  borderColor: "rgba(244, 205, 122, 0.28)",
+  boxShadow: "inset 0 0 0 1px rgba(255, 227, 165, 0.25)",
+  placeItems: "center",
+};
+
+const resultBackCoreStyle: React.CSSProperties = {
+  width: 54,
+  height: 54,
+  borderRadius: "50%",
+  display: "grid",
+  placeItems: "center",
+  fontSize: 28,
+  color: "rgba(255, 235, 186, 0.95)",
+  border: "1px solid rgba(255, 221, 146, 0.4)",
+  boxShadow: "0 0 20px rgba(255, 218, 133, 0.22)",
+};
+
+const openingOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 70,
+  display: "grid",
+  placeItems: "center",
+  background: "rgba(26, 15, 8, 0.45)",
+  backdropFilter: "blur(1.5px)",
+  pointerEvents: "none",
+};
+
+const openingCardStyle: React.CSSProperties = {
+  position: "relative",
+  minWidth: 220,
+  padding: "20px 28px",
+  borderRadius: 16,
+  border: "1px solid rgba(255, 226, 158, 0.65)",
+  color: "#fff7e1",
+  textAlign: "center",
+  background: "linear-gradient(180deg, rgba(116,76,31,0.96) 0%, rgba(73,45,16,0.96) 100%)",
+  boxShadow: "0 18px 40px rgba(19, 10, 4, 0.45)",
+  overflow: "hidden",
+};
+
+const openingPulseStyle: React.CSSProperties = {
+  position: "absolute",
+  left: "50%",
+  top: -24,
+  transform: "translateX(-50%)",
+  width: 180,
+  height: 70,
+  borderRadius: "50%",
+  background: "radial-gradient(circle, rgba(255,220,146,0.7) 0%, rgba(255,220,146,0) 70%)",
+};
+
+const rareOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 72,
+  display: "grid",
+  placeItems: "center",
+  background: "radial-gradient(circle at center, rgba(255,230,173,0.24) 0%, rgba(26, 12, 4, 0.64) 72%)",
+  pointerEvents: "none",
+};
+
+const rareCardStyle: React.CSSProperties = {
+  borderRadius: 16,
+  border: "1px solid rgba(255, 214, 126, 0.85)",
+  padding: "16px 24px",
+  color: "#fff4d1",
+  textAlign: "center",
+  background: "linear-gradient(145deg, rgba(148,92,33,0.96) 0%, rgba(83,45,12,0.96) 100%)",
+  boxShadow: "0 0 0 1px rgba(255, 241, 192, 0.32), 0 0 42px rgba(255, 208, 98, 0.36)",
 };
 
 const framePreviewBaseStyle: React.CSSProperties = {
