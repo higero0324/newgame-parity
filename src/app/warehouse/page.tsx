@@ -159,7 +159,7 @@ const sectionStyle: React.CSSProperties = {
 
 const gridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(90px, 90px))",
+  gridTemplateColumns: "repeat(auto-fill, minmax(92px, 92px))",
   justifyContent: "start",
   gap: 7,
   overflow: "visible",
@@ -170,8 +170,8 @@ const slotStyle: React.CSSProperties = {
   borderRadius: 10,
   background: "rgba(255,255,255,0.78)",
   aspectRatio: "1 / 1",
-  width: 90,
-  height: 90,
+  width: 92,
+  height: 92,
   padding: 6,
   display: "grid",
   alignContent: "center",
