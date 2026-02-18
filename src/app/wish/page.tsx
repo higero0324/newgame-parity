@@ -172,7 +172,7 @@ export default function WishPage() {
   }, [allItems]);
 
   const resultColumns = useMemo(
-    () => (results.length >= 10 ? "repeat(5, minmax(0, 1fr))" : "repeat(auto-fit, minmax(120px, 1fr))"),
+    () => "repeat(auto-fit, minmax(100px, 1fr))",
     [results.length],
   );
 
@@ -269,7 +269,7 @@ export default function WishPage() {
             <button type="button" aria-label="祈願結果を閉じる" style={resultCloseButtonStyle} onClick={() => setResultOverlayOpen(false)}>
               ×
             </button>
-            <h2 style={{ margin: 0, fontSize: 22, color: "#fff5dd" }}>祈願結果</h2>
+            <h2 style={{ margin: 0, fontSize: 20, color: "#fff5dd" }}>祈願結果</h2>
             {manualRevealMode && (
               <div style={{ fontSize: 13, color: "#ffe7b8" }}>
                 {revealBusy ? "最後の一枚..." : "カードをタップして順番にめくる"}
@@ -283,7 +283,6 @@ export default function WishPage() {
                     style={{ ...resultSlotStyle, ...(result.item.tier === "rare" ? rareSlotStyle : null) }}
                   >
                     <div style={resultPreviewWrapStyle}>{renderItemPreview(result.item)}</div>
-                    <div style={{ fontSize: 12, fontWeight: 800, textAlign: "center", lineHeight: 1.3 }}>{result.item.name}</div>
                     {!result.duplicated && <div style={newBadgeStyle}>NEW</div>}
                     {result.duplicated && <div style={dupBadgeStyle}>DUP +{result.refundKiseki}</div>}
                   </div>
@@ -376,6 +375,15 @@ export default function WishPage() {
 
 function renderItemPreview(item: GachaItemDef) {
   if (item.kind === "frame") {
+    if (item.id === "glow_red_frame") {
+      return <span style={{ ...framePreviewBaseStyle, ...framePreviewGlowStyle, borderColor: "#dd3e46", boxShadow: "0 0 10px #dd3e46" }} />;
+    }
+    if (item.id === "glow_blue_frame") {
+      return <span style={{ ...framePreviewBaseStyle, ...framePreviewGlowStyle, borderColor: "#3f8cff", boxShadow: "0 0 10px #3f8cff" }} />;
+    }
+    if (item.id === "glow_green_frame") {
+      return <span style={{ ...framePreviewBaseStyle, ...framePreviewGlowStyle, borderColor: "#2da46f", boxShadow: "0 0 10px #2da46f" }} />;
+    }
     if (item.id === "sakura_frame") {
       return (
         <div style={framePreviewBaseStyle}>
@@ -385,15 +393,18 @@ function renderItemPreview(item: GachaItemDef) {
         </div>
       );
     }
-    const color = item.id === "glow_red_frame" ? "#dd3e46" : item.id === "glow_blue_frame" ? "#3f8cff" : "#2da46f";
-    return <div style={{ ...framePreviewBaseStyle, borderColor: color, boxShadow: `0 0 12px ${color}` }} />;
+    return <span style={framePreviewBaseStyle} />;
   }
 
   if (item.kind === "template") {
     return <div style={{ ...templatePreviewStyle, ...(item.id === "gacha_template_kacho" ? kachoStyle : item.id === "gacha_template_suiboku" ? suibokuStyle : kinranStyle) }} />;
   }
 
-  return <div style={titlePreviewStyle}>称号</div>;
+  return (
+    <span style={{ ...tinyTitleChipStyle, ...tinyTitleChipStyleFor(item.tier) }}>
+      {item.name}
+    </span>
+  );
 }
 
 const sectionStyle: React.CSSProperties = {
@@ -564,11 +575,12 @@ const resultSlotStyle: React.CSSProperties = {
   borderRadius: 10,
   background: "rgba(255,255,255,0.78)",
   aspectRatio: "1 / 1",
-  padding: 8,
+  padding: 6,
   display: "grid",
-  alignContent: "space-between",
+  alignContent: "center",
   justifyItems: "center",
-  gap: 6,
+  textAlign: "left",
+  gap: 4,
 };
 
 const rareSlotStyle: React.CSSProperties = {
@@ -578,7 +590,7 @@ const rareSlotStyle: React.CSSProperties = {
 
 const resultPreviewWrapStyle: React.CSSProperties = {
   width: "100%",
-  minHeight: 56,
+  minHeight: 32,
   display: "grid",
   placeItems: "center",
 };
@@ -778,28 +790,32 @@ const rareCardStyle: React.CSSProperties = {
 };
 
 const framePreviewBaseStyle: React.CSSProperties = {
-  width: 42,
-  height: 42,
+  width: 32,
+  height: 32,
   borderRadius: "50%",
-  border: "3px solid #8f6337",
+  border: "2px solid #8f6337",
   background: "linear-gradient(180deg, #f8e9d3 0%, #e7c39a 100%)",
   position: "relative",
-  overflow: "hidden",
 };
 
 const sakuraFramePreviewStyle: React.CSSProperties = {
   position: "absolute",
-  inset: -1,
+  inset: -2,
   borderRadius: "50%",
-  border: "3px solid #d79db7",
-  boxShadow: "0 0 0 1px rgba(106, 58, 74, 0.72), 0 0 12px rgba(237, 176, 205, 0.7)",
+  border: "2px solid #d79db7",
+  boxShadow: "0 0 10px rgba(237, 176, 205, 0.7)",
   overflow: "hidden",
 };
 
+const framePreviewGlowStyle: React.CSSProperties = {
+  borderWidth: 3,
+  borderStyle: "solid",
+};
+
 const templatePreviewStyle: React.CSSProperties = {
-  width: 60,
-  height: 40,
-  borderRadius: 7,
+  width: 44,
+  height: 28,
+  borderRadius: 6,
   border: "1px solid rgba(90, 60, 30, 0.35)",
   boxShadow: "0 2px 4px rgba(35, 20, 10, 0.18)",
 };
@@ -828,3 +844,39 @@ const titlePreviewStyle: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 800,
 };
+
+const tinyTitleChipStyle: React.CSSProperties = {
+  padding: "3px 8px",
+  borderRadius: 999,
+  border: "1px solid transparent",
+  fontSize: 11,
+  fontWeight: 700,
+  maxWidth: "100%",
+  lineHeight: 1.1,
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+  overflow: "hidden",
+};
+
+function tinyTitleChipStyleFor(tier: GachaItemDef["tier"]): React.CSSProperties {
+  if (tier === "rare") {
+    return {
+      background: "linear-gradient(180deg, #fff4c7 0%, #e2b63f 100%)",
+      color: "#4b3510",
+      borderColor: "#b8891f",
+      borderRadius: 6,
+    };
+  }
+  if (tier === "premium") {
+    return {
+      background: "linear-gradient(180deg, #f4f6f8 0%, #c9d1d9 100%)",
+      color: "#213243",
+      borderColor: "#9aa6b2",
+    };
+  }
+  return {
+    background: "linear-gradient(180deg, #f3d7bf 0%, #d6a274 100%)",
+    color: "#5c3514",
+    borderColor: "#b27a47",
+  };
+}
