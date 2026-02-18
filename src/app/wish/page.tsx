@@ -4,13 +4,13 @@ import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import sakuraIcon from "@/app/sakura.png";
 import { loadPlayerRankStateForCurrentUser } from "@/lib/playerRank";
-import { getGachaCost, pullGachaForCurrentUser, type GachaItemDef } from "@/lib/gacha";
+import { getAllGachaItems, getGachaCost, pullGachaForCurrentUser, type GachaItemDef } from "@/lib/gacha";
 import HomeTopStatusBar from "@/components/HomeTopStatusBar";
 
 const RATES = [
-  { label: "レアアイコンフレーム", rate: "3%" },
-  { label: "光フレーム / おしゃれカード", rate: "17%" },
-  { label: "変な称号", rate: "80%" },
+  { label: "★★★", description: "レアアイコンフレーム", rate: 3 },
+  { label: "★★", description: "光フレーム / おしゃれカード", rate: 17 },
+  { label: "★", description: "変な称号", rate: 80 },
 ];
 
 export default function WishPage() {
@@ -22,6 +22,7 @@ export default function WishPage() {
   const [status, setStatus] = useState("");
   const [results, setResults] = useState<GachaItemDef[]>([]);
   const [newlyObtained, setNewlyObtained] = useState<Set<string>>(new Set());
+  const [showRates, setShowRates] = useState(false);
 
   React.useEffect(() => {
     (async () => {
@@ -59,8 +60,23 @@ export default function WishPage() {
 
   const canSingle = !drawing && kiseki >= getGachaCost(1);
   const canTen = !drawing && kiseki >= getGachaCost(10);
+  const allItems = useMemo(() => getAllGachaItems(), []);
+  const perItemRateMap = useMemo(() => {
+    const totalByTier: Record<string, number> = { rare: 0, premium: 0, odd: 0 };
+    for (const item of allItems) totalByTier[item.tier] = (totalByTier[item.tier] ?? 0) + 1;
+    const tierRate: Record<string, number> = { rare: 3, premium: 17, odd: 80 };
+    const map = new Map<string, number>();
+    for (const item of allItems) {
+      const denom = totalByTier[item.tier] || 1;
+      map.set(item.id, tierRate[item.tier] / denom);
+    }
+    return map;
+  }, [allItems]);
 
-  const resultColumns = useMemo(() => (results.length >= 10 ? "repeat(5, minmax(0, 1fr))" : "repeat(auto-fit, minmax(120px, 1fr))"), [results.length]);
+  const resultColumns = useMemo(
+    () => (results.length >= 10 ? "repeat(5, minmax(0, 1fr))" : "repeat(auto-fit, minmax(120px, 1fr))"),
+    [results.length],
+  );
 
   return (
     <main
@@ -77,22 +93,41 @@ export default function WishPage() {
 
       <section style={sectionStyle}>
         <div style={{ fontSize: 12, color: "#6a5338", textAlign: "right" }}>1回: 250季石</div>
-        <div style={rateWrapStyle}>
-          {RATES.map(r => (
-            <div key={r.label} style={rateRowStyle}>
-              <span>{r.label}</span>
-              <b>{r.rate}</b>
-            </div>
-          ))}
-        </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
           <button type="button" style={drawButtonStyle} onClick={() => draw(1)} disabled={!canSingle || loading}>
-            単発祈願
+            1回祈願
           </button>
           <button type="button" style={drawButtonStyle} onClick={() => draw(10)} disabled={!canTen || loading}>
-            十連祈願
+            10回祈願
+          </button>
+          <button type="button" style={detailButtonStyle} onClick={() => setShowRates(v => !v)}>
+            {showRates ? "詳細を閉じる" : "詳細"}
           </button>
         </div>
+
+        {showRates && (
+          <div style={ratePanelStyle}>
+            <div style={{ fontWeight: 800, fontSize: 14 }}>抽象的な確率分布</div>
+            <div style={rateWrapStyle}>
+              {RATES.map(r => (
+                <div key={r.label} style={rateRowStyle}>
+                  <span>{r.label}（{r.description}）</span>
+                  <b>{r.rate}%</b>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ fontWeight: 800, fontSize: 14 }}>具体的な確率分布</div>
+            <div style={detailGridStyle}>
+              {allItems.map(item => (
+                <div key={item.id} style={detailRowStyle}>
+                  <span>{item.name}</span>
+                  <b>{(perItemRateMap.get(item.id) ?? 0).toFixed(3)}%</b>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {results.length > 0 && (
@@ -150,13 +185,38 @@ const sectionStyle: React.CSSProperties = {
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.5), 0 10px 20px rgba(50, 28, 12, 0.12)",
 };
 
+const drawButtonStyle: React.CSSProperties = {
+  padding: "10px 16px",
+  borderRadius: 12,
+  border: "1px solid #6b4a23",
+  background: "linear-gradient(180deg, #fff3d1 0%, #dfb553 100%)",
+  color: "#3a270f",
+  fontWeight: 900,
+  cursor: "pointer",
+  boxShadow: "0 2px 0 rgba(107, 74, 35, 0.38), 0 6px 14px rgba(40, 20, 8, 0.2)",
+};
+
+const detailButtonStyle: React.CSSProperties = {
+  ...drawButtonStyle,
+  background: "linear-gradient(180deg, #f8f0df 0%, #d8bf8e 100%)",
+};
+
+const ratePanelStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 8,
+  border: "1px solid rgba(90, 60, 30, 0.32)",
+  borderRadius: 10,
+  background: "rgba(255,255,255,0.74)",
+  padding: 10,
+};
+
 const rateWrapStyle: React.CSSProperties = {
   display: "grid",
   gap: 6,
-  border: "1px solid rgba(90, 60, 30, 0.28)",
+  border: "1px solid rgba(90, 60, 30, 0.18)",
   borderRadius: 10,
   padding: 8,
-  background: "rgba(255,255,255,0.62)",
+  background: "rgba(255,255,255,0.58)",
 };
 
 const rateRowStyle: React.CSSProperties = {
@@ -167,15 +227,24 @@ const rateRowStyle: React.CSSProperties = {
   color: "#553b20",
 };
 
-const drawButtonStyle: React.CSSProperties = {
-  padding: "10px 16px",
-  borderRadius: 12,
-  border: "1px solid #6b4a23",
-  background: "linear-gradient(180deg, #fff3d1 0%, #dfb553 100%)",
-  color: "#3a270f",
-  fontWeight: 900,
-  cursor: "pointer",
-  boxShadow: "0 2px 0 rgba(107, 74, 35, 0.38), 0 6px 14px rgba(40, 20, 8, 0.2)",
+const detailGridStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 5,
+  border: "1px solid rgba(90, 60, 30, 0.18)",
+  borderRadius: 10,
+  padding: 8,
+  background: "rgba(255,255,255,0.58)",
+  maxHeight: 240,
+  overflow: "auto",
+};
+
+const detailRowStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 8,
+  fontSize: 12,
+  color: "#553b20",
 };
 
 const resultSlotStyle: React.CSSProperties = {
