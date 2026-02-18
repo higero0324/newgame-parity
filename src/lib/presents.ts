@@ -83,7 +83,21 @@ export async function ensureWelcomePresentForCurrentUser() {
 
   const flags = getPresentFlagsFromMetadata(data.user.user_metadata);
   const currentPresents = getPresentBoxFromMetadata(data.user.user_metadata);
-  if (flags[WELCOME_PRESENT_ID] || currentPresents.some(p => p.id === WELCOME_PRESENT_ID)) {
+  const hasWelcomeInBox = currentPresents.some(p => p.id === WELCOME_PRESENT_ID);
+
+  if (flags[WELCOME_PRESENT_ID]) {
+    return { ok: true as const, changed: false, presents: currentPresents };
+  }
+
+  // Migration path: old users may have welcome present in box without the flag.
+  // In that case, set the flag now to prevent re-distribution loops.
+  if (hasWelcomeInBox) {
+    const { error: migrateError } = await supabase.auth.updateUser({
+      data: {
+        [PRESENT_FLAGS_KEY]: { ...flags, [WELCOME_PRESENT_ID]: true },
+      },
+    });
+    if (migrateError) return { ok: false as const, reason: migrateError.message };
     return { ok: true as const, changed: false, presents: currentPresents };
   }
 
