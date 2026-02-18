@@ -106,7 +106,6 @@ export default function WishPage() {
       <section style={spotlightSectionStyle}>
         <div style={spotlightHeaderStyle}>
           <span style={spotlightEyebrowStyle}>注目祈願</span>
-          <strong style={spotlightTitleStyle}>今だけの目玉景品</strong>
         </div>
         <div style={spotlightGridStyle}>
           {spotlightItems.map(item => (
