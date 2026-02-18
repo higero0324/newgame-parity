@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import kisekiIcon from "@/app/kiseki.png";
 import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
 import { getLevelUpKisekiReward, getRequiredXpForNextRank, loadPlayerRankStateForCurrentUser, type PlayerRankState } from "@/lib/playerRank";
+import { loadPresentBoxForCurrentUser } from "@/lib/presents";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
 
@@ -34,6 +35,7 @@ export default function Home() {
   const [rankState, setRankState] = useState<PlayerRankState>({ rank: 1, xp: 0, kiseki: 0 });
   const [rankPopoverOpen, setRankPopoverOpen] = useState(false);
   const [achievementNotice, setAchievementNotice] = useState(false);
+  const [presentNoticeCount, setPresentNoticeCount] = useState(0);
 
   useEffect(() => {
     const readFromQuery = () => {
@@ -65,6 +67,8 @@ export default function Home() {
         setIsGuestMode(false);
         const ach = await loadAchievementStateForCurrentUser();
         setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
+        const presents = await loadPresentBoxForCurrentUser();
+        setPresentNoticeCount(presents.ok ? presents.presents.length : 0);
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {
@@ -74,6 +78,7 @@ export default function Home() {
         setIsLoggedIn(false);
         setIsGuestMode(true);
         setAchievementNotice(false);
+        setPresentNoticeCount(0);
       }
       setAuthReady(true);
     };
@@ -85,9 +90,12 @@ export default function Home() {
         if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setIsLoggedIn(true);
         setIsGuestMode(false);
-        loadAchievementStateForCurrentUser().then(ach => {
-          setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
-        });
+        Promise.all([loadAchievementStateForCurrentUser(), loadPresentBoxForCurrentUser()]).then(
+          ([ach, presents]) => {
+            setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
+            setPresentNoticeCount(presents.ok ? presents.presents.length : 0);
+          },
+        );
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {
@@ -97,6 +105,7 @@ export default function Home() {
         setIsLoggedIn(false);
         setIsGuestMode(true);
         setAchievementNotice(false);
+        setPresentNoticeCount(0);
       }
       setAuthReady(true);
     });
@@ -254,6 +263,16 @@ export default function Home() {
       >
         進歩
         {achievementNotice && <span style={progressNoticeStyle}>!</span>}
+      </button>
+      <button
+        type="button"
+        aria-label="プレゼントボックス"
+        title="プレゼントボックス"
+        style={giftFloatingButtonStyle}
+        onClick={() => router.push(isLoggedIn ? "/presents" : "/login")}
+      >
+        🎁
+        {presentNoticeCount > 0 && <span style={progressNoticeStyle}>!</span>}
       </button>
     </>
   );
@@ -413,6 +432,14 @@ const progressFloatingButtonStyle: React.CSSProperties = {
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
   cursor: "pointer",
   overflow: "visible",
+};
+
+const giftFloatingButtonStyle: React.CSSProperties = {
+  ...progressFloatingButtonStyle,
+  left: "auto",
+  right: 10,
+  padding: "10px 14px",
+  minWidth: 62,
 };
 
 const progressNoticeStyle: React.CSSProperties = {
