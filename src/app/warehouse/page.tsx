@@ -5,8 +5,17 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { getAllTitles, loadAchievementStateForCurrentUser, type TitleDef, type TitleRarity } from "@/lib/achievements";
 import { loadCurrentProfilePrefsFromProfiles } from "@/lib/profilePrefs";
+import { getAllGachaItems, getOwnedGachaItemsFromMetadata } from "@/lib/gacha";
 
-type CardTemplateId = "classic" | "lacquer" | "paper" | "modern" | "white";
+type CardTemplateId =
+  | "classic"
+  | "lacquer"
+  | "paper"
+  | "modern"
+  | "white"
+  | "gacha_template_kacho"
+  | "gacha_template_suiboku"
+  | "gacha_template_kinran";
 type WarehouseItemType = "title" | "frame" | "template";
 
 type WarehouseItem = {
@@ -26,6 +35,9 @@ const CARD_TEMPLATE_ITEMS: Array<{ id: CardTemplateId; label: string; summary: s
   { id: "paper", label: "和紙カード", summary: "和紙の風合いを重視した上品なカード。" },
   { id: "lacquer", label: "漆黒蒔絵カード", summary: "重厚で高級感のある漆黒カード。" },
   { id: "modern", label: "雅紺カード", summary: "現代的な紺色グラデーションのカード。" },
+  { id: "gacha_template_kacho", label: "花鳥風月カード", summary: "柔らかな桜色と和柄の上品カード。" },
+  { id: "gacha_template_suiboku", label: "水墨カード", summary: "墨の流れを思わせる静謐なカード。" },
+  { id: "gacha_template_kinran", label: "金襴カード", summary: "金糸のきらめきが映える豪華カード。" },
 ];
 
 export default function WarehousePage() {
@@ -36,6 +48,11 @@ export default function WarehousePage() {
   const [equippedFrameId, setEquippedFrameId] = useState("");
   const [equippedTemplate, setEquippedTemplate] = useState<CardTemplateId>("classic");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [ownedGacha, setOwnedGacha] = useState<{ frameIds: string[]; templateIds: string[]; titleIds: string[] }>({
+    frameIds: [],
+    templateIds: [],
+    titleIds: [],
+  });
 
   useEffect(() => {
     (async () => {
@@ -57,9 +74,19 @@ export default function WarehousePage() {
       if (prefs.ok) setEquippedFrameId(prefs.prefs.iconFrameId);
 
       const rawTemplate = String(sessionData.session.user.user_metadata?.profile_card_template ?? "classic");
-      if (rawTemplate === "white" || rawTemplate === "classic" || rawTemplate === "paper" || rawTemplate === "lacquer" || rawTemplate === "modern") {
+      if (
+        rawTemplate === "white" ||
+        rawTemplate === "classic" ||
+        rawTemplate === "paper" ||
+        rawTemplate === "lacquer" ||
+        rawTemplate === "modern" ||
+        rawTemplate === "gacha_template_kacho" ||
+        rawTemplate === "gacha_template_suiboku" ||
+        rawTemplate === "gacha_template_kinran"
+      ) {
         setEquippedTemplate(rawTemplate);
       }
+      setOwnedGacha(getOwnedGachaItemsFromMetadata(sessionData.session.user.user_metadata));
 
       setStatus("");
     })();
@@ -67,6 +94,7 @@ export default function WarehousePage() {
 
   const items = useMemo<WarehouseItem[]>(() => {
     const allTitles = getAllTitles();
+    const gachaMap = new Map(getAllGachaItems().map(x => [x.id, x]));
     const titleItems: WarehouseItem[] = allTitles.map((title: TitleDef) => ({
       id: `title:${title.id}`,
       type: "title",
@@ -76,6 +104,18 @@ export default function WarehousePage() {
       equipped: equippedTitleIds.includes(title.id),
       rarity: title.rarity,
     }));
+    const gachaTitleItems: WarehouseItem[] = ownedGacha.titleIds
+      .map(id => gachaMap.get(id))
+      .filter((x): x is NonNullable<typeof x> => Boolean(x))
+      .map(item => ({
+        id: `title:${item.id}`,
+        type: "title" as const,
+        name: item.name,
+        summary: "祈願で獲得した称号。",
+        unlocked: true,
+        equipped: false,
+        rarity: "bronze" as const,
+      }));
 
     const frameItems: WarehouseItem[] = [
       { id: "frame:none", type: "frame", name: "フレームなし", summary: "通常のアイコン表示。", unlocked: true, equipped: equippedFrameId === "" },
@@ -87,20 +127,38 @@ export default function WarehousePage() {
         unlocked: unlockedTitleIds.includes("extreme_emperor"),
         equipped: equippedFrameId === "setsugekka_frame",
       },
+      ...ownedGacha.frameIds
+        .map(id => gachaMap.get(id))
+        .filter((x): x is NonNullable<typeof x> => Boolean(x))
+        .map(item => ({
+          id: `frame:${item.id}`,
+          type: "frame" as const,
+          name: item.name,
+          summary: "祈願で獲得したアイコンフレーム。",
+          unlocked: true,
+          equipped: equippedFrameId === item.id,
+        })),
     ];
 
-    const templateItems: WarehouseItem[] = CARD_TEMPLATE_ITEMS.map(t => ({
-      id: `template:${t.id}`,
-      type: "template",
-      name: t.label,
-      summary: t.summary,
-      unlocked: true,
-      equipped: equippedTemplate === t.id,
-      templateId: t.id,
-    }));
+    const templateItems: WarehouseItem[] = CARD_TEMPLATE_ITEMS
+      .filter(t => {
+        if (t.id === "gacha_template_kacho" || t.id === "gacha_template_suiboku" || t.id === "gacha_template_kinran") {
+          return ownedGacha.templateIds.includes(t.id);
+        }
+        return true;
+      })
+      .map(t => ({
+        id: `template:${t.id}`,
+        type: "template" as const,
+        name: t.label,
+        summary: t.summary,
+        unlocked: true,
+        equipped: equippedTemplate === t.id,
+        templateId: t.id,
+      }));
 
-    return [...titleItems, ...frameItems, ...templateItems].filter(item => item.unlocked);
-  }, [equippedFrameId, equippedTemplate, equippedTitleIds, unlockedTitleIds]);
+    return [...titleItems, ...gachaTitleItems, ...frameItems, ...templateItems].filter(item => item.unlocked);
+  }, [equippedFrameId, equippedTemplate, equippedTitleIds, unlockedTitleIds, ownedGacha]);
 
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
@@ -290,6 +348,21 @@ const framePreviewSetsugekkaStyle: React.CSSProperties = {
     "0 0 0 1px rgba(92, 63, 14, 0.82), 0 0 10px rgba(245, 207, 96, 0.52), inset 0 1px 2px rgba(255, 248, 220, 0.92)",
 };
 
+const framePreviewSakuraStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -2,
+  borderRadius: "50%",
+  border: "3px solid #d79db7",
+  boxShadow: "0 0 0 1px rgba(106, 58, 74, 0.72), 0 0 12px rgba(237, 176, 205, 0.7)",
+};
+
+const framePreviewGlowStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -2,
+  borderRadius: "50%",
+  border: "3px solid #fff",
+};
+
 const templatePreviewBaseStyle: React.CSSProperties = {
   width: 44,
   height: 28,
@@ -323,6 +396,21 @@ const templatePreviewStyles: Record<CardTemplateId, React.CSSProperties> = {
       "radial-gradient(circle at 100% 100%, rgba(202,228,255,0.23) 0%, rgba(202,228,255,0) 45%), radial-gradient(circle at 12% 10%, rgba(176,201,255,0.2) 0%, rgba(176,201,255,0) 38%), linear-gradient(145deg, #1b2741 0%, #2f456f 52%, #5a78ad 100%)",
     borderColor: "#5673a8",
   },
+  gacha_template_kacho: {
+    background:
+      "radial-gradient(circle at 85% 20%, rgba(255,176,194,0.26) 0%, rgba(255,176,194,0) 40%), linear-gradient(145deg, #fdf1e2 0%, #f7d9c4 52%, #efc1a6 100%)",
+    borderColor: "#c98c72",
+  },
+  gacha_template_suiboku: {
+    background:
+      "repeating-linear-gradient(18deg, rgba(40,40,40,0.18) 0px, rgba(40,40,40,0.18) 2px, rgba(240,240,240,0.9) 2px, rgba(240,240,240,0.9) 8px), linear-gradient(180deg, #f4f4f4 0%, #dedede 100%)",
+    borderColor: "#9ea4aa",
+  },
+  gacha_template_kinran: {
+    background:
+      "radial-gradient(circle at 10% 0%, rgba(255,238,187,0.35) 0%, rgba(255,238,187,0) 45%), linear-gradient(135deg, #4a1f09 0%, #7a3816 45%, #c99737 100%)",
+    borderColor: "#9d6a26",
+  },
 };
 
 function renderSlotPreview(item: WarehouseItem) {
@@ -337,9 +425,17 @@ function renderSlotPreview(item: WarehouseItem) {
 
   if (item.type === "frame") {
     const isSnow = item.id === "frame:setsugekka_frame";
+    const isSakura = item.id === "frame:sakura_frame";
+    const isGlowRed = item.id === "frame:glow_red_frame";
+    const isGlowBlue = item.id === "frame:glow_blue_frame";
+    const isGlowGreen = item.id === "frame:glow_green_frame";
     return (
       <span style={{ ...framePreviewBaseStyle, opacity: item.unlocked ? 1 : 0.6 }}>
         {isSnow && <span style={framePreviewSetsugekkaStyle} />}
+        {isSakura && <span style={framePreviewSakuraStyle} />}
+        {isGlowRed && <span style={{ ...framePreviewGlowStyle, borderColor: "#dd3e46", boxShadow: "0 0 10px #dd3e46" }} />}
+        {isGlowBlue && <span style={{ ...framePreviewGlowStyle, borderColor: "#3f8cff", boxShadow: "0 0 10px #3f8cff" }} />}
+        {isGlowGreen && <span style={{ ...framePreviewGlowStyle, borderColor: "#2da46f", boxShadow: "0 0 10px #2da46f" }} />}
       </span>
     );
   }

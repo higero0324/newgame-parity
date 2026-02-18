@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { getTitleById, type TitleDef, type TitleRarity } from "@/lib/achievements";
+import sakuraIcon from "@/app/sakura.png";
 
 type ProfileRow = {
   user_id: string;
@@ -20,7 +21,15 @@ type ProfileRow = {
   match_names: Record<string, string>;
 };
 
-type CardTemplateId = "classic" | "lacquer" | "paper" | "modern" | "white";
+type CardTemplateId =
+  | "classic"
+  | "lacquer"
+  | "paper"
+  | "modern"
+  | "white"
+  | "gacha_template_kacho"
+  | "gacha_template_suiboku"
+  | "gacha_template_kinran";
 
 type MatchRow = {
   id: string;
@@ -317,7 +326,7 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
   const text = (props.iconText.trim() || fallback).slice(0, 2);
   const wrapStyle = props.expanded ? avatarWrapExpandedStyle : avatarWrapStyle;
   const bodyStyle = props.expanded ? avatarExpandedStyle : avatarStyle;
-  const frameStyle = props.expanded ? setsugekkaFrameExpandedStyle : setsugekkaFrameStyle;
+  const frameStyle = getAvatarFrameStyle(props.iconFrameId, Boolean(props.expanded));
   return (
     <div style={wrapStyle}>
       {props.iconImageDataUrl ? (
@@ -325,9 +334,18 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
       ) : (
         <div style={bodyStyle}>{text}</div>
       )}
-      {props.iconFrameId === "setsugekka_frame" && <div style={frameStyle} aria-hidden />}
+      {frameStyle && <div style={frameStyle} aria-hidden />}
     </div>
   );
+}
+
+function getAvatarFrameStyle(frameId: string, expanded: boolean): React.CSSProperties | null {
+  if (frameId === "setsugekka_frame") return expanded ? setsugekkaFrameExpandedStyle : setsugekkaFrameStyle;
+  if (frameId === "sakura_frame") return expanded ? sakuraFrameExpandedStyle : sakuraFrameStyle;
+  if (frameId === "glow_red_frame") return expanded ? glowRedFrameExpandedStyle : glowRedFrameStyle;
+  if (frameId === "glow_blue_frame") return expanded ? glowBlueFrameExpandedStyle : glowBlueFrameStyle;
+  if (frameId === "glow_green_frame") return expanded ? glowGreenFrameExpandedStyle : glowGreenFrameStyle;
+  return null;
 }
 
 function MiniBoard({ board }: { board: number[] }) {
@@ -457,7 +475,15 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
 };
 
 function parseTemplate(value: string | undefined): CardTemplateId {
-  if (value === "lacquer" || value === "paper" || value === "modern" || value === "white") return value;
+  if (
+    value === "lacquer" ||
+    value === "paper" ||
+    value === "modern" ||
+    value === "white" ||
+    value === "gacha_template_kacho" ||
+    value === "gacha_template_suiboku" ||
+    value === "gacha_template_kinran"
+  ) return value;
   return "classic";
 }
 
@@ -603,6 +629,80 @@ const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
     color: "#edf4ff",
     boxShadow: "inset 0 0 0 1px rgba(213,233,255,0.24), 0 14px 30px rgba(24,33,56,0.35)",
   },
+  gacha_template_kacho: {
+    background:
+      "radial-gradient(circle at 85% 20%, rgba(255,176,194,0.26) 0%, rgba(255,176,194,0) 40%), linear-gradient(145deg, #fdf1e2 0%, #f7d9c4 52%, #efc1a6 100%)",
+    borderColor: "#c98c72",
+  },
+  gacha_template_suiboku: {
+    background:
+      "repeating-linear-gradient(18deg, rgba(40,40,40,0.18) 0px, rgba(40,40,40,0.18) 2px, rgba(240,240,240,0.9) 2px, rgba(240,240,240,0.9) 8px), linear-gradient(180deg, #f4f4f4 0%, #dedede 100%)",
+    borderColor: "#9ea4aa",
+  },
+  gacha_template_kinran: {
+    background:
+      "radial-gradient(circle at 10% 0%, rgba(255,238,187,0.35) 0%, rgba(255,238,187,0) 45%), linear-gradient(135deg, #4a1f09 0%, #7a3816 45%, #c99737 100%)",
+    borderColor: "#9d6a26",
+  },
+};
+
+const sakuraFrameStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -1,
+  borderRadius: "50%",
+  border: "3px solid #d79db7",
+  boxShadow: "0 0 0 1px rgba(106, 58, 74, 0.72), 0 0 12px rgba(237, 176, 205, 0.7)",
+  backgroundImage: `url(${sakuraIcon.src})`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+  backgroundBlendMode: "screen",
+  pointerEvents: "none",
+};
+
+const sakuraFrameExpandedStyle: React.CSSProperties = {
+  ...sakuraFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
+const glowRedFrameStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -1,
+  borderRadius: "50%",
+  border: "3px solid #dd3e46",
+  boxShadow: "0 0 10px #dd3e46",
+  pointerEvents: "none",
+};
+
+const glowRedFrameExpandedStyle: React.CSSProperties = {
+  ...glowRedFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
+const glowBlueFrameStyle: React.CSSProperties = {
+  ...glowRedFrameStyle,
+  borderColor: "#3f8cff",
+  boxShadow: "0 0 10px #3f8cff",
+};
+
+const glowBlueFrameExpandedStyle: React.CSSProperties = {
+  ...glowBlueFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
+const glowGreenFrameStyle: React.CSSProperties = {
+  ...glowRedFrameStyle,
+  borderColor: "#2da46f",
+  boxShadow: "0 0 10px #2da46f",
+};
+
+const glowGreenFrameExpandedStyle: React.CSSProperties = {
+  ...glowGreenFrameStyle,
+  inset: -2,
+  borderWidth: 4,
 };
 
 const titleChipStyleBase: React.CSSProperties = {

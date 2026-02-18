@@ -62,6 +62,10 @@ function normalizeState(metadata: unknown): PlayerRankState {
   return { rank, xp, kiseki };
 }
 
+export function getPlayerRankStateFromMetadata(metadata: unknown): PlayerRankState {
+  return normalizeState(metadata);
+}
+
 export function getClaimedAchievementKisekiTitleIdsFromMetadata(metadata: unknown): string[] {
   const meta = (metadata ?? {}) as Record<string, unknown>;
   return normalizeStringArray(meta[ACHIEVEMENT_KISEKI_CLAIMED_KEY]);

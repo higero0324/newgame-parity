@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
 
-type MenuId = "battle" | "learn" | "kishi" | "warehouse" | "friend" | "progress";
+type MenuId = "battle" | "learn" | "kishi" | "warehouse" | "friend" | "progress" | "wish";
 
 type HomeMenu = {
   id: MenuId;
@@ -19,6 +19,7 @@ const MENUS: HomeMenu[] = [
   { id: "kishi", icon: "季", label: "季士情報" },
   { id: "friend", icon: "友", label: "友人" },
   { id: "progress", icon: "進", label: "進歩" },
+  { id: "wish", icon: "祈", label: "祈願" },
   { id: "warehouse", icon: "倉", label: "倉庫" },
 ];
 
@@ -85,6 +86,7 @@ export default function BottomMenuBar() {
     if (pathname.startsWith("/warehouse")) return "warehouse";
     if (pathname.startsWith("/friends")) return "friend";
     if (pathname.startsWith("/achievements")) return "progress";
+    if (pathname.startsWith("/wish")) return "wish";
     if (pathname.startsWith("/hajimeni") || pathname.startsWith("/rules") || pathname.startsWith("/tutorial") || pathname.startsWith("/history")) {
       return "learn";
     }
@@ -112,6 +114,10 @@ export default function BottomMenuBar() {
     }
     if (id === "warehouse") {
       router.push(isLoggedIn ? "/warehouse" : "/login");
+      return;
+    }
+    if (id === "wish") {
+      router.push(isLoggedIn ? "/wish" : "/login");
       return;
     }
     if (id === "friend") {

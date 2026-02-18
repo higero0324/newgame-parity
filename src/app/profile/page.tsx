@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import sakuraIcon from "@/app/sakura.png";
 import {
   ensureFriendIdForCurrentUser,
   getFriendIdFromUserMetadata,
@@ -20,6 +21,7 @@ import {
   type TitleDef,
   type TitleRarity,
 } from "@/lib/achievements";
+import { getOwnedGachaItemsFromMetadata } from "@/lib/gacha";
 
 type MatchRow = {
   id: string;
@@ -35,7 +37,15 @@ type UserMeta = {
   profile_card_template?: string;
 };
 
-type CardTemplateId = "classic" | "lacquer" | "paper" | "modern" | "white";
+type CardTemplateId =
+  | "classic"
+  | "lacquer"
+  | "paper"
+  | "modern"
+  | "white"
+  | "gacha_template_kacho"
+  | "gacha_template_suiboku"
+  | "gacha_template_kinran";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -66,6 +76,11 @@ export default function ProfilePage() {
   const [cardExpanded, setCardExpanded] = useState(false);
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [friendId, setFriendId] = useState("");
+  const [ownedGacha, setOwnedGacha] = useState<{ frameIds: string[]; templateIds: string[]; titleIds: string[] }>({
+    frameIds: [],
+    templateIds: [],
+    titleIds: [],
+  });
   const iconFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -88,6 +103,7 @@ export default function ProfilePage() {
         setCardTemplate(parseTemplate(meta.profile_card_template));
 
         const profilePrefs = getProfilePrefsFromUserMetadata(currentUser.user_metadata);
+        setOwnedGacha(getOwnedGachaItemsFromMetadata(currentUser.user_metadata));
         const loaded = await loadCurrentProfilePrefsFromProfiles();
         if (loaded.ok) {
           setMatchNames(loaded.prefs.matchNames);
@@ -544,6 +560,8 @@ export default function ProfilePage() {
               <span style={{ fontWeight: 700 }}>カードテンプレート</span>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {cardTemplateOptions.map(opt => (
+                  ((opt.id === "gacha_template_kacho" || opt.id === "gacha_template_suiboku" || opt.id === "gacha_template_kinran")
+                    && !ownedGacha.templateIds.includes(opt.id)) ? null : (
                   <button
                     key={opt.id}
                     type="button"
@@ -555,6 +573,7 @@ export default function ProfilePage() {
                   >
                     {opt.label}
                   </button>
+                  )
                 ))}
               </div>
             </label>
@@ -586,6 +605,42 @@ export default function ProfilePage() {
                 >
                   雪月花フレーム
                 </button>
+                {ownedGacha.frameIds.includes("sakura_frame") && (
+                  <button
+                    type="button"
+                    onClick={() => setIconFrameId("sakura_frame")}
+                    style={{ ...templateChipStyle, ...(iconFrameId === "sakura_frame" ? templateChipActiveStyle : null) }}
+                  >
+                    桜雅フレーム
+                  </button>
+                )}
+                {ownedGacha.frameIds.includes("glow_red_frame") && (
+                  <button
+                    type="button"
+                    onClick={() => setIconFrameId("glow_red_frame")}
+                    style={{ ...templateChipStyle, ...(iconFrameId === "glow_red_frame" ? templateChipActiveStyle : null) }}
+                  >
+                    紅光フレーム
+                  </button>
+                )}
+                {ownedGacha.frameIds.includes("glow_blue_frame") && (
+                  <button
+                    type="button"
+                    onClick={() => setIconFrameId("glow_blue_frame")}
+                    style={{ ...templateChipStyle, ...(iconFrameId === "glow_blue_frame" ? templateChipActiveStyle : null) }}
+                  >
+                    蒼光フレーム
+                  </button>
+                )}
+                {ownedGacha.frameIds.includes("glow_green_frame") && (
+                  <button
+                    type="button"
+                    onClick={() => setIconFrameId("glow_green_frame")}
+                    style={{ ...templateChipStyle, ...(iconFrameId === "glow_green_frame" ? templateChipActiveStyle : null) }}
+                  >
+                    翠光フレーム
+                  </button>
+                )}
               </div>
               {!canUseSnowFrame && (
                 <div style={{ fontSize: 12, color: editSubtleColor }}>
@@ -739,7 +794,7 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
   const text = (trimmed || fallback).slice(0, 2);
   const wrapStyle = props.expanded ? avatarWrapExpandedStyle : avatarWrapStyle;
   const bodyStyle = props.expanded ? avatarExpandedStyle : avatarStyle;
-  const frameStyle = props.expanded ? setsugekkaFrameExpandedStyle : setsugekkaFrameStyle;
+  const frameStyle = getAvatarFrameStyle(props.iconFrameId, Boolean(props.expanded));
   return (
     <div style={wrapStyle}>
       {props.iconImageDataUrl ? (
@@ -751,9 +806,28 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
       ) : (
         <div style={bodyStyle}>{text}</div>
       )}
-      {props.iconFrameId === "setsugekka_frame" && <div style={frameStyle} aria-hidden />}
+      {frameStyle && <div style={frameStyle} aria-hidden />}
     </div>
   );
+}
+
+function getAvatarFrameStyle(frameId: string, expanded: boolean): React.CSSProperties | null {
+  if (frameId === "setsugekka_frame") {
+    return expanded ? setsugekkaFrameExpandedStyle : setsugekkaFrameStyle;
+  }
+  if (frameId === "sakura_frame") {
+    return expanded ? sakuraFrameExpandedStyle : sakuraFrameStyle;
+  }
+  if (frameId === "glow_red_frame") {
+    return expanded ? glowRedFrameExpandedStyle : glowRedFrameStyle;
+  }
+  if (frameId === "glow_blue_frame") {
+    return expanded ? glowBlueFrameExpandedStyle : glowBlueFrameStyle;
+  }
+  if (frameId === "glow_green_frame") {
+    return expanded ? glowGreenFrameExpandedStyle : glowGreenFrameStyle;
+  }
+  return null;
 }
 
 async function resizeImageToDataUrl(file: File) {
@@ -930,6 +1004,65 @@ const setsugekkaFrameExpandedStyle: React.CSSProperties = {
   borderWidth: 4,
 };
 
+const sakuraFrameStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -1,
+  borderRadius: "50%",
+  border: "3px solid #d79db7",
+  boxShadow: "0 0 0 1px rgba(106, 58, 74, 0.72), 0 0 12px rgba(237, 176, 205, 0.7)",
+  backgroundImage: `url(${sakuraIcon.src})`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+  backgroundBlendMode: "screen",
+  pointerEvents: "none",
+};
+
+const sakuraFrameExpandedStyle: React.CSSProperties = {
+  ...sakuraFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
+const glowRedFrameStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -1,
+  borderRadius: "50%",
+  border: "3px solid #dd3e46",
+  boxShadow: "0 0 10px #dd3e46",
+  pointerEvents: "none",
+};
+
+const glowRedFrameExpandedStyle: React.CSSProperties = {
+  ...glowRedFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
+const glowBlueFrameStyle: React.CSSProperties = {
+  ...glowRedFrameStyle,
+  borderColor: "#3f8cff",
+  boxShadow: "0 0 10px #3f8cff",
+};
+
+const glowBlueFrameExpandedStyle: React.CSSProperties = {
+  ...glowBlueFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
+const glowGreenFrameStyle: React.CSSProperties = {
+  ...glowRedFrameStyle,
+  borderColor: "#2da46f",
+  boxShadow: "0 0 10px #2da46f",
+};
+
+const glowGreenFrameExpandedStyle: React.CSSProperties = {
+  ...glowGreenFrameStyle,
+  inset: -2,
+  borderWidth: 4,
+};
+
 const profileTopStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "max-content minmax(0, 1fr)",
@@ -982,7 +1115,15 @@ const hiddenFileInputStyle: React.CSSProperties = {
 };
 
 function parseTemplate(value: string | undefined): CardTemplateId {
-  if (value === "lacquer" || value === "paper" || value === "modern" || value === "white") return value;
+  if (
+    value === "lacquer" ||
+    value === "paper" ||
+    value === "modern" ||
+    value === "white" ||
+    value === "gacha_template_kacho" ||
+    value === "gacha_template_suiboku" ||
+    value === "gacha_template_kinran"
+  ) return value;
   return "classic";
 }
 
@@ -992,6 +1133,9 @@ const cardTemplateOptions: Array<{ id: CardTemplateId; label: string }> = [
   { id: "paper", label: "和紙カード" },
   { id: "lacquer", label: "漆黒蒔絵カード" },
   { id: "modern", label: "雅紺カード" },
+  { id: "gacha_template_kacho", label: "花鳥風月カード" },
+  { id: "gacha_template_suiboku", label: "水墨カード" },
+  { id: "gacha_template_kinran", label: "金襴カード" },
 ];
 
 const profileCardBaseStyle: React.CSSProperties = {
@@ -1108,6 +1252,21 @@ const profileCardTemplateStyles: Record<CardTemplateId, React.CSSProperties> = {
     borderColor: "#5673a8",
     color: "#edf4ff",
     boxShadow: "inset 0 0 0 1px rgba(213,233,255,0.24), 0 14px 30px rgba(24,33,56,0.35)",
+  },
+  gacha_template_kacho: {
+    background:
+      "radial-gradient(circle at 85% 20%, rgba(255,176,194,0.26) 0%, rgba(255,176,194,0) 40%), linear-gradient(145deg, #fdf1e2 0%, #f7d9c4 52%, #efc1a6 100%)",
+    borderColor: "#c98c72",
+  },
+  gacha_template_suiboku: {
+    background:
+      "repeating-linear-gradient(18deg, rgba(40,40,40,0.18) 0px, rgba(40,40,40,0.18) 2px, rgba(240,240,240,0.9) 2px, rgba(240,240,240,0.9) 8px), linear-gradient(180deg, #f4f4f4 0%, #dedede 100%)",
+    borderColor: "#9ea4aa",
+  },
+  gacha_template_kinran: {
+    background:
+      "radial-gradient(circle at 10% 0%, rgba(255,238,187,0.35) 0%, rgba(255,238,187,0) 45%), linear-gradient(135deg, #4a1f09 0%, #7a3816 45%, #c99737 100%)",
+    borderColor: "#9d6a26",
   },
 };
 
