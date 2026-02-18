@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import kisekiIcon from "@/app/kiseki.png";
+import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
 import { getLevelUpKisekiReward, getRequiredXpForNextRank, loadPlayerRankStateForCurrentUser, type PlayerRankState } from "@/lib/playerRank";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
@@ -32,6 +33,7 @@ export default function Home() {
   const [homeMenu, setHomeMenu] = useState<"battle" | "learn">("battle");
   const [rankState, setRankState] = useState<PlayerRankState>({ rank: 1, xp: 0, kiseki: 0 });
   const [rankPopoverOpen, setRankPopoverOpen] = useState(false);
+  const [achievementNotice, setAchievementNotice] = useState(false);
 
   useEffect(() => {
     const readFromQuery = () => {
@@ -61,6 +63,8 @@ export default function Home() {
         if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setIsLoggedIn(true);
         setIsGuestMode(false);
+        const ach = await loadAchievementStateForCurrentUser();
+        setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {
@@ -69,6 +73,7 @@ export default function Home() {
         }
         setIsLoggedIn(false);
         setIsGuestMode(true);
+        setAchievementNotice(false);
       }
       setAuthReady(true);
     };
@@ -80,6 +85,9 @@ export default function Home() {
         if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setIsLoggedIn(true);
         setIsGuestMode(false);
+        loadAchievementStateForCurrentUser().then(ach => {
+          setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
+        });
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {
@@ -88,6 +96,7 @@ export default function Home() {
         }
         setIsLoggedIn(false);
         setIsGuestMode(true);
+        setAchievementNotice(false);
       }
       setAuthReady(true);
     });
@@ -238,6 +247,14 @@ export default function Home() {
       </section>
 
       </main>
+      <button
+        type="button"
+        style={progressFloatingButtonStyle}
+        onClick={() => router.push(isLoggedIn ? "/achievements" : "/login")}
+      >
+        進歩
+        {achievementNotice && <span style={progressNoticeStyle}>!</span>}
+      </button>
     </>
   );
 }
@@ -378,4 +395,36 @@ const rankPopoverStyle: React.CSSProperties = {
   border: "1px solid rgba(120, 80, 40, 0.35)",
   background: "rgba(255, 252, 245, 0.98)",
   boxShadow: "0 10px 24px rgba(40, 24, 12, 0.22)",
+};
+
+const progressFloatingButtonStyle: React.CSSProperties = {
+  position: "fixed",
+  left: 10,
+  bottom: "calc(62px + env(safe-area-inset-bottom))",
+  zIndex: 25,
+  padding: "8px 12px",
+  borderRadius: 12,
+  border: "1px solid var(--line)",
+  background: "linear-gradient(180deg, #fff8ec 0%, #f1dfbf 100%)",
+  color: "var(--ink)",
+  fontWeight: 800,
+  fontSize: 14,
+  boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
+  cursor: "pointer",
+  overflow: "visible",
+};
+
+const progressNoticeStyle: React.CSSProperties = {
+  position: "absolute",
+  top: -4,
+  right: -4,
+  width: 16,
+  height: 16,
+  borderRadius: "50%",
+  background: "#d33",
+  color: "#fff",
+  display: "grid",
+  placeItems: "center",
+  fontSize: 11,
+  fontWeight: 800,
 };

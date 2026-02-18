@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
 
-type MenuId = "battle" | "learn" | "kishi" | "warehouse" | "friend" | "progress" | "wish";
+type MenuId = "battle" | "learn" | "kishi" | "warehouse" | "friend" | "wish";
 
 type HomeMenu = {
   id: MenuId;
@@ -18,9 +18,8 @@ const MENUS: HomeMenu[] = [
   { id: "learn", icon: "学", label: "学び" },
   { id: "kishi", icon: "季", label: "季士情報" },
   { id: "friend", icon: "友", label: "友人" },
-  { id: "progress", icon: "進", label: "進歩" },
-  { id: "wish", icon: "祈", label: "祈願" },
   { id: "warehouse", icon: "倉", label: "倉庫" },
+  { id: "wish", icon: "祈", label: "祈願" },
 ];
 
 export default function BottomMenuBar() {
@@ -85,7 +84,6 @@ export default function BottomMenuBar() {
     if (pathname.startsWith("/profile")) return "kishi";
     if (pathname.startsWith("/warehouse")) return "warehouse";
     if (pathname.startsWith("/friends")) return "friend";
-    if (pathname.startsWith("/achievements")) return "progress";
     if (pathname.startsWith("/wish")) return "wish";
     if (pathname.startsWith("/hajimeni") || pathname.startsWith("/rules") || pathname.startsWith("/tutorial") || pathname.startsWith("/history")) {
       return "learn";
@@ -112,19 +110,18 @@ export default function BottomMenuBar() {
       router.push(isLoggedIn ? "/profile" : "/login");
       return;
     }
-    if (id === "warehouse") {
-      router.push(isLoggedIn ? "/warehouse" : "/login");
-      return;
-    }
     if (id === "wish") {
       router.push(isLoggedIn ? "/wish" : "/login");
+      return;
+    }
+    if (id === "warehouse") {
+      router.push(isLoggedIn ? "/warehouse" : "/login");
       return;
     }
     if (id === "friend") {
       router.push(isLoggedIn ? "/friends" : "/login");
       return;
     }
-    router.push(isLoggedIn ? "/achievements" : "/login");
   };
 
   return (
@@ -132,7 +129,7 @@ export default function BottomMenuBar() {
       <div style={bottomMenuRowStyle}>
         {MENUS.map(menu => {
           const active = menu.id === activeMenu;
-          const showNotice = menu.id === "progress" && isLoggedIn && achievementNotice;
+          const showNotice = false;
           return (
             <button
               key={menu.id}
