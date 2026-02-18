@@ -52,6 +52,8 @@ export default function WishPage() {
   const [rareCutIn, setRareCutIn] = useState(false);
   const [revealCount, setRevealCount] = useState(0);
   const [resultOverlayOpen, setResultOverlayOpen] = useState(false);
+  const [manualRevealMode, setManualRevealMode] = useState(false);
+  const [revealBusy, setRevealBusy] = useState(false);
   const revealTimerRef = useRef<number | null>(null);
 
   const clearRevealTimer = () => {
@@ -93,6 +95,8 @@ export default function WishPage() {
     setResults([]);
     setRevealCount(0);
     setResultOverlayOpen(false);
+    setManualRevealMode(false);
+    setRevealBusy(false);
     setOpening(true);
     setRareCutIn(false);
     setDrawing(true);
@@ -117,18 +121,12 @@ export default function WishPage() {
 
     setResults(pulled);
     setResultOverlayOpen(true);
-    setRevealCount(Math.min(1, pulled.length));
-    if (pulled.length > 1) {
-      revealTimerRef.current = window.setInterval(() => {
-        setRevealCount(prev => {
-          const next = prev + 1;
-          if (next >= pulled.length) {
-            clearRevealTimer();
-            return pulled.length;
-          }
-          return next;
-        });
-      }, 110);
+    if (count === 10) {
+      setRevealCount(0);
+      setManualRevealMode(true);
+    } else {
+      setRevealCount(Math.min(1, pulled.length));
+      setManualRevealMode(false);
     }
 
     setDrawing(false);
@@ -161,6 +159,23 @@ export default function WishPage() {
     () => (results.length >= 10 ? "repeat(5, minmax(0, 1fr))" : "repeat(auto-fit, minmax(120px, 1fr))"),
     [results.length],
   );
+
+  const revealNextCard = () => {
+    if (!manualRevealMode || revealBusy) return;
+    if (revealCount >= results.length) return;
+    const nextIsLastCard = revealCount === results.length - 1;
+    if (nextIsLastCard) {
+      setRevealBusy(true);
+      revealTimerRef.current = window.setTimeout(() => {
+        setRevealCount(prev => Math.min(prev + 1, results.length));
+        setRevealBusy(false);
+        setManualRevealMode(false);
+        clearRevealTimer();
+      }, 700);
+      return;
+    }
+    setRevealCount(prev => Math.min(prev + 1, results.length));
+  };
 
   return (
     <main
@@ -239,6 +254,11 @@ export default function WishPage() {
               ×
             </button>
             <h2 style={{ margin: 0, fontSize: 22, color: "#fff5dd" }}>祈願結果</h2>
+            {manualRevealMode && (
+              <div style={{ fontSize: 13, color: "#ffe7b8" }}>
+                {revealBusy ? "最後の一枚..." : "カードをタップして順番にめくる"}
+              </div>
+            )}
             <div style={{ width: "100%", display: "grid", gap: 10, gridTemplateColumns: resultColumns }}>
               {results.map((result, i) => (
                 i < revealCount ? (
@@ -252,9 +272,19 @@ export default function WishPage() {
                     {result.duplicated && <div style={dupBadgeStyle}>DUP +{result.refundKiseki}</div>}
                   </div>
                 ) : (
-                  <div key={`back-${i}`} style={resultBackSlotStyle}>
+                  <button
+                    type="button"
+                    key={`back-${i}`}
+                    style={{
+                      ...resultBackSlotStyle,
+                      ...(manualRevealMode && i === revealCount && !revealBusy ? resultBackNextStyle : null),
+                      ...(manualRevealMode && i !== revealCount ? resultBackLockedStyle : null),
+                    }}
+                    onClick={revealNextCard}
+                    disabled={!manualRevealMode || revealBusy || i !== revealCount}
+                  >
                     <div style={resultBackCoreStyle}>?</div>
-                  </div>
+                  </button>
                 )
               ))}
             </div>
@@ -565,10 +595,23 @@ const dupBadgeStyle: React.CSSProperties = {
 
 const resultBackSlotStyle: React.CSSProperties = {
   ...resultSlotStyle,
+  appearance: "none",
   background: "linear-gradient(145deg, rgba(90,67,47,0.94) 0%, rgba(49,33,21,0.94) 100%)",
   borderColor: "rgba(244, 205, 122, 0.28)",
   boxShadow: "inset 0 0 0 1px rgba(255, 227, 165, 0.25)",
   placeItems: "center",
+  cursor: "pointer",
+  transition: "transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease",
+};
+
+const resultBackNextStyle: React.CSSProperties = {
+  transform: "translateY(-1px)",
+  boxShadow: "inset 0 0 0 1px rgba(255, 227, 165, 0.35), 0 0 0 1px rgba(255, 221, 149, 0.32), 0 0 18px rgba(255, 217, 124, 0.24)",
+};
+
+const resultBackLockedStyle: React.CSSProperties = {
+  opacity: 0.75,
+  cursor: "default",
 };
 
 const resultBackCoreStyle: React.CSSProperties = {
