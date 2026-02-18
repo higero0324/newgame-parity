@@ -386,9 +386,10 @@ function renderItemPreview(item: GachaItemDef) {
     }
     if (item.id === "sakura_frame") {
       return (
-        <div style={framePreviewBaseStyle}>
+        <div style={sakuraFramePreviewWrapStyle}>
+          <div style={sakuraFramePreviewGlowCircleStyle} />
           <div style={sakuraFramePreviewStyle}>
-            <Image src={sakuraIcon} alt="桜フレーム" fill sizes="40px" style={{ objectFit: "cover", opacity: 0.32, borderRadius: "50%" }} />
+            <Image src={sakuraIcon} alt="桜フレーム" fill sizes="40px" style={{ objectFit: "fill", opacity: 1 }} />
           </div>
         </div>
       );
@@ -800,11 +801,23 @@ const framePreviewBaseStyle: React.CSSProperties = {
 
 const sakuraFramePreviewStyle: React.CSSProperties = {
   position: "absolute",
+  inset: 0,
+  borderRadius: 0,
+  border: "none",
+  overflow: "hidden",
+};
+
+const sakuraFramePreviewWrapStyle: React.CSSProperties = {
+  width: 32,
+  height: 32,
+  position: "relative",
+};
+
+const sakuraFramePreviewGlowCircleStyle: React.CSSProperties = {
+  position: "absolute",
   inset: -2,
   borderRadius: "50%",
-  border: "2px solid #d79db7",
-  boxShadow: "0 0 10px rgba(237, 176, 205, 0.7)",
-  overflow: "hidden",
+  boxShadow: "0 0 10px rgba(237, 176, 205, 0.72)",
 };
 
 const framePreviewGlowStyle: React.CSSProperties = {

@@ -327,6 +327,7 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
   const wrapStyle = props.expanded ? avatarWrapExpandedStyle : avatarWrapStyle;
   const bodyStyle = props.expanded ? avatarExpandedStyle : avatarStyle;
   const frameStyle = getAvatarFrameStyle(props.iconFrameId, Boolean(props.expanded));
+  const sakuraGlow = props.iconFrameId === "sakura_frame" ? (props.expanded ? sakuraGlowExpandedStyle : sakuraGlowStyle) : null;
   return (
     <div style={wrapStyle}>
       {props.iconImageDataUrl ? (
@@ -334,6 +335,7 @@ function Avatar(props: { iconText: string; iconImageDataUrl: string; iconFrameId
       ) : (
         <div style={bodyStyle}>{text}</div>
       )}
+      {sakuraGlow && <div style={sakuraGlow} aria-hidden />}
       {frameStyle && <div style={frameStyle} aria-hidden />}
     </div>
   );
@@ -651,7 +653,6 @@ const sakuraFrameStyle: React.CSSProperties = {
   inset: 0,
   borderRadius: 0,
   border: "none",
-  boxShadow: "0 0 10px rgba(237, 176, 205, 0.7)",
   backgroundImage: `url(${sakuraIcon.src})`,
   backgroundSize: "100% 100%",
   backgroundPosition: "center",
@@ -662,6 +663,20 @@ const sakuraFrameStyle: React.CSSProperties = {
 const sakuraFrameExpandedStyle: React.CSSProperties = {
   ...sakuraFrameStyle,
   inset: 0,
+};
+
+const sakuraGlowStyle: React.CSSProperties = {
+  position: "absolute",
+  inset: -2,
+  borderRadius: "50%",
+  boxShadow: "0 0 12px rgba(237, 176, 205, 0.72)",
+  pointerEvents: "none",
+};
+
+const sakuraGlowExpandedStyle: React.CSSProperties = {
+  ...sakuraGlowStyle,
+  inset: -3,
+  boxShadow: "0 0 16px rgba(237, 176, 205, 0.74)",
 };
 
 const glowRedFrameStyle: React.CSSProperties = {
