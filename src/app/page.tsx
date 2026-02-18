@@ -2,7 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
+import kisekiIcon from "@/app/kiseki.png";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
 
@@ -153,6 +155,25 @@ export default function Home() {
 
   return (
     <main style={{ padding: 24, display: "grid", gap: 14, justifyItems: "center" }}>
+      <section style={statusBarWrapStyle}>
+        <div style={statusItemStyle}>
+          <span style={statusLabelStyle}>季士ランク</span>
+          <strong style={statusValueStyle}>0</strong>
+        </div>
+        <div style={statusItemStyle}>
+          <span style={statusIconLabelStyle} aria-label="所持通貨" title="所持通貨">
+            🪙
+          </span>
+          <strong style={statusValueStyle}>0</strong>
+        </div>
+        <div style={statusItemStyle}>
+          <span style={statusIconLabelStyle} aria-label="所持季石" title="所持季石">
+            <Image src={kisekiIcon} alt="季石" width={14} height={14} />
+          </span>
+          <strong style={statusValueStyle}>0</strong>
+        </div>
+      </section>
+
       <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
         <span style={{ fontSize: 60, display: "block" }}>一正</span>
         <span style={{ fontSize: 15, display: "block", marginTop: 5, color: "#555" }}>～HISEI～</span>
@@ -189,4 +210,46 @@ const bigActionButtonStyle: React.CSSProperties = {
   fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
   cursor: "pointer",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.25)",
+};
+
+const statusBarWrapStyle: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 760,
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: 8,
+  padding: 8,
+  borderRadius: 12,
+  border: "1px solid rgba(90, 60, 30, 0.3)",
+  background: "linear-gradient(180deg, rgba(255,248,236,0.92) 0%, rgba(241,223,191,0.86) 100%)",
+};
+
+const statusItemStyle: React.CSSProperties = {
+  display: "grid",
+  justifyItems: "center",
+  gap: 2,
+  padding: "6px 8px",
+  borderRadius: 10,
+  border: "1px solid rgba(90, 60, 30, 0.24)",
+  background: "rgba(255,255,255,0.7)",
+};
+
+const statusLabelStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: "#5b4d39",
+  lineHeight: 1.2,
+};
+
+const statusIconLabelStyle: React.CSSProperties = {
+  minHeight: 16,
+  display: "inline-grid",
+  placeItems: "center",
+  color: "#5b4d39",
+  lineHeight: 1,
+  fontSize: 14,
+};
+
+const statusValueStyle: React.CSSProperties = {
+  fontSize: 22,
+  lineHeight: 1,
 };
