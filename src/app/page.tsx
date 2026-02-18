@@ -160,17 +160,17 @@ export default function Home() {
           <span style={statusLabelStyle}>ランク</span>
           <strong style={statusValueStyle}>0</strong>
         </div>
-        <div style={statusItemRowStyle}>
+        <div style={{ ...statusItemRowStyle, ...statusRightAlignedItemStyle }}>
           <span style={statusIconLabelStyle} aria-label="所持通貨" title="所持通貨">
             🪙
           </span>
-          <strong style={statusValueStyle}>0</strong>
+          <strong style={{ ...statusValueStyle, ...statusLongValueStyle }}>0</strong>
         </div>
-        <div style={statusItemRowStyle}>
+        <div style={{ ...statusItemRowStyle, ...statusRightAlignedItemStyle }}>
           <span style={statusIconLabelStyle} aria-label="所持季石" title="所持季石">
             <Image src={kisekiIcon} alt="季石" width={28} height={28} />
           </span>
-          <strong style={statusValueStyle}>0</strong>
+          <strong style={{ ...statusValueStyle, ...statusLongValueStyle }}>0</strong>
         </div>
       </section>
 
@@ -263,6 +263,10 @@ const statusRankItemStyle: React.CSSProperties = {
   flex: "0 0 112px",
 };
 
+const statusRightAlignedItemStyle: React.CSSProperties = {
+  justifyContent: "flex-end",
+};
+
 const statusLabelStyle: React.CSSProperties = {
   fontSize: 11,
   color: "#5b4d39",
@@ -284,4 +288,9 @@ const statusValueStyle: React.CSSProperties = {
   fontSize: 17,
   lineHeight: 1,
   whiteSpace: "nowrap",
+};
+
+const statusLongValueStyle: React.CSSProperties = {
+  minWidth: "6ch",
+  textAlign: "right",
 };
