@@ -176,7 +176,7 @@ export default function Home() {
 
       <main
         style={{
-          margin: "calc(46px + env(safe-area-inset-top)) auto 24px",
+          margin: "calc(56px + env(safe-area-inset-top)) auto 24px",
           padding: "24px",
           display: "grid",
           gap: 14,
