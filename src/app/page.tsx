@@ -174,7 +174,7 @@ export default function Home() {
         </div>
       </section>
 
-      <main style={{ padding: "72px 24px 24px", display: "grid", gap: 14, justifyItems: "center" }}>
+      <main style={{ padding: "calc(44px + env(safe-area-inset-top)) 24px 24px", display: "grid", gap: 14, justifyItems: "center" }}>
       <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
         <span style={{ fontSize: 60, display: "block" }}>一正</span>
         <span style={{ fontSize: 15, display: "block", marginTop: 5, color: "#555" }}>～HISEI～</span>
@@ -225,13 +225,13 @@ const statusBarWrapStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "stretch",
   gap: 5,
-  padding: "1px 8px 1px",
+  padding: "1px 8px",
   borderRadius: 14,
   borderTop: "1px solid rgba(120, 80, 40, 0.25)",
   border: "1px solid rgba(120, 80, 40, 0.22)",
   background: "linear-gradient(180deg, rgba(255,250,241,0.66) 0%, rgba(245,230,202,0.72) 100%)",
   backdropFilter: "blur(10px)",
-  overflow: "visible",
+  overflow: "hidden",
 };
 
 const statusItemRowStyle: React.CSSProperties = {
@@ -242,13 +242,13 @@ const statusItemRowStyle: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "space-between",
   gap: 6,
-  padding: "8px 6px",
-  marginTop: -6,
+  padding: "5px 6px",
+  marginTop: 0,
   borderRadius: 10,
   border: "1px solid var(--line)",
   background: "rgba(255,255,255,0.72)",
   boxShadow: "0 2px 0 rgba(120, 80, 40, 0.2)",
-  minHeight: 38,
+  minHeight: 30,
 };
 
 const statusRankItemStyle: React.CSSProperties = {
@@ -256,24 +256,24 @@ const statusRankItemStyle: React.CSSProperties = {
 };
 
 const statusLabelStyle: React.CSSProperties = {
-  fontSize: 12,
+  fontSize: 11,
   color: "#5b4d39",
   lineHeight: 1.2,
   whiteSpace: "nowrap",
 };
 
 const statusIconLabelStyle: React.CSSProperties = {
-  minHeight: 20,
+  minHeight: 16,
   display: "inline-grid",
   placeItems: "center",
   color: "#5b4d39",
   lineHeight: 1,
-  fontSize: 18,
+  fontSize: 16,
   whiteSpace: "nowrap",
 };
 
 const statusValueStyle: React.CSSProperties = {
-  fontSize: 20,
+  fontSize: 17,
   lineHeight: 1,
   whiteSpace: "nowrap",
 };
