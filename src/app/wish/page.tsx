@@ -3,9 +3,9 @@
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import sakuraIcon from "@/app/sakura.png";
-import kisekiIcon from "@/app/kiseki.png";
 import { loadPlayerRankStateForCurrentUser } from "@/lib/playerRank";
 import { getGachaCost, pullGachaForCurrentUser, type GachaItemDef } from "@/lib/gacha";
+import HomeTopStatusBar from "@/components/HomeTopStatusBar";
 
 const RATES = [
   { label: "レアアイコンフレーム", rate: "3%" },
@@ -14,6 +14,8 @@ const RATES = [
 ];
 
 export default function WishPage() {
+  const [rank, setRank] = useState(1);
+  const [xp, setXp] = useState(0);
   const [kiseki, setKiseki] = useState(0);
   const [loading, setLoading] = useState(true);
   const [drawing, setDrawing] = useState(false);
@@ -29,6 +31,8 @@ export default function WishPage() {
         setLoading(false);
         return;
       }
+      setRank(loaded.state.rank);
+      setXp(loaded.state.xp);
       setKiseki(loaded.state.kiseki);
       setLoading(false);
     })();
@@ -59,17 +63,20 @@ export default function WishPage() {
   const resultColumns = useMemo(() => (results.length >= 10 ? "repeat(5, minmax(0, 1fr))" : "repeat(auto-fit, minmax(120px, 1fr))"), [results.length]);
 
   return (
-    <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
+    <main
+      style={{
+        margin: "calc(56px + env(safe-area-inset-top)) auto 24px",
+        padding: "clamp(12px, 4vw, 24px)",
+        display: "grid",
+        gap: 12,
+        justifyItems: "center",
+      }}
+    >
+      <HomeTopStatusBar rank={rank} xp={xp} kiseki={kiseki} />
       <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900 }}>祈願</h1>
 
       <section style={sectionStyle}>
-        <div style={topStatusRowStyle}>
-          <div style={kisekiBoxStyle}>
-            <Image src={kisekiIcon} alt="季石" width={20} height={20} />
-            <strong style={{ fontSize: 22 }}>{kiseki}</strong>
-          </div>
-          <div style={{ fontSize: 12, color: "#6a5338" }}>1回: 250季石</div>
-        </div>
+        <div style={{ fontSize: 12, color: "#6a5338", textAlign: "right" }}>1回: 250季石</div>
         <div style={rateWrapStyle}>
           {RATES.map(r => (
             <div key={r.label} style={rateRowStyle}>
@@ -141,24 +148,6 @@ const sectionStyle: React.CSSProperties = {
   background: "linear-gradient(180deg, rgba(255,251,244,0.88) 0%, rgba(250,236,208,0.78) 100%)",
   boxSizing: "border-box",
   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.5), 0 10px 20px rgba(50, 28, 12, 0.12)",
-};
-
-const topStatusRowStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 8,
-};
-
-const kisekiBoxStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "4px 10px",
-  borderRadius: 999,
-  border: "1px solid #a57b3d",
-  background: "linear-gradient(180deg, #fff4c7 0%, #e2b63f 100%)",
-  color: "#4b3510",
 };
 
 const rateWrapStyle: React.CSSProperties = {
