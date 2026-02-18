@@ -3,6 +3,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import sakuraIcon from "@/app/sakura.png";
+import kisekiIcon from "@/app/kiseki.png";
 import { loadPlayerRankStateForCurrentUser } from "@/lib/playerRank";
 import {
   getAllGachaItems,
@@ -18,6 +19,18 @@ const RATES = [
   { label: "★★★", description: "レアアイコンフレーム", rate: 1.5 },
   { label: "★★", description: "光フレーム / おしゃれカード", rate: 13.5 },
   { label: "★", description: "変な称号", rate: 85 },
+];
+const KISEKI_PARTICLE_VECTORS = [
+  { x: -42, y: -20, d: 0 },
+  { x: -28, y: -38, d: 0.04 },
+  { x: 0, y: -46, d: 0.08 },
+  { x: 28, y: -38, d: 0.12 },
+  { x: 42, y: -20, d: 0.16 },
+  { x: 44, y: 8, d: 0.2 },
+  { x: 28, y: 34, d: 0.24 },
+  { x: 0, y: 44, d: 0.28 },
+  { x: -28, y: 34, d: 0.32 },
+  { x: -44, y: 8, d: 0.36 },
 ];
 
 const TIER_ORDER: Record<GachaItemDef["tier"], number> = {
@@ -245,8 +258,25 @@ export default function WishPage() {
         <div style={openingOverlayStyle}>
           <div style={openingCardStyle}>
             <div style={openingPulseStyle} />
+            <div style={kisekiCoreWrapStyle}>
+              <div style={kisekiSpinHaloStyle} />
+              <Image src={kisekiIcon} alt="季石" width={44} height={44} style={kisekiCoreIconStyle} />
+              {KISEKI_PARTICLE_VECTORS.map((v, i) => (
+                <span
+                  key={`${v.x}-${v.y}-${i}`}
+                  style={
+                    {
+                      ...kisekiParticleStyle,
+                      ["--dx" as string]: `${v.x}px`,
+                      ["--dy" as string]: `${v.y}px`,
+                      animationDelay: `${v.d}s`,
+                    } as React.CSSProperties
+                  }
+                />
+              ))}
+            </div>
             <div style={{ fontSize: 28, fontWeight: 900 }}>祈願中...</div>
-            <div style={{ fontSize: 13, opacity: 0.92 }}>静かに光が満ちていく</div>
+            <div style={{ fontSize: 13, opacity: 0.92 }}>季石を捧げ、祈りを紡いでいます</div>
           </div>
         </div>
       )}
@@ -259,6 +289,33 @@ export default function WishPage() {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes hisei-kiseki-spin {
+          from {
+            transform: rotate(0deg) scale(1);
+          }
+          50% {
+            transform: rotate(180deg) scale(1.08);
+          }
+          to {
+            transform: rotate(360deg) scale(1);
+          }
+        }
+        @keyframes hisei-kiseki-burst {
+          0% {
+            opacity: 0;
+            transform: translate(0, 0) scale(0.4);
+          }
+          18% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translate(var(--dx), var(--dy)) scale(0.02);
+          }
+        }
+      `}</style>
     </main>
   );
 }
@@ -551,6 +608,45 @@ const openingPulseStyle: React.CSSProperties = {
   height: 70,
   borderRadius: "50%",
   background: "radial-gradient(circle, rgba(255,220,146,0.7) 0%, rgba(255,220,146,0) 70%)",
+};
+
+const kisekiCoreWrapStyle: React.CSSProperties = {
+  position: "relative",
+  width: 94,
+  height: 70,
+  margin: "0 auto 8px",
+  display: "grid",
+  placeItems: "center",
+};
+
+const kisekiSpinHaloStyle: React.CSSProperties = {
+  position: "absolute",
+  width: 66,
+  height: 66,
+  borderRadius: "50%",
+  border: "1px solid rgba(255, 226, 160, 0.58)",
+  boxShadow: "0 0 18px rgba(255, 205, 105, 0.35)",
+  animation: "hisei-kiseki-spin 1.2s linear infinite",
+};
+
+const kisekiCoreIconStyle: React.CSSProperties = {
+  zIndex: 2,
+  filter: "drop-shadow(0 0 8px rgba(255, 215, 120, 0.45))",
+  animation: "hisei-kiseki-spin 1.2s linear infinite",
+};
+
+const kisekiParticleStyle: React.CSSProperties = {
+  position: "absolute",
+  left: "50%",
+  top: "50%",
+  width: 7,
+  height: 7,
+  marginLeft: -3.5,
+  marginTop: -3.5,
+  borderRadius: "50%",
+  background: "radial-gradient(circle, rgba(255,246,218,1) 0%, rgba(255,207,108,0.92) 55%, rgba(255,207,108,0.2) 100%)",
+  boxShadow: "0 0 8px rgba(255, 216, 126, 0.55)",
+  animation: "hisei-kiseki-burst 1.05s ease-out infinite",
 };
 
 const rareOverlayStyle: React.CSSProperties = {
