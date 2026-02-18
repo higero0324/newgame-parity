@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# 一正 - HISEI
 
-## Getting Started
+## 公開URL（Vercel）
+https://hisei.vercel.app/
 
-First, run the development server:
+## 開発期間
+2026.02.11 ~ 2026.02.18（制作時間 約50時間）
 
+## 概要
+`一正 - HISEI` は、5x5盤面で戦うオリジナル対戦ゲームです。  
+通常対戦・CPU対戦・フレンド機能・季譜保存・アチーブメント・称号/フレーム収集まで、
+「対局の熱」と「育成の継続性」を1つにまとめました。
+
+## こだわりポイント
+- 独自ルールを実装した5x5対局ロジック（通常対戦 / CPU対戦）
+- 1手戻し・勝敗判定・季譜（手順）表示まで一貫して実装
+- Supabase連携によるログイン、プロフィール、フレンド、保存季譜
+- アチーブメント達成で称号開放、プロフィールに装備可能
+- 季石を使ったガチャと倉庫管理で、見た目カスタムのモチベーションを設計
+
+## 主な機能
+- 対局: ホットシート対戦、CPU対戦（難易度と記録連動）
+- 学習: ルール説明、体験チュートリアル
+- 成長: ランク、季石、アチーブメント、プレゼントボックス
+- コミュニティ: フレンド申請/承諾、フレンドプロフィール閲覧
+- 記録: 季譜保存、履歴閲覧、プロフィール掲載設定
+
+## スクリーンショット（5枚以上）
+> 必要条件に合わせて、主要画面を掲載しています。
+
+### 1. ホーム
+![ホーム画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/)
+
+### 2. 通常対戦
+![通常対戦画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/play)
+
+### 3. CPU対戦
+![CPU対戦画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/cpu)
+
+### 4. プロフィール
+![プロフィール画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/profile)
+
+### 5. フレンド
+![フレンド画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/friends)
+
+### 6. アチーブメント
+![アチーブメント画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/achievements)
+
+## 技術スタック
+- Frontend: Next.js 16 (App Router), React 19, TypeScript
+- Backend / BaaS: Supabase
+- Styling: CSS (App Router構成)
+- Deploy: Vercel
+
+## セットアップ
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 提出時メモ
+- Teams「PG3-課題3」に提出するのは **Vercel URLではなくGitHubリポジトリURL**
+- 本README先頭付近に Vercel URL と開発期間を明記済み
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+熱中して遊べて、記録したくなる。  
+`一正 - HISEI` はその体験を目指して制作しました。
