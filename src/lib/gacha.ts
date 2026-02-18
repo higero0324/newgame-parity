@@ -109,7 +109,7 @@ export function getOwnedGachaItemsFromMetadata(metadata: unknown): OwnedGachaIte
 function drawOne(): GachaItemDef {
   const roll = Math.random() * 100;
   if (roll < 1.5) return RARE_FRAME;
-  if (roll < 20) return PREMIUM_ITEMS[Math.floor(Math.random() * PREMIUM_ITEMS.length)];
+  if (roll < 15) return PREMIUM_ITEMS[Math.floor(Math.random() * PREMIUM_ITEMS.length)];
   return ODD_TITLES[Math.floor(Math.random() * ODD_TITLES.length)];
 }
 

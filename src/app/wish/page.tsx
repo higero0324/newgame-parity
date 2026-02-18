@@ -15,8 +15,8 @@ import HomeTopStatusBar from "@/components/HomeTopStatusBar";
 
 const RATES = [
   { label: "★★★", description: "レアアイコンフレーム", rate: 1.5 },
-  { label: "★★", description: "光フレーム / おしゃれカード", rate: 18.5 },
-  { label: "★", description: "変な称号", rate: 80 },
+  { label: "★★", description: "光フレーム / おしゃれカード", rate: 13.5 },
+  { label: "★", description: "変な称号", rate: 85 },
 ];
 
 export default function WishPage() {
@@ -68,7 +68,7 @@ export default function WishPage() {
   const perItemRateMap = useMemo(() => {
     const totalByTier: Record<string, number> = { rare: 0, premium: 0, odd: 0 };
     for (const item of allItems) totalByTier[item.tier] = (totalByTier[item.tier] ?? 0) + 1;
-    const tierRate: Record<string, number> = { rare: 1.5, premium: 18.5, odd: 80 };
+    const tierRate: Record<string, number> = { rare: 1.5, premium: 13.5, odd: 85 };
     const map = new Map<string, number>();
     for (const item of allItems) {
       const denom = totalByTier[item.tier] || 1;

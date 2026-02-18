@@ -400,7 +400,7 @@ const rankPopoverStyle: React.CSSProperties = {
 const progressFloatingButtonStyle: React.CSSProperties = {
   position: "fixed",
   left: 10,
-  bottom: "calc(80px + env(safe-area-inset-bottom))",
+  bottom: "calc(68px + env(safe-area-inset-bottom))",
   zIndex: 25,
   padding: "10px 19px",
   borderRadius: 16,
