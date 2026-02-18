@@ -159,7 +159,7 @@ const sectionStyle: React.CSSProperties = {
 
 const gridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
   justifyContent: "start",
   gap: 7,
   overflow: "visible",
