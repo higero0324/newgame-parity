@@ -174,7 +174,15 @@ export default function Home() {
         </div>
       </section>
 
-      <main style={{ padding: "calc(44px + env(safe-area-inset-top)) 24px 24px", display: "grid", gap: 14, justifyItems: "center" }}>
+      <main
+        style={{
+          margin: "calc(46px + env(safe-area-inset-top)) auto 24px",
+          padding: "24px",
+          display: "grid",
+          gap: 14,
+          justifyItems: "center",
+        }}
+      >
       <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
         <span style={{ fontSize: 60, display: "block" }}>一正</span>
         <span style={{ fontSize: 15, display: "block", marginTop: 5, color: "#555" }}>～HISEI～</span>
