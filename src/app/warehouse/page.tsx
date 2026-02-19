@@ -48,6 +48,9 @@ export default function WarehousePage() {
   const [equippedFrameId, setEquippedFrameId] = useState("");
   const [equippedTemplate, setEquippedTemplate] = useState<CardTemplateId>("classic");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<"all" | WarehouseItemType>("all");
+  const [equippedOnly, setEquippedOnly] = useState(false);
+  const [sortMode, setSortMode] = useState<"default" | "name_asc" | "name_desc">("default");
   const [ownedGacha, setOwnedGacha] = useState<{ frameIds: string[]; templateIds: string[]; titleIds: string[] }>({
     frameIds: [],
     templateIds: [],
@@ -160,14 +163,54 @@ export default function WarehousePage() {
     return [...titleItems, ...gachaTitleItems, ...frameItems, ...templateItems].filter(item => item.unlocked);
   }, [equippedFrameId, equippedTemplate, equippedTitleIds, unlockedTitleIds, ownedGacha]);
 
+  const filteredSortedItems = useMemo(() => {
+    let next = items.slice();
+    if (filterType !== "all") {
+      next = next.filter(item => item.type === filterType);
+    }
+    if (equippedOnly) {
+      next = next.filter(item => item.equipped);
+    }
+    if (sortMode === "name_asc") {
+      next.sort((a, b) => a.name.localeCompare(b.name, "ja"));
+    } else if (sortMode === "name_desc") {
+      next.sort((a, b) => b.name.localeCompare(a.name, "ja"));
+    }
+    return next;
+  }, [items, filterType, equippedOnly, sortMode]);
+
   return (
     <main style={{ padding: "clamp(12px, 4vw, 24px)", display: "grid", gap: 12, justifyItems: "center" }}>
       <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>倉庫</h1>
 
       <section style={sectionStyle}>
         <div style={{ fontSize: 13, color: "#666" }}>アイテムを押すとその場で詳細が表示されます。</div>
+        <div style={toolbarStyle}>
+          <label style={toolbarFieldStyle}>
+            <span style={toolbarLabelStyle}>絞り込み</span>
+            <select value={filterType} onChange={e => setFilterType(e.target.value as "all" | WarehouseItemType)} style={toolbarSelectStyle}>
+              <option value="all">すべて</option>
+              <option value="title">称号</option>
+              <option value="frame">フレーム</option>
+              <option value="template">カード</option>
+            </select>
+          </label>
+          <label style={toolbarFieldStyle}>
+            <span style={toolbarLabelStyle}>並び替え</span>
+            <select value={sortMode} onChange={e => setSortMode(e.target.value as "default" | "name_asc" | "name_desc")} style={toolbarSelectStyle}>
+              <option value="default">標準</option>
+              <option value="name_asc">名前順（昇順）</option>
+              <option value="name_desc">名前順（降順）</option>
+            </select>
+          </label>
+          <label style={toolbarCheckStyle}>
+            <input type="checkbox" checked={equippedOnly} onChange={e => setEquippedOnly(e.target.checked)} />
+            装備中のみ
+          </label>
+          <div style={toolbarCountStyle}>{filteredSortedItems.length} 件</div>
+        </div>
         <div style={gridStyle}>
-          {items.map(item => (
+          {filteredSortedItems.map(item => (
             <div key={item.id} style={slotAnchorStyle}>
               <button
                 type="button"
@@ -221,6 +264,51 @@ const gridStyle: React.CSSProperties = {
   justifyContent: "start",
   gap: 7,
   overflow: "visible",
+};
+
+const toolbarStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 8,
+  alignItems: "end",
+  padding: "6px 0 2px",
+};
+
+const toolbarFieldStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 4,
+};
+
+const toolbarLabelStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: "#6a5a46",
+  fontWeight: 700,
+};
+
+const toolbarSelectStyle: React.CSSProperties = {
+  minHeight: 30,
+  borderRadius: 8,
+  border: "1px solid rgba(120, 80, 40, 0.35)",
+  background: "rgba(255,255,255,0.9)",
+  color: "var(--ink)",
+  padding: "0 8px",
+};
+
+const toolbarCheckStyle: React.CSSProperties = {
+  display: "inline-flex",
+  gap: 6,
+  alignItems: "center",
+  height: 30,
+  fontSize: 12,
+  color: "#5e4a33",
+  marginLeft: 2,
+};
+
+const toolbarCountStyle: React.CSSProperties = {
+  marginLeft: "auto",
+  fontSize: 12,
+  color: "#6a5a46",
+  fontWeight: 700,
 };
 
 const slotStyle: React.CSSProperties = {
