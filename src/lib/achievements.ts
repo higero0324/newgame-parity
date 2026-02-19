@@ -16,6 +16,8 @@ export type AchievementStats = {
   cpu_wins: Record<AchievementCpuLevel, number>;
   total_cpu_wins: number;
   saved_matches: number;
+  shogo_matches: number;
+  shogo_match_wins: number;
 };
 
 export type TitleDef = {
@@ -51,11 +53,7 @@ type ProfileAchievementRow = {
   equipped_title_ids?: unknown;
 };
 
-const EMPTY_STATS: AchievementStats = {
-  cpu_wins: { easy: 0, medium: 0, hard: 0, extreme: 0 },
-  total_cpu_wins: 0,
-  saved_matches: 0,
-};
+export const SETSUGEKKA_TITLE_ID = "extreme_emperor";
 
 const TITLE_DEFS: TitleDef[] = [
   { id: "rookie_winner", name: "桜咲く", rarity: "bronze", description: "手を戻さずCPU戦で1勝" },
@@ -69,6 +67,8 @@ const TITLE_DEFS: TitleDef[] = [
   { id: "cpu_legend", name: "百戦錬磨", rarity: "obsidian", description: "手を戻さずCPU戦で通算100勝" },
   { id: "record_keeper", name: "初心な思い出", rarity: "bronze", description: "季譜を1件保存" },
   { id: "archive_lord", name: "辿る旅路", rarity: "silver", description: "季譜を10件保存" },
+  { id: "shogo_challenger", name: "正豪戦・初陣", rarity: "silver", description: "正豪戦を1回プレイ" },
+  { id: "shogo_conqueror", name: "正豪之季士", rarity: "gold", description: "正豪戦で1回勝利" },
 ];
 
 const TITLE_MAP = new Map(TITLE_DEFS.map(x => [x.id, x]));
@@ -85,10 +85,12 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: "cpu_total_100", name: "百戦錬磨", description: "手を戻さずCPU戦で通算100勝", title_id: "cpu_legend", target: () => 100 },
   { id: "saved_10", name: "文箱の若芽", description: "季譜を1件保存", title_id: "record_keeper", target: () => 1 },
   { id: "saved_30", name: "一冊を綴る", description: "季譜を10件保存", title_id: "archive_lord", target: () => 10 },
+  { id: "shogo_play_1", name: "正豪戦への挑戦", description: "正豪戦を1回プレイ", title_id: "shogo_challenger", target: () => 1 },
+  { id: "shogo_win_1", name: "正豪の証", description: "正豪戦で1回勝利", title_id: "shogo_conqueror", target: () => 1 },
 ];
 
 function normalizeStringArray(value: unknown): string[] {
-  const arr = Array.isArray(value) ? value.filter(x => typeof x === "string") as string[] : [];
+  const arr = Array.isArray(value) ? (value.filter(x => typeof x === "string") as string[]) : [];
   return Array.from(new Set(arr));
 }
 
@@ -97,6 +99,8 @@ function normalizeStats(value: unknown): AchievementStats {
     cpu_wins?: unknown;
     total_cpu_wins?: unknown;
     saved_matches?: unknown;
+    shogo_matches?: unknown;
+    shogo_match_wins?: unknown;
   };
   const wins = (raw.cpu_wins ?? {}) as Record<string, unknown>;
   const easy = Number.isFinite(Number(wins.easy)) ? Math.max(0, Number(wins.easy)) : 0;
@@ -106,10 +110,14 @@ function normalizeStats(value: unknown): AchievementStats {
   const totalFromWins = easy + medium + hard + extreme;
   const totalRaw = Number.isFinite(Number(raw.total_cpu_wins)) ? Math.max(0, Number(raw.total_cpu_wins)) : 0;
   const saved = Number.isFinite(Number(raw.saved_matches)) ? Math.max(0, Number(raw.saved_matches)) : 0;
+  const shogoMatches = Number.isFinite(Number(raw.shogo_matches)) ? Math.max(0, Number(raw.shogo_matches)) : 0;
+  const shogoWins = Number.isFinite(Number(raw.shogo_match_wins)) ? Math.max(0, Number(raw.shogo_match_wins)) : 0;
   return {
     cpu_wins: { easy, medium, hard, extreme },
     total_cpu_wins: Math.max(totalRaw, totalFromWins),
     saved_matches: saved,
+    shogo_matches: shogoMatches,
+    shogo_match_wins: Math.min(shogoWins, shogoMatches),
   };
 }
 
@@ -137,6 +145,10 @@ function achievementCurrentValue(def: AchievementDef, stats: AchievementStats): 
       return stats.saved_matches;
     case "saved_30":
       return stats.saved_matches;
+    case "shogo_play_1":
+      return stats.shogo_matches;
+    case "shogo_win_1":
+      return stats.shogo_match_wins;
     default:
       return 0;
   }
@@ -198,9 +210,7 @@ export function buildAchievementProgress(stats: AchievementStats, unlockedTitleI
   const unlockedSet = new Set(unlockedTitleIds);
   return ACHIEVEMENT_DEFS.map(def => {
     const title = TITLE_MAP.get(def.title_id);
-    if (!title) {
-      throw new Error(`Unknown title id: ${def.title_id}`);
-    }
+    if (!title) throw new Error(`Unknown title id: ${def.title_id}`);
     const target = def.target(stats);
     const current = achievementCurrentValue(def, stats);
     const done = current >= target;
@@ -277,6 +287,31 @@ export async function recordSavedMatchForCurrentUser() {
   if (!loaded.ok) return loaded;
   const stats = normalizeStats(loaded.row.achievement_stats);
   stats.saved_matches += 1;
+
+  const nowUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
+  const allowed = getAllowedEquippableTitleIds(nowUnlocked, loaded.auth.userMetadata);
+  const equipped = clampEquipped(allowed, normalizeStringArray(loaded.row.equipped_title_ids));
+
+  const { error } = await supabase.from("profiles").upsert(
+    {
+      user_id: loaded.auth.userId,
+      friend_id: loaded.auth.friendId,
+      achievement_stats: stats,
+      unlocked_title_ids: nowUnlocked,
+      equipped_title_ids: equipped,
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) return { ok: false as const, reason: error.message };
+  return { ok: true as const };
+}
+
+export async function recordShogoMatchForCurrentUser(userWon: boolean) {
+  const loaded = await loadRowForCurrentUser();
+  if (!loaded.ok) return loaded;
+  const stats = normalizeStats(loaded.row.achievement_stats);
+  stats.shogo_matches += 1;
+  if (userWon) stats.shogo_match_wins += 1;
 
   const nowUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
   const allowed = getAllowedEquippableTitleIds(nowUnlocked, loaded.auth.userMetadata);

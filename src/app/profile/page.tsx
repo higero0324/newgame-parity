@@ -1433,6 +1433,15 @@ function titleChipStyleFor(title: { id: string; rarity: TitleRarity; isGacha?: b
       borderRadius: 999,
     };
   }
+  if (title.id === "shogo_conqueror") {
+    return {
+      background: "linear-gradient(145deg, #250a0f 0%, #5c1320 56%, #2a090d 100%)",
+      color: "#f4cf7b",
+      borderColor: "#d9b35e",
+      boxShadow: "inset 0 0 0 1px rgba(248, 223, 161, 0.24), 0 0 10px rgba(217, 179, 94, 0.25)",
+      borderRadius: 8,
+    };
+  }
   return {
     ...titleChipByRarity[title.rarity],
     borderRadius: isUpperTitle(title) ? 8 : 999,

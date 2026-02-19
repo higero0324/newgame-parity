@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Board from "@/components/Board";
 import { applyMove, emptyBoard, getAllWinningLines, type Player } from "@/lib/gameLogic";
@@ -82,16 +82,18 @@ export default function PlayCpuPage() {
     recordCpuWinForCurrentUser(cpuLevel, userWon, noUndoUsed).catch(() => {
       // ignore
     });
-    grantCpuWinXpForCurrentUser(cpuLevel, userWon, noUndoUsed).then(res => {
-      if (!res.ok || !userWon || res.gainedXp <= 0) return;
-      setMsg(prev => {
-        const base = prev.trim();
-        const levelUpText = res.levelUps > 0 ? ` / ランクアップ +${res.levelUps}` : "";
-        return `${base}${base ? " " : ""}(EXP +${res.gainedXp}${levelUpText})`;
+    grantCpuWinXpForCurrentUser(cpuLevel, userWon, noUndoUsed)
+      .then(res => {
+        if (!res.ok || !userWon || res.gainedXp <= 0) return;
+        setMsg(prev => {
+          const base = prev.trim();
+          const levelUpText = res.levelUps > 0 ? ` / ランクアップ +${res.levelUps}` : "";
+          return `${base}${base ? " " : ""}(EXP +${res.gainedXp}${levelUpText})`;
+        });
+      })
+      .catch(() => {
+        // ignore
       });
-    }).catch(() => {
-      // ignore
-    });
   };
 
   useEffect(() => {
@@ -120,12 +122,10 @@ export default function PlayCpuPage() {
       const animDuration = lastMoveRef.current
         ? calculateAnimationDuration(lastMoveRef.current.changed, lastMoveRef.current.placedPos)
         : 0;
-
       const delay = Math.max(animDuration + 300, 600);
 
       setTimeout(() => {
-        const openingAllowed =
-          cpuLevel === "extreme" ? getExtremeOpeningAllowedPositions(current.board, moves) : null;
+        const openingAllowed = cpuLevel === "extreme" ? getExtremeOpeningAllowedPositions(current.board, moves) : null;
         let pos = findCpuMove(current.board, cpuSide, cpuLevel);
         if (openingAllowed && openingAllowed.length > 0 && !openingAllowed.includes(pos)) {
           pos = openingAllowed[0];
@@ -147,8 +147,7 @@ export default function PlayCpuPage() {
               if (lines.length > 0) setWinningLine(new Set(lines));
               if (!resultRecordedRef.current) {
                 resultRecordedRef.current = true;
-                const userWon = res.winner === playerSide;
-                recordResultProgress(userWon);
+                recordResultProgress(res.winner === playerSide);
               }
             }
           }
@@ -161,7 +160,7 @@ export default function PlayCpuPage() {
   const canPlay = winner === null && current.turn === playerSide && !thinking;
 
   const onClickCell = (pos: number) => {
-    if (!canPlay) return;
+    if (!canPlay || !playerSide) return;
     if (cpuLevel === "extreme") {
       const openingAllowed = getExtremeOpeningAllowedPositions(current.board, moves);
       if (openingAllowed && !openingAllowed.includes(pos)) {
@@ -192,8 +191,7 @@ export default function PlayCpuPage() {
       if (lines.length > 0) setWinningLine(new Set(lines));
       if (!resultRecordedRef.current) {
         resultRecordedRef.current = true;
-        const userWon = res.winner === playerSide;
-        recordResultProgress(userWon);
+        recordResultProgress(res.winner === playerSide);
       }
     }
   };
@@ -288,12 +286,12 @@ export default function PlayCpuPage() {
     medium: "中級",
     hard: "上級",
     extreme: "極級",
-  };
+  } satisfies Record<CpuLevel, string>;
 
   const sideLabels = {
     p1: "先手",
     p2: "後手",
-  };
+  } satisfies Record<Player, string>;
 
   const statusStyle: React.CSSProperties = {
     fontSize: 18,
@@ -366,9 +364,7 @@ export default function PlayCpuPage() {
                     setPlayerSide(side);
                     if (cpuLevel === "extreme") {
                       setShowExtremeNotice(true);
-                      if (extremeNoticeTimerRef.current !== null) {
-                        window.clearTimeout(extremeNoticeTimerRef.current);
-                      }
+                      if (extremeNoticeTimerRef.current !== null) window.clearTimeout(extremeNoticeTimerRef.current);
                       extremeNoticeTimerRef.current = window.setTimeout(() => {
                         setShowExtremeNotice(false);
                         extremeNoticeTimerRef.current = null;
@@ -390,16 +386,6 @@ export default function PlayCpuPage() {
                     boxShadow: "0 4px 12px rgba(44, 24, 16, 0.25), inset 0 1px 2px rgba(255,255,255,0.6)",
                     transition: "all 0.15s",
                     letterSpacing: "0.1em",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(44, 24, 16, 0.35), inset 0 1px 2px rgba(255,255,255,0.6)";
-                    e.currentTarget.style.background = "linear-gradient(180deg, #fff 0%, #f5ead0 100%)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(44, 24, 16, 0.25), inset 0 1px 2px rgba(255,255,255,0.6)";
-                    e.currentTarget.style.background = "linear-gradient(180deg, #fdfbf5 0%, #f0e6d2 100%)";
                   }}
                 >
                   {sideLabels[side]}
@@ -440,9 +426,7 @@ export default function PlayCpuPage() {
       {!isMobile && (
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
           <div style={statusStyle}>
-            {winner
-              ? winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！"
-              : thinking ? "CPUが考え中..." : "あなたの手番"}
+            {winner ? (winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！") : thinking ? "CPUが考え中..." : "あなたの手番"}
           </div>
           <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
           <button onClick={save} disabled={!winner || saving} style={btnStyle}>
@@ -456,9 +440,7 @@ export default function PlayCpuPage() {
       {isMobile && (
         <div style={{ width: "100%", maxWidth: 760, display: "grid", gap: 8 }}>
           <div style={statusStyle}>
-            {winner
-              ? winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！"
-              : thinking ? "CPUが考え中..." : "あなたの手番"}
+            {winner ? (winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！") : thinking ? "CPUが考え中..." : "あなたの手番"}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <button onClick={undo} disabled={history.length <= 1} style={btnStyle}>1手戻す</button>
@@ -524,3 +506,4 @@ const btnStyle: React.CSSProperties = {
   boxShadow: "0 2px 8px rgba(120, 80, 40, 0.15)",
   transition: "all 0.2s",
 };
+

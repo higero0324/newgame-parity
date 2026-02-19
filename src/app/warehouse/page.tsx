@@ -503,6 +503,22 @@ const templatePreviewStyles: Record<CardTemplateId, React.CSSProperties> = {
 
 function renderSlotPreview(item: WarehouseItem) {
   if (item.type === "title") {
+    if (item.id === "title:shogo_conqueror") {
+      return (
+        <span
+          style={{
+            ...tinyTitleChipStyle,
+            background: "linear-gradient(145deg, #250a0f 0%, #5c1320 56%, #2a090d 100%)",
+            color: "#f4cf7b",
+            borderColor: "#d9b35e",
+            borderRadius: 6,
+            boxShadow: "inset 0 0 0 1px rgba(248, 223, 161, 0.24), 0 0 8px rgba(217, 179, 94, 0.22)",
+          }}
+        >
+          {item.name}
+        </span>
+      );
+    }
     const rarity = item.rarity ?? "bronze";
     return (
       <span style={{ ...tinyTitleChipStyle, ...tinyTitleChipByRarity[rarity], borderRadius: rarity === "gold" || rarity === "obsidian" ? 6 : 999 }}>

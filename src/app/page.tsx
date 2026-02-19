@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import kisekiIcon from "@/app/kiseki.png";
-import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
+import { loadAchievementStateForCurrentUser, SETSUGEKKA_TITLE_ID } from "@/lib/achievements";
 import { getLevelUpKisekiReward, getRequiredXpForNextRank, loadPlayerRankStateForCurrentUser, type PlayerRankState } from "@/lib/playerRank";
 import { loadPresentBoxForCurrentUser } from "@/lib/presents";
 
@@ -36,6 +36,7 @@ export default function Home() {
   const [rankPopoverOpen, setRankPopoverOpen] = useState(false);
   const [achievementNotice, setAchievementNotice] = useState(false);
   const [presentNoticeCount, setPresentNoticeCount] = useState(0);
+  const [shogoUnlocked, setShogoUnlocked] = useState(false);
 
   useEffect(() => {
     const readFromQuery = () => {
@@ -66,6 +67,13 @@ export default function Home() {
         setIsLoggedIn(true);
         setIsGuestMode(false);
         const ach = await loadAchievementStateForCurrentUser();
+        if (ach.ok) {
+          const unlockedByAch = ach.unlockedTitleIds.includes(SETSUGEKKA_TITLE_ID);
+          const unlockedByDone = ach.claimableTitleIds.includes(SETSUGEKKA_TITLE_ID);
+          setShogoUnlocked(unlockedByAch || unlockedByDone);
+        } else {
+          setShogoUnlocked(false);
+        }
         setAchievementNotice(
           Boolean(
             ach.ok &&
@@ -86,6 +94,7 @@ export default function Home() {
         setIsGuestMode(true);
         setAchievementNotice(false);
         setPresentNoticeCount(0);
+        setShogoUnlocked(false);
       }
       setAuthReady(true);
     };
@@ -99,6 +108,13 @@ export default function Home() {
         setIsGuestMode(false);
         Promise.all([loadAchievementStateForCurrentUser(), loadPresentBoxForCurrentUser()]).then(
           ([ach, presents]) => {
+            if (ach.ok) {
+              const unlockedByAch = ach.unlockedTitleIds.includes(SETSUGEKKA_TITLE_ID);
+              const unlockedByDone = ach.claimableTitleIds.includes(SETSUGEKKA_TITLE_ID);
+              setShogoUnlocked(unlockedByAch || unlockedByDone);
+            } else {
+              setShogoUnlocked(false);
+            }
             setAchievementNotice(
               Boolean(
                 ach.ok &&
@@ -120,6 +136,7 @@ export default function Home() {
         setIsGuestMode(true);
         setAchievementNotice(false);
         setPresentNoticeCount(0);
+        setShogoUnlocked(false);
       }
       setAuthReady(true);
     });
@@ -155,6 +172,7 @@ export default function Home() {
         actions: [
           { label: "通常対局", href: "/play" },
           { label: "CPU対局", href: "/cpu" },
+          { label: "正豪戦", href: "/shogo" },
         ],
       },
       {
@@ -205,8 +223,18 @@ export default function Home() {
       router.push("/login");
       return;
     }
+    if (action.href === "/shogo" && !shogoUnlocked) {
+      window.alert("正豪戦は「雪月花」達成で開放されます。");
+      router.push("/achievements");
+      return;
+    }
     router.push(action.href);
   };
+
+  const visibleActions = selectedMenu.actions.filter(action => {
+    if (action.href === "/shogo") return shogoUnlocked;
+    return true;
+  });
 
   return (
     <>
@@ -254,9 +282,9 @@ export default function Home() {
       </h1>
 
       <section style={{ width: "100%", maxWidth: 760, display: "grid", gap: 10 }}>
-        {selectedMenu.actions.length > 1 ? (
+        {visibleActions.length > 1 ? (
           <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-            {selectedMenu.actions.map(action => (
+            {visibleActions.map(action => (
               <button key={action.label} onClick={() => goAction(action)} style={bigActionButtonStyle}>
                 {action.label}
               </button>

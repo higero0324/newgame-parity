@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
+  type AchievementStats,
   buildAchievementProgress,
   claimTitleForCurrentUser,
   getTitleById,
@@ -27,11 +28,7 @@ export default function AchievementsPage() {
   const [claimableXpTitleIds, setClaimableXpTitleIds] = useState<string[]>([]);
   const [achievementKisekiReward, setAchievementKisekiReward] = useState(250);
   const [achievementXpReward, setAchievementXpReward] = useState(500);
-  const [statsLoaded, setStatsLoaded] = useState<{
-    cpu_wins: { easy: number; medium: number; hard: number; extreme: number };
-    total_cpu_wins: number;
-    saved_matches: number;
-  } | null>(null);
+  const [statsLoaded, setStatsLoaded] = useState<AchievementStats | null>(null);
   const [claimReveal, setClaimReveal] = useState<{ title: TitleDef; items: ClaimItem[] } | null>(null);
   const revealTimerRef = useRef<number | null>(null);
 
@@ -428,6 +425,15 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
       color: "#6f2d43",
       borderColor: "#d78ea8",
       borderRadius: 999,
+    };
+  }
+  if (title.id === "shogo_conqueror") {
+    return {
+      background: "linear-gradient(145deg, #250a0f 0%, #5c1320 56%, #2a090d 100%)",
+      color: "#f4cf7b",
+      borderColor: "#d9b35e",
+      boxShadow: "inset 0 0 0 1px rgba(248, 223, 161, 0.24), 0 0 10px rgba(217, 179, 94, 0.25)",
+      borderRadius: 8,
     };
   }
   const isUpper = title.rarity === "gold" || title.rarity === "obsidian";
