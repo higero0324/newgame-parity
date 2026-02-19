@@ -17,7 +17,6 @@ export function findShogoCpuMove(board: number[], player: Player): number {
     .filter(x => x.res.ok) as Array<{ pos: number; res: Extract<ReturnType<typeof applyMove>, { ok: true }> }>;
 
   if (legalMoves.length === 0) return -1;
-  const opponent: Player = player === "p1" ? "p2" : "p1";
 
   // 1) 局勝利は最優先。勝ち手が複数ある場合は得点が高い手を選ぶ。
   const winningMoves = legalMoves.filter(x => x.res.winner === player);
@@ -37,38 +36,46 @@ export function findShogoCpuMove(board: number[], player: Player): number {
     return best.pos;
   }
 
-  // 2) 相手の即勝ちがある局面では、その受けを最優先。
-  const opponentImmediateWins = board
-    .map((v, i) => (v === 0 ? i : -1))
-    .filter(i => i >= 0)
-    .filter(pos => {
-      const res = applyMove(board, pos, opponent);
-      return res.ok && res.winner === opponent;
-    });
-  if (opponentImmediateWins.length > 0) {
-    const blockers = legalMoves.filter(x => opponentImmediateWins.includes(x.pos));
-    if (blockers.length > 0) {
-      let best = blockers[0];
-      let bestScore = evaluateShogoPosition(blockers[0].res.newBoard, player);
-      for (let i = 1; i < blockers.length; i += 1) {
-        const score = evaluateShogoPosition(blockers[i].res.newBoard, player);
-        if (score > bestScore) {
-          best = blockers[i];
-          bestScore = score;
-        }
-      }
-      return best.pos;
+  // 2) 上級CPUの探索を基礎に、同等候補内だけ得点志向で選ぶ。
+  transpositionTable.clear();
+
+  const emptyCount = legalMoves.length;
+  const maxDepth = emptyCount > 15 ? 4 : emptyCount > 10 ? 5 : 6;
+
+  let scoredAtLastDepth: Array<{ pos: number; score: number; shogoBonus: number }> = [];
+  for (let depth = 2; depth <= maxDepth; depth += 1) {
+    const ordered = orderMoves(
+      board,
+      legalMoves.map(x => x.pos),
+      player,
+    );
+    const scored: Array<{ pos: number; score: number; shogoBonus: number }> = [];
+    for (const pos of ordered) {
+      const res = applyMove(board, pos, player);
+      if (!res.ok) continue;
+      const score = minimax(res.newBoard, depth - 1, -Infinity, Infinity, false, player);
+      // 正豪戦向け: 局面の「得点期待値」寄りの補助評価。
+      const shogoBonus = evaluateShogoPosition(res.newBoard, player);
+      scored.push({ pos, score, shogoBonus });
     }
+    if (scored.length > 0) scoredAtLastDepth = scored;
   }
 
-  // 3) 通常時は「高得点取り」を意識した評価で選択。
-  let best = legalMoves[0];
-  let bestScore = evaluateShogoPosition(legalMoves[0].res.newBoard, player);
-  for (let i = 1; i < legalMoves.length; i += 1) {
-    const score = evaluateShogoPosition(legalMoves[i].res.newBoard, player);
-    if (score > bestScore) {
-      best = legalMoves[i];
-      bestScore = score;
+  if (scoredAtLastDepth.length === 0) return findHardMove(board, player);
+
+  const safeMoves = scoredAtLastDepth.filter(x => !isDangerousMove(board, x.pos, player));
+  const source = safeMoves.length > 0 ? safeMoves : scoredAtLastDepth;
+  const bestScore = Math.max(...source.map(x => x.score));
+
+  // 「勝率がほぼ下がらない」近傍だけを得点志向で比較。
+  const scoreTolerance = 14;
+  const nearBest = source.filter(x => bestScore - x.score <= scoreTolerance);
+  const pickFrom = nearBest.length > 0 ? nearBest : source;
+
+  let best = pickFrom[0];
+  for (let i = 1; i < pickFrom.length; i += 1) {
+    if (pickFrom[i].shogoBonus > best.shogoBonus) {
+      best = pickFrom[i];
     }
   }
 

@@ -123,8 +123,9 @@ export default function ShogoPage() {
     open: boolean;
     winner: "player" | "cpu";
     gained: number;
+    base: number;
     shown: number;
-  }>({ open: false, winner: "player", gained: 0, shown: 0 });
+  }>({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
   const [matchFinishReveal, setMatchFinishReveal] = useState<{
     open: boolean;
     result: "win" | "lose";
@@ -286,15 +287,17 @@ export default function ShogoPage() {
     const playerWonRound = roundWinner === playerSide;
 
     clearRevealTimers();
+    const baseScore = playerWonRound ? shogoScore.player : shogoScore.cpu;
     setScoreReveal({
       open: true,
       winner: playerWonRound ? "player" : "cpu",
       gained,
-      shown: 0,
+      base: baseScore,
+      shown: baseScore,
     });
     for (let i = 1; i <= gained; i += 1) {
       const timer = window.setTimeout(() => {
-        setScoreReveal(prev => ({ ...prev, shown: i }));
+        setScoreReveal(prev => ({ ...prev, shown: prev.base + i }));
       }, 260 * i);
       revealTimersRef.current.push(timer);
     }
@@ -352,7 +355,7 @@ export default function ShogoPage() {
     lastMoveRef.current = null;
     resultRecordedRef.current = false;
     clearRevealTimers();
-    setScoreReveal({ open: false, winner: "player", gained: 0, shown: 0 });
+    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
     setByoyomiMs(null);
     setMsg("");
   };
@@ -375,7 +378,7 @@ export default function ShogoPage() {
     lastMoveRef.current = null;
     resultRecordedRef.current = false;
     clearRevealTimers();
-    setScoreReveal({ open: false, winner: "player", gained: 0, shown: 0 });
+    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
     setMatchFinishReveal({ open: false, result: "win", playerScore: 0, cpuScore: 0 });
     setByoyomiMs(null);
     setMsg("");
@@ -383,7 +386,7 @@ export default function ShogoPage() {
 
   const backToShogoLobby = () => {
     clearRevealTimers();
-    setScoreReveal({ open: false, winner: "player", gained: 0, shown: 0 });
+    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
     setMatchFinishReveal({ open: false, result: "win", playerScore: 0, cpuScore: 0 });
     setPlayerMainTimeMs(SHOGO_MAIN_TIME_MS);
     setByoyomiMs(null);
@@ -543,10 +546,12 @@ export default function ShogoPage() {
         <div style={scoreRevealOverlayStyle} aria-live="polite">
           <div style={scoreRevealCardStyle}>
             <div style={scoreRevealTitleStyle}>
-              {scoreReveal.winner === "player" ? "あなたの得点" : "CPUの得点"}
+              {scoreReveal.winner === "player" ? "あなたの累計得点" : "CPUの累計得点"}
             </div>
             <div style={scoreRevealMarksStyle}>{toShoMarks(scoreReveal.shown)}</div>
-            <div style={scoreRevealSubStyle}>+{scoreReveal.gained} 点</div>
+            <div style={scoreRevealSubStyle}>
+              {toShoMarks(scoreReveal.base)} → {toShoMarks(scoreReveal.shown)}（+{scoreReveal.gained}）
+            </div>
           </div>
         </div>
       )}

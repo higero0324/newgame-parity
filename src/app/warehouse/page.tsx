@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { getAllTitles, loadAchievementStateForCurrentUser, type TitleDef, type TitleRarity } from "@/lib/achievements";
 import { loadCurrentProfilePrefsFromProfiles } from "@/lib/profilePrefs";
 import { getAllGachaItems, getOwnedGachaItemsFromMetadata } from "@/lib/gacha";
+import sakuraIcon from "@/app/sakura.png";
 
 type CardTemplateId =
   | "classic"
@@ -29,6 +30,33 @@ type WarehouseItem = {
   templateId?: CardTemplateId;
 };
 
+type WarehouseSortMode = "default" | "rarity_desc";
+
+const TITLE_RARITY_ORDER: Record<TitleRarity, number> = {
+  bronze: 1,
+  silver: 2,
+  gold: 3,
+  obsidian: 4,
+};
+
+function getItemRarityOrder(item: WarehouseItem): number {
+  if (item.type === "title") return TITLE_RARITY_ORDER[item.rarity ?? "bronze"] ?? 1;
+  if (item.id === "frame:sakura_frame") return 4;
+  if (item.id === "frame:setsugekka_frame") return 3;
+  if (
+    item.id === "frame:glow_red_frame" ||
+    item.id === "frame:glow_blue_frame" ||
+    item.id === "frame:glow_green_frame" ||
+    item.id === "template:gacha_template_kacho" ||
+    item.id === "template:gacha_template_suiboku" ||
+    item.id === "template:gacha_template_kinran"
+  ) {
+    return 2;
+  }
+  if (item.id === "frame:none") return 0;
+  return 1;
+}
+
 const CARD_TEMPLATE_ITEMS: Array<{ id: CardTemplateId; label: string; summary: string }> = [
   { id: "white", label: "白磁カード", summary: "透明感のある白基調のカード。" },
   { id: "classic", label: "欅木目カード", summary: "温かい木目調の定番カード。" },
@@ -50,7 +78,7 @@ export default function WarehousePage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<"all" | WarehouseItemType>("all");
   const [equippedOnly, setEquippedOnly] = useState(false);
-  const [sortMode, setSortMode] = useState<"default" | "name_asc" | "name_desc">("default");
+  const [sortMode, setSortMode] = useState<WarehouseSortMode>("default");
   const [ownedGacha, setOwnedGacha] = useState<{ frameIds: string[]; templateIds: string[]; titleIds: string[] }>({
     frameIds: [],
     templateIds: [],
@@ -171,10 +199,12 @@ export default function WarehousePage() {
     if (equippedOnly) {
       next = next.filter(item => item.equipped);
     }
-    if (sortMode === "name_asc") {
-      next.sort((a, b) => a.name.localeCompare(b.name, "ja"));
-    } else if (sortMode === "name_desc") {
-      next.sort((a, b) => b.name.localeCompare(a.name, "ja"));
+    if (sortMode === "rarity_desc") {
+      next.sort((a, b) => {
+        const rarityDiff = getItemRarityOrder(b) - getItemRarityOrder(a);
+        if (rarityDiff !== 0) return rarityDiff;
+        return a.name.localeCompare(b.name, "ja");
+      });
     }
     return next;
   }, [items, filterType, equippedOnly, sortMode]);
@@ -197,10 +227,9 @@ export default function WarehousePage() {
           </label>
           <label style={toolbarFieldStyle}>
             <span style={toolbarLabelStyle}>並び替え</span>
-            <select value={sortMode} onChange={e => setSortMode(e.target.value as "default" | "name_asc" | "name_desc")} style={toolbarSelectStyle}>
+            <select value={sortMode} onChange={e => setSortMode(e.target.value as WarehouseSortMode)} style={toolbarSelectStyle}>
               <option value="default">標準</option>
-              <option value="name_asc">名前順（昇順）</option>
-              <option value="name_desc">名前順（降順）</option>
+              <option value="rarity_desc">レア度順</option>
             </select>
           </label>
           <label style={toolbarCheckStyle}>
@@ -438,10 +467,12 @@ const framePreviewSetsugekkaStyle: React.CSSProperties = {
 
 const framePreviewSakuraStyle: React.CSSProperties = {
   position: "absolute",
-  inset: -2,
-  borderRadius: "50%",
-  border: "3px solid #d79db7",
-  boxShadow: "0 0 0 1px rgba(106, 58, 74, 0.72), 0 0 12px rgba(237, 176, 205, 0.7)",
+  inset: -4,
+  width: "calc(100% + 8px)",
+  height: "calc(100% + 8px)",
+  objectFit: "contain",
+  filter: "drop-shadow(0 0 8px rgba(237, 176, 205, 0.74))",
+  pointerEvents: "none",
 };
 
 const framePreviewGlowStyle: React.CSSProperties = {
@@ -536,7 +567,7 @@ function renderSlotPreview(item: WarehouseItem) {
     return (
       <span style={{ ...framePreviewBaseStyle, opacity: item.unlocked ? 1 : 0.6 }}>
         {isSnow && <span style={framePreviewSetsugekkaStyle} />}
-        {isSakura && <span style={framePreviewSakuraStyle} />}
+        {isSakura && <img src={sakuraIcon.src} alt="" style={framePreviewSakuraStyle} />}
         {isGlowRed && <span style={{ ...framePreviewGlowStyle, borderColor: "#dd3e46", boxShadow: "0 0 10px #dd3e46" }} />}
         {isGlowBlue && <span style={{ ...framePreviewGlowStyle, borderColor: "#3f8cff", boxShadow: "0 0 10px #3f8cff" }} />}
         {isGlowGreen && <span style={{ ...framePreviewGlowStyle, borderColor: "#2da46f", boxShadow: "0 0 10px #2da46f" }} />}
