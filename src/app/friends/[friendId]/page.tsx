@@ -228,7 +228,7 @@ export default function FriendProfilePage() {
         )}
         {!cardExpanded && (
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <h2 style={{ margin: 0, fontSize: 20 }}>季士情報</h2>
+            <h2 style={{ margin: 0, fontSize: 20, color: isDarkCard ? "rgba(255,245,230,0.98)" : "inherit" }}>季士情報</h2>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button type="button" onClick={() => setCardExpanded(true)} style={btnStyle}>
                 拡大
@@ -238,7 +238,9 @@ export default function FriendProfilePage() {
         )}
         <div style={cardExpanded ? profileTopExpandedStyle : profileTopStyle}>
           <div style={profileInfoBlockStyle}>
-            <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere" }}>{displayName}</div>
+            <div style={{ ...profileNameTextStyle, overflowWrap: "anywhere", color: isDarkCard ? "rgba(255,245,230,0.98)" : "inherit" }}>
+              {displayName}
+            </div>
             <div style={{ ...profileMetaTextStyle, color: isDarkCard ? "rgba(255,245,230,0.8)" : "#666" }}>フレンドID: {profile?.friend_id ?? "-"}</div>
             <div
               style={{
