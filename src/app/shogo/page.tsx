@@ -117,7 +117,8 @@ export default function ShogoPage() {
       }
       const unlockedByAch = loaded.unlockedTitleIds.includes(SETSUGEKKA_TITLE_ID);
       const unlockedByDone = loaded.claimableTitleIds.includes(SETSUGEKKA_TITLE_ID);
-      if (!unlockedByAch && !unlockedByDone) {
+      const unlockedByExtremeWins = (loaded.stats?.cpu_wins?.extreme ?? 0) >= 5;
+      if (!unlockedByAch && !unlockedByDone && !unlockedByExtremeWins) {
         window.alert("正豪戦は「雪月花」達成で開放されます。");
         router.replace("/achievements");
         return;

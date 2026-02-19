@@ -66,7 +66,8 @@ export default function Home() {
         if (ach.ok) {
           const unlockedByAch = ach.unlockedTitleIds.includes(SETSUGEKKA_TITLE_ID);
           const unlockedByDone = ach.claimableTitleIds.includes(SETSUGEKKA_TITLE_ID);
-          setShogoUnlocked(unlockedByAch || unlockedByDone);
+          const unlockedByExtremeWins = (ach.stats?.cpu_wins?.extreme ?? 0) >= 5;
+          setShogoUnlocked(unlockedByAch || unlockedByDone || unlockedByExtremeWins);
         } else {
           setShogoUnlocked(false);
         }
