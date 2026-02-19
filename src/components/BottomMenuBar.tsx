@@ -40,7 +40,14 @@ export default function BottomMenuBar() {
         return;
       }
       const ach = await loadAchievementStateForCurrentUser();
-      setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
+      setAchievementNotice(
+        Boolean(
+          ach.ok &&
+            (ach.claimableTitleIds.length > 0 ||
+              ach.claimableKisekiTitleIds.length > 0 ||
+              ach.claimableXpTitleIds.length > 0),
+        ),
+      );
     };
     refresh();
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -50,7 +57,14 @@ export default function BottomMenuBar() {
         setAchievementNotice(false);
       } else {
         loadAchievementStateForCurrentUser().then(ach => {
-          setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
+          setAchievementNotice(
+            Boolean(
+              ach.ok &&
+                (ach.claimableTitleIds.length > 0 ||
+                  ach.claimableKisekiTitleIds.length > 0 ||
+                  ach.claimableXpTitleIds.length > 0),
+            ),
+          );
         });
       }
     });

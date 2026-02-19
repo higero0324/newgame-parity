@@ -66,7 +66,14 @@ export default function Home() {
         setIsLoggedIn(true);
         setIsGuestMode(false);
         const ach = await loadAchievementStateForCurrentUser();
-        setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
+        setAchievementNotice(
+          Boolean(
+            ach.ok &&
+              (ach.claimableTitleIds.length > 0 ||
+                ach.claimableKisekiTitleIds.length > 0 ||
+                ach.claimableXpTitleIds.length > 0),
+          ),
+        );
         const presents = await loadPresentBoxForCurrentUser();
         setPresentNoticeCount(presents.ok ? presents.presents.length : 0);
       } else {
@@ -92,7 +99,14 @@ export default function Home() {
         setIsGuestMode(false);
         Promise.all([loadAchievementStateForCurrentUser(), loadPresentBoxForCurrentUser()]).then(
           ([ach, presents]) => {
-            setAchievementNotice(Boolean(ach.ok && (ach.claimableTitleIds.length > 0 || ach.claimableKisekiTitleIds.length > 0)));
+            setAchievementNotice(
+              Boolean(
+                ach.ok &&
+                  (ach.claimableTitleIds.length > 0 ||
+                    ach.claimableKisekiTitleIds.length > 0 ||
+                    ach.claimableXpTitleIds.length > 0),
+              ),
+            );
             setPresentNoticeCount(presents.ok ? presents.presents.length : 0);
           },
         );

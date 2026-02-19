@@ -15,7 +15,9 @@ const REQUIRED_XP_STEP = 2000;
 const STEP_LEVEL = 10;
 const LEVEL_UP_KISEKI_REWARD = 500;
 const ACHIEVEMENT_KISEKI_REWARD = 250;
+const ACHIEVEMENT_XP_REWARD = 500;
 const ACHIEVEMENT_KISEKI_CLAIMED_KEY = "achievement_kiseki_claimed_title_ids";
+const ACHIEVEMENT_XP_CLAIMED_KEY = "achievement_xp_claimed_title_ids";
 
 export function getRequiredXpForNextRank(rank: number): number {
   const safe = Math.min(Math.max(Math.floor(rank), MIN_RANK), MAX_RANK);
@@ -29,6 +31,10 @@ export function getLevelUpKisekiReward(): number {
 
 export function getAchievementKisekiReward(): number {
   return ACHIEVEMENT_KISEKI_REWARD;
+}
+
+export function getAchievementXpReward(): number {
+  return ACHIEVEMENT_XP_REWARD;
 }
 
 export function getXpForCpuWin(level: CpuRankLevel): number {
@@ -71,6 +77,30 @@ export function getClaimedAchievementKisekiTitleIdsFromMetadata(metadata: unknow
   return normalizeStringArray(meta[ACHIEVEMENT_KISEKI_CLAIMED_KEY]);
 }
 
+export function getClaimedAchievementXpTitleIdsFromMetadata(metadata: unknown): string[] {
+  const meta = (metadata ?? {}) as Record<string, unknown>;
+  return normalizeStringArray(meta[ACHIEVEMENT_XP_CLAIMED_KEY]);
+}
+
+function applyXpGain(state: PlayerRankState, gainedXp: number) {
+  let { rank, xp, kiseki } = state;
+  let levelUps = 0;
+  xp += Math.max(0, Math.floor(gainedXp));
+  while (rank < MAX_RANK) {
+    const required = getRequiredXpForNextRank(rank);
+    if (xp < required) break;
+    xp -= required;
+    rank += 1;
+    levelUps += 1;
+    kiseki += LEVEL_UP_KISEKI_REWARD;
+  }
+  if (rank >= MAX_RANK) {
+    rank = MAX_RANK;
+    xp = 0;
+  }
+  return { state: { rank, xp, kiseki }, levelUps };
+}
+
 export async function loadPlayerRankStateForCurrentUser() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return { ok: false as const, reason: error?.message ?? "not logged in" };
@@ -86,23 +116,9 @@ export async function grantCpuWinXpForCurrentUser(level: CpuRankLevel, userWon: 
   if (error || !data.user) return { ok: false as const, reason: error?.message ?? "not logged in" };
 
   const gainedXp = getXpForCpuWin(level);
-  let { rank, xp, kiseki } = normalizeState(data.user.user_metadata);
-  let levelUps = 0;
-  xp += gainedXp;
-
-  while (rank < MAX_RANK) {
-    const required = getRequiredXpForNextRank(rank);
-    if (xp < required) break;
-    xp -= required;
-    rank += 1;
-    levelUps += 1;
-    kiseki += LEVEL_UP_KISEKI_REWARD;
-  }
-
-  if (rank >= MAX_RANK) {
-    rank = MAX_RANK;
-    xp = 0;
-  }
+  const applied = applyXpGain(normalizeState(data.user.user_metadata), gainedXp);
+  const { rank, xp, kiseki } = applied.state;
+  const { levelUps } = applied;
 
   const { error: updateError } = await supabase.auth.updateUser({
     data: {
@@ -137,4 +153,46 @@ export async function grantAchievementKisekiForCurrentUser(titleId: string) {
   });
   if (updateError) return { ok: false as const, reason: updateError.message };
   return { ok: true as const, granted: true, state: { rank: state.rank, xp: state.xp, kiseki: nextKiseki } };
+}
+
+export async function grantAchievementRewardsForCurrentUser(titleId: string) {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return { ok: false as const, reason: error?.message ?? "not logged in" };
+
+  const baseState = normalizeState(data.user.user_metadata);
+  const kisekiClaimed = getClaimedAchievementKisekiTitleIdsFromMetadata(data.user.user_metadata);
+  const xpClaimed = getClaimedAchievementXpTitleIdsFromMetadata(data.user.user_metadata);
+
+  const kisekiClaimedNow = !kisekiClaimed.includes(titleId);
+  const xpClaimedNow = !xpClaimed.includes(titleId);
+
+  const nextKisekiClaimed = kisekiClaimedNow ? [...kisekiClaimed, titleId] : kisekiClaimed;
+  const nextXpClaimed = xpClaimedNow ? [...xpClaimed, titleId] : xpClaimed;
+  const kisekiWithReward = baseState.kiseki + (kisekiClaimedNow ? ACHIEVEMENT_KISEKI_REWARD : 0);
+  const xpApplied = applyXpGain(
+    { rank: baseState.rank, xp: baseState.xp, kiseki: kisekiWithReward },
+    xpClaimedNow ? ACHIEVEMENT_XP_REWARD : 0,
+  );
+  const nextState = xpApplied.state;
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    data: {
+      player_rank: nextState.rank,
+      player_xp: nextState.xp,
+      player_kiseki: nextState.kiseki,
+      [ACHIEVEMENT_KISEKI_CLAIMED_KEY]: nextKisekiClaimed,
+      [ACHIEVEMENT_XP_CLAIMED_KEY]: nextXpClaimed,
+    },
+  });
+  if (updateError) return { ok: false as const, reason: updateError.message };
+
+  return {
+    ok: true as const,
+    kisekiClaimedNow,
+    xpClaimedNow,
+    kisekiReward: ACHIEVEMENT_KISEKI_REWARD,
+    xpReward: ACHIEVEMENT_XP_REWARD,
+    levelUps: xpApplied.levelUps,
+    state: nextState,
+  };
 }

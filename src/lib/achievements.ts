@@ -3,8 +3,10 @@ import { ensureFriendIdForCurrentUser, getFriendIdFromUserMetadata } from "@/lib
 import { getOwnedGachaItemsFromMetadata } from "@/lib/gacha";
 import {
   getAchievementKisekiReward,
+  getAchievementXpReward,
   getClaimedAchievementKisekiTitleIdsFromMetadata,
-  grantAchievementKisekiForCurrentUser,
+  getClaimedAchievementXpTitleIdsFromMetadata,
+  grantAchievementRewardsForCurrentUser,
 } from "@/lib/playerRank";
 
 export type AchievementCpuLevel = "easy" | "medium" | "hard" | "extreme";
@@ -224,7 +226,9 @@ export async function loadAchievementStateForCurrentUser() {
   const achieved = achievedTitleIds(stats);
   const claimableTitleIds = achieved.filter(id => !unlocked.includes(id));
   const claimedKisekiTitleIds = getClaimedAchievementKisekiTitleIdsFromMetadata(loaded.auth.userMetadata);
+  const claimedXpTitleIds = getClaimedAchievementXpTitleIdsFromMetadata(loaded.auth.userMetadata);
   const claimableKisekiTitleIds = unlocked.filter(id => !claimedKisekiTitleIds.includes(id));
+  const claimableXpTitleIds = unlocked.filter(id => !claimedXpTitleIds.includes(id));
   const allowed = getAllowedEquippableTitleIds(unlocked, loaded.auth.userMetadata);
   const equipped = clampEquipped(allowed, normalizeStringArray(loaded.row.equipped_title_ids));
   return {
@@ -234,7 +238,9 @@ export async function loadAchievementStateForCurrentUser() {
     equippedTitleIds: equipped,
     claimableTitleIds,
     claimableKisekiTitleIds,
+    claimableXpTitleIds,
     achievementKisekiReward: getAchievementKisekiReward(),
+    achievementXpReward: getAchievementXpReward(),
   };
 }
 
@@ -339,12 +345,15 @@ export async function claimTitleForCurrentUser(titleId: string) {
   );
   if (error) return { ok: false as const, reason: error.message };
 
-  const kiseki = await grantAchievementKisekiForCurrentUser(titleId);
-  if (!kiseki.ok) return kiseki;
+  const rewards = await grantAchievementRewardsForCurrentUser(titleId);
+  if (!rewards.ok) return rewards;
   return {
     ok: true as const,
     titleClaimedNow: !titleAlreadyClaimed,
-    kisekiClaimedNow: kiseki.granted,
+    kisekiClaimedNow: rewards.kisekiClaimedNow,
+    xpClaimedNow: rewards.xpClaimedNow,
     kisekiReward: getAchievementKisekiReward(),
+    xpReward: getAchievementXpReward(),
+    levelUps: rewards.levelUps,
   };
 }
