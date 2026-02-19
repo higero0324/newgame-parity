@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Board from "@/components/Board";
-import ShoGlyph from "@/components/ShoGlyph";
+import ShoGlyph, { SHO_STROKE_ANIMATION_CSS } from "@/components/ShoGlyph";
 import { applyMove, emptyBoard, getAllWinningLines, idx, ownerOf, SIZE, type Player } from "@/lib/gameLogic";
 import { calculateAnimationDuration } from "@/lib/animationTiming";
 import { findShogoCpuMove } from "@/lib/cpuPlayer";
@@ -551,6 +551,7 @@ export default function ShogoPage() {
         disabled={!canPlay}
         winningLine={winningLine}
       />
+      <style>{SHO_STROKE_ANIMATION_CSS}</style>
 
       {scoreReveal.open && (
         <div style={scoreRevealOverlayStyle} aria-live="polite">
@@ -560,11 +561,19 @@ export default function ShogoPage() {
             </div>
             <div style={scoreRevealMarksStyle}>
               <span style={scoreRevealGlyphRowTotalStyle}>
-                {splitShoPointUnits(scoreReveal.base + scoreReveal.addedShown).map((unit, i) => (
-                  <span key={`total-${i}`} style={scoreRevealGlyphWrapStyle}>
-                    <ShoGlyph value={unit} strokeColor="#ffffff" />
-                  </span>
-                ))}
+                {(() => {
+                  const currentUnits = splitShoPointUnits(scoreReveal.base + scoreReveal.addedShown);
+                  const prevUnits = splitShoPointUnits(scoreReveal.base + Math.max(0, scoreReveal.addedShown - 1));
+                  return currentUnits.map((unit, i) => {
+                  const prevUnit = prevUnits[i] ?? 0;
+                  const animateFrom = unit > prevUnit ? prevUnit : null;
+                  return (
+                    <span key={`total-${i}`} style={scoreRevealGlyphWrapStyle}>
+                      <ShoGlyph value={unit} animateFrom={animateFrom} strokeColor="#ffffff" />
+                    </span>
+                  );
+                  });
+                })()}
               </span>
             </div>
             <div style={scoreRevealSubStyle}>

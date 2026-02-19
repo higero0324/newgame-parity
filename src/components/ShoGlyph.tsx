@@ -3,6 +3,13 @@
 import React from "react";
 
 export const SHO_STROKE_ANIMATION_NAME = "hisei-stroke-draw";
+export const SHO_STROKE_ANIMATION_CSS = `
+@keyframes hisei-stroke-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+`;
 const SHO_STROKE_DURATION_SEC = 0.34;
 
 const SHO_STROKE_PATHS = [
@@ -60,4 +67,3 @@ export default function ShoGlyph({
     </svg>
   );
 }
-

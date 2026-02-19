@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { BOARD_LEN, SIZE } from "@/lib/gameLogic";
-import ShoGlyph from "@/components/ShoGlyph";
+import ShoGlyph, { SHO_STROKE_ANIMATION_CSS } from "@/components/ShoGlyph";
 
 type Props = {
   board: number[];
@@ -13,13 +13,6 @@ type Props = {
   winningLine?: Set<number>;
 };
 
-const STROKE_ANIMATION = `
-@keyframes hisei-stroke-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-`;
 export const STROKE_DURATION_SEC = 0.34;
 export const DEFAULT_STROKE_STEP_DELAY_SEC = 0.1;
 
@@ -44,7 +37,7 @@ export default function Board({ board, onClickCell, lastChanged, lastPlaced, dis
 
   return (
     <div style={{ width: "100%", overflowX: "auto", overflowY: "visible" }}>
-      <style>{STROKE_ANIMATION}</style>
+      <style>{SHO_STROKE_ANIMATION_CSS}</style>
       <div
         style={{
           display: "grid",
