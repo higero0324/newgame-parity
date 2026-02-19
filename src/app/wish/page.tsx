@@ -65,7 +65,7 @@ export default function WishPage() {
     (async () => {
       const loaded = await loadPlayerRankStateForCurrentUser();
       if (!loaded.ok) {
-        setStatus(`隱ｭ縺ｿ霎ｼ縺ｿ縺ｫ螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${loaded.reason}`);
+        setStatus(`読み込みに失敗しました。詳細: ${loaded.reason}`);
         setLoading(false);
         return;
       }
@@ -114,7 +114,7 @@ export default function WishPage() {
     setRareCutIn(false);
     setOpeningRareGuaranteed(false);
     setDrawing(true);
-    setStatus("逾磯｡倅ｸｭ...");
+    setStatus("祈願中...");
     const res = await pullGachaForCurrentUser(count);
     if (!res.ok) {
       setDrawing(false);
@@ -225,14 +225,16 @@ export default function WishPage() {
       </section>
 
       <section style={sectionStyle}>
-        <div style={{ fontSize: 12, color: "#6a5338", textAlign: "right" }}>1蝗・ 250蟄｣遏ｳ</div>
+        <div style={{ fontSize: 12, color: "#6a5338", textAlign: "right" }}>1回: 250季石</div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
           <button type="button" style={drawButtonStyle} onClick={() => draw(1)} disabled={!canSingle || loading}>
-            1蝗樒･磯｡・          </button>
+            1回祈願
+          </button>
           <button type="button" style={drawButtonStyle} onClick={() => draw(10)} disabled={!canTen || loading}>
-            10蝗樒･磯｡・          </button>
+            10回祈願
+          </button>
           <button type="button" style={detailButtonStyle} onClick={() => setShowRates(v => !v)}>
-            {showRates ? "隧ｳ邏ｰ繧帝哩縺倥ｋ" : "隧ｳ邏ｰ"}
+            {showRates ? "詳細を閉じる" : "詳細"}
           </button>
         </div>
 
@@ -266,9 +268,10 @@ export default function WishPage() {
       {resultOverlayOpen && results.length > 0 && (
         <div style={resultOverlayStyle}>
           <div style={resultOverlayInnerStyle}>
-            <button type="button" aria-label="逾磯｡倡ｵ先棡繧帝哩縺倥ｋ" style={resultCloseButtonStyle} onClick={() => setResultOverlayOpen(false)}>
-              ﾃ・            </button>
-            <h2 style={{ margin: 0, fontSize: 20, color: "#fff5dd" }}>逾磯｡倡ｵ先棡</h2>
+            <button type="button" aria-label="祈願結果を閉じる" style={resultCloseButtonStyle} onClick={() => setResultOverlayOpen(false)}>
+              ×
+            </button>
+            <h2 style={{ margin: 0, fontSize: 20, color: "#fff5dd" }}>祈願結果</h2>
             {manualRevealMode && (
               <div style={{ fontSize: 13, color: "#ffe7b8" }}>
                 {revealBusy ? "ため中..." : "カードをタップして順番にめくる"}
@@ -313,7 +316,7 @@ export default function WishPage() {
             <div style={openingPulseStyle} />
             <div style={kisekiCoreWrapStyle}>
               <div style={kisekiSpinHaloStyle} />
-              <Image src={kisekiIcon} alt="蟄｣遏ｳ" width={44} height={44} style={kisekiCoreIconStyle} />
+              <Image src={kisekiIcon} alt="季石" width={44} height={44} style={kisekiCoreIconStyle} />
               {KISEKI_PARTICLE_VECTORS.map((v, i) => (
                 <span
                   key={`${v.x}-${v.y}-${i}`}
@@ -328,7 +331,7 @@ export default function WishPage() {
                 />
               ))}
             </div>
-            <div style={{ fontSize: 28, fontWeight: 900 }}>逾磯｡倅ｸｭ...</div>
+            <div style={{ fontSize: 28, fontWeight: 900 }}>祈願中...</div>
             {openingRareGuaranteed && <div style={openingRareGuaranteedStyle}>★★★確定</div>}
             <div style={{ fontSize: 13, opacity: 0.92 }}>季石を捧げ、祈りを込めています...</div>
           </div>
@@ -339,7 +342,7 @@ export default function WishPage() {
         <div style={rareOverlayStyle}>
           <div style={rareCardStyle}>
             <div style={{ fontSize: 12, letterSpacing: "0.08em", opacity: 0.92 }}>SPECIAL</div>
-            <div style={{ fontSize: 30, fontWeight: 900 }}>笘・・笘・蜃ｺ迴ｾ</div>
+            <div style={{ fontSize: 30, fontWeight: 900 }}>★★★ 出現</div>
           </div>
         </div>
       )}
@@ -401,7 +404,7 @@ function renderItemPreview(item: GachaItemDef) {
         <div style={sakuraFramePreviewWrapStyle}>
           <div style={sakuraFramePreviewGlowCircleStyle} />
           <div style={sakuraFramePreviewStyle}>
-            <Image src={sakuraIcon} alt="譯懊ヵ繝ｬ繝ｼ繝" fill sizes="40px" style={{ objectFit: "cover", transform: "scale(1.05)", opacity: 1 }} />
+            <Image src={sakuraIcon} alt="桜フレーム" fill sizes="40px" style={{ objectFit: "cover", transform: "scale(1.05)", opacity: 1 }} />
           </div>
         </div>
       );
