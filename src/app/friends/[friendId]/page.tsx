@@ -4,7 +4,8 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { getTitleById, type TitleDef, type TitleRarity } from "@/lib/achievements";
+import { getTitleById, type TitleRarity } from "@/lib/achievements";
+import { getGachaItemById } from "@/lib/gacha";
 import sakuraIcon from "@/app/sakura.png";
 
 type ProfileRow = {
@@ -37,6 +38,14 @@ type MatchRow = {
   winner: string;
   moves_count: number;
   final_board: number[];
+};
+
+type FriendTitleView = {
+  id: string;
+  name: string;
+  description: string;
+  rarity: TitleRarity;
+  isGacha?: boolean;
 };
 
 export default function FriendProfilePage() {
@@ -174,7 +183,7 @@ export default function FriendProfilePage() {
   const matchNames = profile?.match_names ?? {};
   const equippedTitles = useMemo(() => {
     const ids = Array.isArray(profile?.equipped_title_ids) ? profile?.equipped_title_ids : [];
-    return ids.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x)).slice(0, 2);
+    return ids.map(id => resolveFriendTitle(id)).filter((x): x is FriendTitleView => Boolean(x)).slice(0, 2);
   }, [profile?.equipped_title_ids]);
   const equippedTitleSlots = useMemo(() => {
     return [equippedTitles[0] ?? null, equippedTitles[1] ?? null] as const;
@@ -782,7 +791,23 @@ const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
   },
 };
 
-function titleChipStyleFor(title: TitleDef): React.CSSProperties {
+function resolveFriendTitle(id: string): FriendTitleView | null {
+  const normal = getTitleById(id);
+  if (normal) return { id: normal.id, name: normal.name, description: normal.description, rarity: normal.rarity };
+  const gacha = getGachaItemById(id);
+  if (gacha?.kind === "title") return { id: gacha.id, name: gacha.name, description: "祈願で獲得した称号。", rarity: "bronze", isGacha: true };
+  return null;
+}
+
+function titleChipStyleFor(title: { id: string; rarity: TitleRarity; isGacha?: boolean }): React.CSSProperties {
+  if (title.isGacha) {
+    return {
+      background: "linear-gradient(180deg, #ffffff 0%, #f3f3f3 100%)",
+      color: "#2d241a",
+      borderColor: "#cfcfcf",
+      borderRadius: 999,
+    };
+  }
   if (title.id === "rookie_winner") {
     return {
       background: "linear-gradient(180deg, #ffe6ef 0%, #f7bfd1 100%)",
@@ -797,7 +822,8 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
   };
 }
 
-function isUpperTitle(title: TitleDef): boolean {
+function isUpperTitle(title: { rarity: TitleRarity; isGacha?: boolean }): boolean {
+  if (title.isGacha) return false;
   return title.rarity === "gold" || title.rarity === "obsidian";
 }
 

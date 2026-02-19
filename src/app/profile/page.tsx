@@ -18,10 +18,9 @@ import {
   getTitleById,
   loadAchievementStateForCurrentUser,
   saveEquippedTitlesForCurrentUser,
-  type TitleDef,
   type TitleRarity,
 } from "@/lib/achievements";
-import { getOwnedGachaItemsFromMetadata } from "@/lib/gacha";
+import { getGachaItemById, getOwnedGachaItemsFromMetadata } from "@/lib/gacha";
 
 type MatchRow = {
   id: string;
@@ -46,6 +45,14 @@ type CardTemplateId =
   | "gacha_template_kacho"
   | "gacha_template_suiboku"
   | "gacha_template_kinran";
+
+type ProfileTitleView = {
+  id: string;
+  name: string;
+  description: string;
+  rarity: TitleRarity;
+  isGacha?: boolean;
+};
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -291,11 +298,13 @@ export default function ProfilePage() {
   const editTextColor = isDarkCard ? "rgba(255,245,230,0.96)" : "#3f2b18";
   const editSubtleColor = isDarkCard ? "rgba(255,245,230,0.84)" : "#666";
   const equippedTitles = useMemo(() => {
-    return equippedTitleIds.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
+    return equippedTitleIds.map(id => resolveProfileTitle(id)).filter((x): x is ProfileTitleView => Boolean(x));
   }, [equippedTitleIds]);
   const unlockedTitles = useMemo(() => {
-    return unlockedTitleIds.map(id => getTitleById(id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
-  }, [unlockedTitleIds]);
+    return Array.from(new Set([...unlockedTitleIds, ...ownedGacha.titleIds]))
+      .map(id => resolveProfileTitle(id))
+      .filter((x): x is ProfileTitleView => Boolean(x));
+  }, [unlockedTitleIds, ownedGacha.titleIds]);
   const equippedSlots = useMemo(() => {
     return [equippedTitleIds[0] ?? "", equippedTitleIds[1] ?? ""] as [string, string];
   }, [equippedTitleIds]);
@@ -422,7 +431,7 @@ export default function ProfilePage() {
                 {[0, 1].map(i => {
                   const slot = i as 0 | 1;
                   const titleId = equippedSlots[slot];
-                  const title = titleId ? getTitleById(titleId) : null;
+                  const title = titleId ? resolveProfileTitle(titleId) : null;
                   const empty = !title;
                   return (
                     <button
@@ -1394,7 +1403,23 @@ const titleChipByRarity: Record<TitleRarity, React.CSSProperties> = {
   },
 };
 
-function titleChipStyleFor(title: TitleDef): React.CSSProperties {
+function resolveProfileTitle(id: string): ProfileTitleView | null {
+  const normal = getTitleById(id);
+  if (normal) return { id: normal.id, name: normal.name, description: normal.description, rarity: normal.rarity };
+  const gacha = getGachaItemById(id);
+  if (gacha?.kind === "title") return { id: gacha.id, name: gacha.name, description: "祈願で獲得した称号。", rarity: "bronze", isGacha: true };
+  return null;
+}
+
+function titleChipStyleFor(title: { id: string; rarity: TitleRarity; isGacha?: boolean }): React.CSSProperties {
+  if (title.isGacha) {
+    return {
+      background: "linear-gradient(180deg, #ffffff 0%, #f3f3f3 100%)",
+      color: "#2d241a",
+      borderColor: "#cfcfcf",
+      borderRadius: 999,
+    };
+  }
   if (title.id === "rookie_winner") {
     return {
       background: "linear-gradient(180deg, #ffe6ef 0%, #f7bfd1 100%)",
@@ -1409,7 +1434,8 @@ function titleChipStyleFor(title: TitleDef): React.CSSProperties {
   };
 }
 
-function isUpperTitle(title: TitleDef): boolean {
+function isUpperTitle(title: { rarity: TitleRarity; isGacha?: boolean }): boolean {
+  if (title.isGacha) return false;
   return title.rarity === "gold" || title.rarity === "obsidian";
 }
 

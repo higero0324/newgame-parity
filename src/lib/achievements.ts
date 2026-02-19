@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { ensureFriendIdForCurrentUser, getFriendIdFromUserMetadata } from "@/lib/profilePrefs";
+import { getOwnedGachaItemsFromMetadata } from "@/lib/gacha";
 import {
   getAchievementKisekiReward,
   getClaimedAchievementKisekiTitleIdsFromMetadata,
@@ -149,9 +150,14 @@ function achievedTitleIds(stats: AchievementStats): string[] {
   return ids;
 }
 
-function clampEquipped(unlocked: string[], equipped: string[]): string[] {
-  const unlockedSet = new Set(unlocked);
-  return equipped.filter(id => unlockedSet.has(id)).slice(0, 2);
+function getAllowedEquippableTitleIds(unlocked: string[], userMetadata: unknown): string[] {
+  const ownedGacha = getOwnedGachaItemsFromMetadata(userMetadata);
+  return Array.from(new Set([...unlocked, ...ownedGacha.titleIds]));
+}
+
+function clampEquipped(allowedTitleIds: string[], equipped: string[]): string[] {
+  const allowedSet = new Set(allowedTitleIds);
+  return equipped.filter(id => allowedSet.has(id)).slice(0, 2);
 }
 
 async function getCurrentUserAndFriendId() {
@@ -219,7 +225,8 @@ export async function loadAchievementStateForCurrentUser() {
   const claimableTitleIds = achieved.filter(id => !unlocked.includes(id));
   const claimedKisekiTitleIds = getClaimedAchievementKisekiTitleIdsFromMetadata(loaded.auth.userMetadata);
   const claimableKisekiTitleIds = unlocked.filter(id => !claimedKisekiTitleIds.includes(id));
-  const equipped = clampEquipped(unlocked, normalizeStringArray(loaded.row.equipped_title_ids));
+  const allowed = getAllowedEquippableTitleIds(unlocked, loaded.auth.userMetadata);
+  const equipped = clampEquipped(allowed, normalizeStringArray(loaded.row.equipped_title_ids));
   return {
     ok: true as const,
     stats,
@@ -242,7 +249,8 @@ export async function recordCpuWinForCurrentUser(level: AchievementCpuLevel, use
   stats.total_cpu_wins = stats.cpu_wins.easy + stats.cpu_wins.medium + stats.cpu_wins.hard + stats.cpu_wins.extreme;
 
   const nowUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
-  const equipped = clampEquipped(nowUnlocked, normalizeStringArray(loaded.row.equipped_title_ids));
+  const allowed = getAllowedEquippableTitleIds(nowUnlocked, loaded.auth.userMetadata);
+  const equipped = clampEquipped(allowed, normalizeStringArray(loaded.row.equipped_title_ids));
 
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -265,7 +273,8 @@ export async function recordSavedMatchForCurrentUser() {
   stats.saved_matches += 1;
 
   const nowUnlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
-  const equipped = clampEquipped(nowUnlocked, normalizeStringArray(loaded.row.equipped_title_ids));
+  const allowed = getAllowedEquippableTitleIds(nowUnlocked, loaded.auth.userMetadata);
+  const equipped = clampEquipped(allowed, normalizeStringArray(loaded.row.equipped_title_ids));
 
   const { error } = await supabase.from("profiles").upsert(
     {
@@ -286,7 +295,8 @@ export async function saveEquippedTitlesForCurrentUser(equippedTitleIds: string[
   if (!loaded.ok) return loaded;
   const stats = normalizeStats(loaded.row.achievement_stats);
   const unlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
-  const equipped = clampEquipped(unlocked, normalizeStringArray(equippedTitleIds));
+  const allowed = getAllowedEquippableTitleIds(unlocked, loaded.auth.userMetadata);
+  const equipped = clampEquipped(allowed, normalizeStringArray(equippedTitleIds));
   const { error } = await supabase.from("profiles").upsert(
     {
       user_id: loaded.auth.userId,
@@ -313,7 +323,8 @@ export async function claimTitleForCurrentUser(titleId: string) {
   const unlocked = normalizeStringArray(loaded.row.unlocked_title_ids);
   const titleAlreadyClaimed = unlocked.includes(titleId);
   if (!titleAlreadyClaimed) unlocked.push(titleId);
-  const equipped = clampEquipped(unlocked, normalizeStringArray(loaded.row.equipped_title_ids));
+  const allowed = getAllowedEquippableTitleIds(unlocked, loaded.auth.userMetadata);
+  const equipped = clampEquipped(allowed, normalizeStringArray(loaded.row.equipped_title_ids));
   if (!titleAlreadyClaimed && equipped.length < 2 && !equipped.includes(titleId)) equipped.push(titleId);
 
   const { error } = await supabase.from("profiles").upsert(
