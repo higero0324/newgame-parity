@@ -7,7 +7,8 @@ import Board from "@/components/Board";
 import { applyMove, emptyBoard, getAllWinningLines, idx, ownerOf, SIZE, type Player } from "@/lib/gameLogic";
 import { calculateAnimationDuration } from "@/lib/animationTiming";
 import { findCpuMove } from "@/lib/cpuPlayer";
-import { loadAchievementStateForCurrentUser, recordShogoMatchForCurrentUser, SETSUGEKKA_TITLE_ID } from "@/lib/achievements";
+import { supabase } from "@/lib/supabaseClient";
+import { recordShogoMatchForCurrentUser } from "@/lib/achievements";
 
 type Snapshot = {
   board: number[];
@@ -109,18 +110,10 @@ export default function ShogoPage() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const loaded = await loadAchievementStateForCurrentUser();
+      const loaded = await supabase.auth.getSession();
       if (!alive) return;
-      if (!loaded.ok) {
+      if (loaded.error || !loaded.data.session?.user) {
         router.replace("/login");
-        return;
-      }
-      const unlockedByAch = loaded.unlockedTitleIds.includes(SETSUGEKKA_TITLE_ID);
-      const unlockedByDone = loaded.claimableTitleIds.includes(SETSUGEKKA_TITLE_ID);
-      const unlockedByExtremeWins = (loaded.stats?.cpu_wins?.extreme ?? 0) >= 5;
-      if (!unlockedByAch && !unlockedByDone && !unlockedByExtremeWins) {
-        window.alert("正豪戦は「雪月花」達成で開放されます。");
-        router.replace("/achievements");
         return;
       }
       setReady(true);
