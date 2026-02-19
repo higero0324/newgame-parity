@@ -61,12 +61,23 @@ export function getSupabase() {
   if (invalidUrl || invalidAnon) {
     console.warn("Supabase credentials not configured. Authentication features will not work.");
     const notConfiguredError = { message: "Supabase is not configured." };
+    const mockResult = async () => ({ data: null, error: notConfiguredError });
     const mockQuery = {
       select: () => mockQuery,
-      order: () => mockQuery,
-      limit: async () => ({ data: null, error: notConfiguredError }),
       insert: () => mockQuery,
-      single: async () => ({ data: null, error: notConfiguredError }),
+      update: () => mockQuery,
+      upsert: () => mockQuery,
+      delete: () => mockQuery,
+      order: () => mockQuery,
+      limit: () => mockQuery,
+      eq: () => mockQuery,
+      neq: () => mockQuery,
+      in: () => mockQuery,
+      maybeSingle: mockResult,
+      single: mockResult,
+      then: (resolve: (value: { data: null; error: { message: string } }) => unknown) => {
+        return Promise.resolve(resolve({ data: null, error: notConfiguredError }));
+      },
     };
     return {
       auth: {
