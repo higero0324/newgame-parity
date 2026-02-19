@@ -147,8 +147,15 @@ export default function TutorialPage() {
   const [ritualSenteFirst, setRitualSenteFirst] = useState<number | null>(null);
   const [ritualGoteFirst, setRitualGoteFirst] = useState<number | null>(null);
   const timersRef = useRef<number[]>([]);
+  const demoRunIdRef = useRef(0);
+  const stepIdRef = useRef<StepId>(step.id);
+
+  useEffect(() => {
+    stepIdRef.current = step.id;
+  }, [step.id]);
 
   const resetStepState = (nextStep: Step) => {
+    demoRunIdRef.current += 1;
     const init = nextStep.init();
     timersRef.current.forEach(t => window.clearTimeout(t));
     timersRef.current = [];
@@ -173,6 +180,7 @@ export default function TutorialPage() {
   }, []);
 
   const runCaptureDemo = () => {
+    const runId = ++demoRunIdRef.current;
     timersRef.current.forEach(t => window.clearTimeout(t));
     timersRef.current = [];
     const frames: Array<Record<number, number>> = [
@@ -182,6 +190,7 @@ export default function TutorialPage() {
     ];
     frames.forEach((frame, idx) => {
       const t = window.setTimeout(() => {
+        if (runId !== demoRunIdRef.current || stepIdRef.current !== "rules") return;
         setBoard(makeBoard(frame));
         setLastChanged(new Set(Object.keys(frame).map(k => Number(k))));
         setLastPlaced(undefined);
@@ -191,6 +200,7 @@ export default function TutorialPage() {
   };
 
   const runWinDemo = () => {
+    const runId = ++demoRunIdRef.current;
     timersRef.current.forEach(t => window.clearTimeout(t));
     timersRef.current = [];
     const frames: Array<Record<number, number>> = [
@@ -200,6 +210,7 @@ export default function TutorialPage() {
     ];
     frames.forEach((frame, idx) => {
       const t = window.setTimeout(() => {
+        if (runId !== demoRunIdRef.current || stepIdRef.current !== "rules") return;
         setBoard(makeBoard(frame));
         setLastChanged(new Set(Object.keys(frame).map(k => Number(k))));
         setLastPlaced(undefined);
@@ -208,6 +219,7 @@ export default function TutorialPage() {
     });
     // ループ再生
     const loopTimer = window.setTimeout(() => {
+      if (runId !== demoRunIdRef.current || stepIdRef.current !== "rules") return;
       runWinDemo();
     }, frames.length * WIN_INTERVAL_MS);
     timersRef.current.push(loopTimer);

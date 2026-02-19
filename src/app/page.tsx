@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,7 +6,12 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import kisekiIcon from "@/app/kiseki.png";
 import { loadAchievementStateForCurrentUser } from "@/lib/achievements";
-import { getLevelUpKisekiReward, getRequiredXpForNextRank, loadPlayerRankStateForCurrentUser, type PlayerRankState } from "@/lib/playerRank";
+import {
+  getLevelUpKisekiReward,
+  getRequiredXpForNextRank,
+  loadPlayerRankStateForCurrentUser,
+  type PlayerRankState,
+} from "@/lib/playerRank";
 import { loadPresentBoxForCurrentUser } from "@/lib/presents";
 
 const GUEST_MODE_KEY = "hisei_guest_mode";
@@ -161,19 +166,19 @@ export default function Home() {
       },
       {
         id: "kishi",
-        icon: "季",
+        icon: "👤",
         label: "季士情報",
         actions: [{ label: "プロフィール", href: "/profile", requiresAuth: true }],
       },
       {
         id: "friend",
-        icon: "友",
+        icon: "🤝",
         label: "友人",
         actions: [{ label: "フレンド", href: "/friends", requiresAuth: true }],
       },
       {
         id: "learn",
-        icon: "学",
+        icon: "📘",
         label: "学び",
         actions: [
           { label: "初めに", href: "/hajimeni" },
@@ -184,7 +189,7 @@ export default function Home() {
       },
       {
         id: "progress",
-        icon: "進",
+        icon: "📈",
         label: "進歩",
         actions: [{ label: "アチーブメント", href: "/achievements", requiresAuth: true }],
       },
@@ -252,28 +257,28 @@ export default function Home() {
           justifyItems: "center",
         }}
       >
-      <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
-        <span style={{ fontSize: 60, display: "block" }}>一正</span>
-        <span style={{ fontSize: 15, display: "block", marginTop: 5, color: "#555" }}>～HISEI～</span>
-      </h1>
+        <h1 style={{ fontWeight: 900, textAlign: "center", lineHeight: 1 }}>
+          <span style={{ fontSize: 60, display: "block" }}>一正</span>
+          <span style={{ fontSize: 15, display: "block", marginTop: 5, color: "#555" }}>HISEI</span>
+        </h1>
 
-      <section style={{ width: "100%", maxWidth: 760, display: "grid", gap: 10 }}>
-        {visibleActions.length > 1 ? (
-          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-            {visibleActions.map(action => (
-              <button key={action.label} onClick={() => goAction(action)} style={bigActionButtonStyle}>
-                {action.label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div style={{ textAlign: "center", color: "#666", fontSize: 14 }}>
-            下のメニューを押すと画面を開きます。
-          </div>
-        )}
-      </section>
-
+        <section style={{ width: "100%", maxWidth: 760, display: "grid", gap: 10 }}>
+          {visibleActions.length > 1 ? (
+            <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+              {visibleActions.map(action => (
+                <button key={action.label} onClick={() => goAction(action)} style={bigActionButtonStyle}>
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", color: "#666", fontSize: 14 }}>
+              下のメニューを押すと画面が開きます。
+            </div>
+          )}
+        </section>
       </main>
+
       <button
         type="button"
         style={progressFloatingButtonStyle}
@@ -364,21 +369,10 @@ const statusWideItemStyle: React.CSSProperties = {
   minWidth: 126,
 };
 
-const statusRightAlignedItemStyle: React.CSSProperties = {
-  justifyContent: "flex-end",
-};
-
 const statusKisekiItemStyle: React.CSSProperties = {
   justifyContent: "space-between",
   paddingLeft: 2,
   marginLeft: "auto",
-};
-
-const statusLabelStyle: React.CSSProperties = {
-  fontSize: 11,
-  color: "#5b4d39",
-  lineHeight: 1.2,
-  whiteSpace: "nowrap",
 };
 
 const statusIconLabelStyle: React.CSSProperties = {

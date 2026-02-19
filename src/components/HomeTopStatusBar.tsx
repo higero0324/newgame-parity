@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
@@ -160,4 +160,3 @@ const rankPopoverStyle: React.CSSProperties = {
   background: "rgba(255, 252, 245, 0.98)",
   boxShadow: "0 10px 24px rgba(40, 24, 12, 0.22)",
 };
-

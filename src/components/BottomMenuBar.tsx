@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -15,11 +15,11 @@ type HomeMenu = {
 
 const MENUS: HomeMenu[] = [
   { id: "battle", icon: "🏠", label: "ホーム" },
-  { id: "learn", icon: "学", label: "学び" },
-  { id: "kishi", icon: "季", label: "季士情報" },
-  { id: "friend", icon: "友", label: "友人" },
-  { id: "warehouse", icon: "倉", label: "倉庫" },
-  { id: "wish", icon: "祈", label: "祈願" },
+  { id: "learn", icon: "📘", label: "学び" },
+  { id: "kishi", icon: "👤", label: "季士情報" },
+  { id: "friend", icon: "🤝", label: "友人" },
+  { id: "warehouse", icon: "📦", label: "倉庫" },
+  { id: "wish", icon: "✨", label: "祈願" },
 ];
 
 export default function BottomMenuBar() {
@@ -99,7 +99,12 @@ export default function BottomMenuBar() {
     if (pathname.startsWith("/warehouse")) return "warehouse";
     if (pathname.startsWith("/friends")) return "friend";
     if (pathname.startsWith("/wish")) return "wish";
-    if (pathname.startsWith("/hajimeni") || pathname.startsWith("/rules") || pathname.startsWith("/tutorial") || pathname.startsWith("/history")) {
+    if (
+      pathname.startsWith("/hajimeni") ||
+      pathname.startsWith("/rules") ||
+      pathname.startsWith("/tutorial") ||
+      pathname.startsWith("/history")
+    ) {
       return "learn";
     }
     return "battle";

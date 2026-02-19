@@ -9,6 +9,72 @@ export function findCpuMove(board: number[], player: Player, level: CpuLevel = "
   return findHardMove(board, player);
 }
 
+export function findShogoCpuMove(board: number[], player: Player): number {
+  const legalMoves = board
+    .map((v, i) => (v === 0 ? i : -1))
+    .filter(i => i >= 0)
+    .map(pos => ({ pos, res: applyMove(board, pos, player) }))
+    .filter(x => x.res.ok) as Array<{ pos: number; res: Extract<ReturnType<typeof applyMove>, { ok: true }> }>;
+
+  if (legalMoves.length === 0) return -1;
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+
+  // 1) 局勝利は最優先。勝ち手が複数ある場合は得点が高い手を選ぶ。
+  const winningMoves = legalMoves.filter(x => x.res.winner === player);
+  if (winningMoves.length > 0) {
+    let best = winningMoves[0];
+    let bestGain = calcShogoRoundGain(best.res.newBoard, player);
+    let bestEval = evaluateBoard(best.res.newBoard, player);
+    for (let i = 1; i < winningMoves.length; i += 1) {
+      const gain = calcShogoRoundGain(winningMoves[i].res.newBoard, player);
+      const evalScore = evaluateBoard(winningMoves[i].res.newBoard, player);
+      if (gain > bestGain || (gain === bestGain && evalScore > bestEval)) {
+        best = winningMoves[i];
+        bestGain = gain;
+        bestEval = evalScore;
+      }
+    }
+    return best.pos;
+  }
+
+  // 2) 相手の即勝ちがある局面では、その受けを最優先。
+  const opponentImmediateWins = board
+    .map((v, i) => (v === 0 ? i : -1))
+    .filter(i => i >= 0)
+    .filter(pos => {
+      const res = applyMove(board, pos, opponent);
+      return res.ok && res.winner === opponent;
+    });
+  if (opponentImmediateWins.length > 0) {
+    const blockers = legalMoves.filter(x => opponentImmediateWins.includes(x.pos));
+    if (blockers.length > 0) {
+      let best = blockers[0];
+      let bestScore = evaluateShogoPosition(blockers[0].res.newBoard, player);
+      for (let i = 1; i < blockers.length; i += 1) {
+        const score = evaluateShogoPosition(blockers[i].res.newBoard, player);
+        if (score > bestScore) {
+          best = blockers[i];
+          bestScore = score;
+        }
+      }
+      return best.pos;
+    }
+  }
+
+  // 3) 通常時は「高得点取り」を意識した評価で選択。
+  let best = legalMoves[0];
+  let bestScore = evaluateShogoPosition(legalMoves[0].res.newBoard, player);
+  for (let i = 1; i < legalMoves.length; i += 1) {
+    const score = evaluateShogoPosition(legalMoves[i].res.newBoard, player);
+    if (score > bestScore) {
+      best = legalMoves[i];
+      bestScore = score;
+    }
+  }
+
+  return best.pos;
+}
+
 // 初級：ランダム + 即勝ち手のみ
 function findEasyMove(board: number[], player: Player): number {
   const emptyPositions = board.map((v, i) => (v === 0 ? i : -1)).filter(i => i >= 0);
@@ -281,4 +347,71 @@ function isDangerousMove(board: number[], pos: number, player: Player): boolean 
     if (res.ok && res.winner === opponent) return true;
   }
   return false;
+}
+
+function lineIndices(): number[][] {
+  const lines: number[][] = [];
+  for (let r = 0; r < SIZE; r++) {
+    const line: number[] = [];
+    for (let c = 0; c < SIZE; c++) line.push(idx(r, c));
+    lines.push(line);
+  }
+  for (let c = 0; c < SIZE; c++) {
+    const line: number[] = [];
+    for (let r = 0; r < SIZE; r++) line.push(idx(r, c));
+    lines.push(line);
+  }
+  lines.push([idx(0, 0), idx(1, 1), idx(2, 2), idx(3, 3), idx(4, 4)]);
+  lines.push([idx(0, 4), idx(1, 3), idx(2, 2), idx(3, 1), idx(4, 0)]);
+  return lines;
+}
+
+function countCompleteLinesForPlayer(board: number[], player: Player): number {
+  let count = 0;
+  const lines = lineIndices();
+  for (const line of lines) {
+    if (line.every(i => ownerOf(board[i]) === player)) count += 1;
+  }
+  return count;
+}
+
+function calcShogoRoundGain(board: number[], winner: Player): number {
+  const linePoints = countCompleteLinesForPlayer(board, winner);
+  const boardFilled = board.every(v => v !== 0);
+  let evenCount = 0;
+  let oddCount = 0;
+  for (const v of board) {
+    if (v % 2 === 0) evenCount += 1;
+    else oddCount += 1;
+  }
+  const countWinner: Player = evenCount > oddCount ? "p1" : "p2";
+  const countWinBonus = boardFilled && countWinner === winner ? 1 : 0;
+  return Math.min(3, linePoints + countWinBonus);
+}
+
+function potentialLineScore(board: number[], player: Player): number {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  let score = 0;
+  const lines = lineIndices();
+  for (const line of lines) {
+    let myCount = 0;
+    let oppCount = 0;
+    for (const i of line) {
+      const o = ownerOf(board[i]);
+      if (o === player) myCount += 1;
+      else if (o === opponent) oppCount += 1;
+    }
+    if (oppCount === 0 && myCount > 0) {
+      score += myCount * myCount;
+    }
+  }
+  return score;
+}
+
+function evaluateShogoPosition(board: number[], player: Player): number {
+  const opponent: Player = player === "p1" ? "p2" : "p1";
+  const base = evaluateBoard(board, player);
+  const myPotential = potentialLineScore(board, player);
+  const oppPotential = potentialLineScore(board, opponent);
+  return base * 2 + myPotential * 85 - oppPotential * 75;
 }
