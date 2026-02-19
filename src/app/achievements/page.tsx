@@ -78,6 +78,18 @@ export default function AchievementsPage() {
     () => new Set([...claimableTitleIds, ...claimableKisekiTitleIds, ...claimableXpTitleIds]).size,
     [claimableTitleIds, claimableKisekiTitleIds, claimableXpTitleIds],
   );
+  const sortedProgressList = useMemo(() => {
+    return progressList
+      .map((item, index) => {
+        const canClaim =
+          item.done &&
+          (!item.claimed || claimableKisekiSet.has(item.title.id) || claimableXpSet.has(item.title.id));
+        const priority = canClaim ? 0 : item.done ? 2 : 1;
+        return { item, index, priority };
+      })
+      .sort((a, b) => a.priority - b.priority || a.index - b.index)
+      .map(x => x.item);
+  }, [progressList, claimableKisekiSet, claimableXpSet]);
 
   const claim = async (titleId: string) => {
     const res = await claimTitleForCurrentUser(titleId);
@@ -159,10 +171,10 @@ export default function AchievementsPage() {
           </div>
         )}
         <div style={{ display: "grid", gap: 8 }}>
-          {progressList.map(item => {
-            const canClaim =
-              item.done &&
-              (!item.claimed || claimableKisekiSet.has(item.title.id) || claimableXpSet.has(item.title.id));
+          {sortedProgressList.map(item => {
+            const hasPendingSubReward = claimableKisekiSet.has(item.title.id) || claimableXpSet.has(item.title.id);
+            const canClaim = item.done && (!item.claimed || hasPendingSubReward);
+            const isClaimedComplete = item.done && item.claimed && !hasPendingSubReward;
 
             return (
               <div
@@ -170,6 +182,7 @@ export default function AchievementsPage() {
                 style={{
                   ...achievementCardStyle,
                   ...(canClaim ? achievementClaimableCardStyle : null),
+                  ...(isClaimedComplete ? achievementClaimedCardStyle : null),
                 }}
                 onClick={() => {
                   if (canClaim) claim(item.title.id);
@@ -177,22 +190,20 @@ export default function AchievementsPage() {
                 role={canClaim ? "button" : undefined}
                 aria-label={canClaim ? `${item.name} の報酬を回収` : undefined}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "grid", gap: 8 }}>
                   <div style={{ display: "grid", gap: 2 }}>
                     <b>{item.name}</b>
                     <span style={{ fontSize: 13, color: "#666" }}>{item.description}</span>
                   </div>
-                  <div style={{ display: "grid", gap: 6, justifyItems: "end" }}>
+                  <div style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ ...titleChipStyleBase, ...titleChipStyleFor(item.title) }}>
                       {item.title.name}
                     </span>
-                    <div style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                      <span style={kisekiRewardChipStyle}>
-                        <Image src={kisekiIcon} alt="季石" width={12} height={12} />
-                        +{achievementKisekiReward}
-                      </span>
-                      <span style={xpRewardChipStyle}>EXP +{achievementXpReward}</span>
-                    </div>
+                    <span style={kisekiRewardChipStyle}>
+                      <Image src={kisekiIcon} alt="季石" width={12} height={12} />
+                      +{achievementKisekiReward}
+                    </span>
+                    <span style={xpRewardChipStyle}>EXP +{achievementXpReward}</span>
                   </div>
                 </div>
                 <div style={progressTrackStyle}>
@@ -280,6 +291,12 @@ const achievementClaimableCardStyle: React.CSSProperties = {
   borderColor: "#d2a318",
   background: "linear-gradient(180deg, rgba(255,247,199,0.95) 0%, rgba(255,236,156,0.85) 100%)",
   boxShadow: "inset 0 0 0 1px rgba(255, 213, 79, 0.55)",
+};
+
+const achievementClaimedCardStyle: React.CSSProperties = {
+  borderColor: "rgba(105, 105, 105, 0.35)",
+  background: "linear-gradient(180deg, rgba(242,242,242,0.9) 0%, rgba(228,228,228,0.86) 100%)",
+  color: "#5a5a5a",
 };
 
 const progressTrackStyle: React.CSSProperties = {
