@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Board from "@/components/Board";
+import ShoGlyph from "@/components/ShoGlyph";
 import { applyMove, emptyBoard, getAllWinningLines, idx, ownerOf, SIZE, type Player } from "@/lib/gameLogic";
 import { calculateAnimationDuration } from "@/lib/animationTiming";
 import { findShogoCpuMove } from "@/lib/cpuPlayer";
@@ -46,6 +47,15 @@ function toShoMarks(score: number): string {
   const full = Math.floor(safe / 5);
   const rem = safe % 5;
   return `${"正".repeat(full)}${["", "一", "二", "三", "四"][rem]}`;
+}
+
+function splitShoPointUnits(score: number): number[] {
+  const safe = Math.max(0, Math.floor(score));
+  const full = Math.floor(safe / 5);
+  const rem = safe % 5;
+  const units = Array.from({ length: full }, () => 5);
+  if (rem > 0) units.push(rem);
+  return units;
 }
 
 function formatClock(ms: number): string {
@@ -124,8 +134,8 @@ export default function ShogoPage() {
     winner: "player" | "cpu";
     gained: number;
     base: number;
-    shown: number;
-  }>({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
+    addedShown: number;
+  }>({ open: false, winner: "player", gained: 0, base: 0, addedShown: 0 });
   const [matchFinishReveal, setMatchFinishReveal] = useState<{
     open: boolean;
     result: "win" | "lose";
@@ -293,11 +303,11 @@ export default function ShogoPage() {
       winner: playerWonRound ? "player" : "cpu",
       gained,
       base: baseScore,
-      shown: baseScore,
+      addedShown: 0,
     });
     for (let i = 1; i <= gained; i += 1) {
       const timer = window.setTimeout(() => {
-        setScoreReveal(prev => ({ ...prev, shown: prev.base + i }));
+        setScoreReveal(prev => ({ ...prev, addedShown: i }));
       }, 260 * i);
       revealTimersRef.current.push(timer);
     }
@@ -355,7 +365,7 @@ export default function ShogoPage() {
     lastMoveRef.current = null;
     resultRecordedRef.current = false;
     clearRevealTimers();
-    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
+    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, addedShown: 0 });
     setByoyomiMs(null);
     setMsg("");
   };
@@ -378,7 +388,7 @@ export default function ShogoPage() {
     lastMoveRef.current = null;
     resultRecordedRef.current = false;
     clearRevealTimers();
-    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
+    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, addedShown: 0 });
     setMatchFinishReveal({ open: false, result: "win", playerScore: 0, cpuScore: 0 });
     setByoyomiMs(null);
     setMsg("");
@@ -386,7 +396,7 @@ export default function ShogoPage() {
 
   const backToShogoLobby = () => {
     clearRevealTimers();
-    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, shown: 0 });
+    setScoreReveal({ open: false, winner: "player", gained: 0, base: 0, addedShown: 0 });
     setMatchFinishReveal({ open: false, result: "win", playerScore: 0, cpuScore: 0 });
     setPlayerMainTimeMs(SHOGO_MAIN_TIME_MS);
     setByoyomiMs(null);
@@ -548,9 +558,24 @@ export default function ShogoPage() {
             <div style={scoreRevealTitleStyle}>
               {scoreReveal.winner === "player" ? "あなたの累計得点" : "CPUの累計得点"}
             </div>
-            <div style={scoreRevealMarksStyle}>{toShoMarks(scoreReveal.shown)}</div>
+            <div style={scoreRevealMarksStyle}>
+              <span style={scoreRevealGlyphRowBaseStyle}>
+                {splitShoPointUnits(scoreReveal.base).map((unit, i) => (
+                  <span key={`base-${i}`} style={scoreRevealGlyphWrapStyle}>
+                    <ShoGlyph value={unit} strokeColor="rgba(255,255,255,0.7)" />
+                  </span>
+                ))}
+              </span>
+              <span style={scoreRevealGlyphRowAddedStyle}>
+                {splitShoPointUnits(scoreReveal.addedShown).map((unit, i) => (
+                  <span key={`add-${i}`} style={scoreRevealGlyphWrapStyle}>
+                    <ShoGlyph value={unit} strokeColor="#ffffff" />
+                  </span>
+                ))}
+              </span>
+            </div>
             <div style={scoreRevealSubStyle}>
-              {toShoMarks(scoreReveal.base)} → {toShoMarks(scoreReveal.shown)}（+{scoreReveal.gained}）
+              {toShoMarks(scoreReveal.base)} → {toShoMarks(scoreReveal.base + scoreReveal.addedShown)}（+{scoreReveal.gained}）
             </div>
           </div>
         </div>
@@ -925,13 +950,34 @@ const scoreRevealTitleStyle: React.CSSProperties = {
 
 const scoreRevealMarksStyle: React.CSSProperties = {
   minHeight: 72,
-  fontSize: 64,
-  lineHeight: 1.05,
-  fontWeight: 900,
-  letterSpacing: "0.08em",
-  color: "#ffe8be",
-  textShadow: "0 0 10px rgba(255, 214, 130, 0.5), 0 0 22px rgba(255, 190, 104, 0.35)",
-  fontFamily: "var(--font-hisei-mincho-bold), var(--font-hisei-serif), serif",
+  width: "100%",
+  display: "grid",
+  gap: 6,
+};
+
+const scoreRevealGlyphRowBaseStyle: React.CSSProperties = {
+  minHeight: 36,
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 4,
+  alignItems: "center",
+  justifyContent: "center",
+  opacity: 0.86,
+};
+
+const scoreRevealGlyphRowAddedStyle: React.CSSProperties = {
+  minHeight: 36,
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 4,
+  alignItems: "center",
+  justifyContent: "center",
+  filter: "drop-shadow(0 0 8px rgba(255, 237, 170, 0.92))",
+};
+
+const scoreRevealGlyphWrapStyle: React.CSSProperties = {
+  width: 42,
+  height: 42,
 };
 
 const scoreRevealSubStyle: React.CSSProperties = {
