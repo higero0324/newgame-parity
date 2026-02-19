@@ -33,12 +33,6 @@ const KISEKI_PARTICLE_VECTORS = [
   { x: -44, y: 8, d: 0.36 },
 ];
 
-const TIER_ORDER: Record<GachaItemDef["tier"], number> = {
-  odd: 0,
-  premium: 1,
-  rare: 2,
-};
-
 export default function WishPage() {
   const [rank, setRank] = useState(1);
   const [xp, setXp] = useState(0);
@@ -58,7 +52,7 @@ export default function WishPage() {
 
   const clearRevealTimer = () => {
     if (revealTimerRef.current !== null) {
-      window.clearInterval(revealTimerRef.current);
+      window.clearTimeout(revealTimerRef.current);
       revealTimerRef.current = null;
     }
   };
@@ -125,25 +119,14 @@ export default function WishPage() {
       return;
     }
     setKiseki(res.remainingKiseki);
-    const pulled = [...res.pullResults].sort((a, b) => TIER_ORDER[a.item.tier] - TIER_ORDER[b.item.tier]);
-    const hasRare = pulled.some(x => x.item.tier === "rare");
+    const pulled = res.pullResults;
     await sleep(700);
     setOpening(false);
-    if (hasRare) {
-      setRareCutIn(true);
-      await sleep(900);
-      setRareCutIn(false);
-    }
-
     setResults(pulled);
     setResultOverlayOpen(true);
-    if (count === 10) {
-      setRevealCount(0);
-      setManualRevealMode(true);
-    } else {
-      setRevealCount(Math.min(1, pulled.length));
-      setManualRevealMode(false);
-    }
+    setRevealCount(0);
+    setManualRevealMode(true);
+    setRareCutIn(false);
 
     setDrawing(false);
     setStatus(`祈願完了（消費 ${res.cost} 季石 / 返還 ${res.refundTotal} 季石）`);
@@ -179,15 +162,20 @@ export default function WishPage() {
   const revealNextCard = () => {
     if (!manualRevealMode || revealBusy) return;
     if (revealCount >= results.length) return;
+    const next = results[revealCount];
+    const nextIsRare = next.item.tier === "rare";
     const nextIsLastCard = revealCount === results.length - 1;
-    if (nextIsLastCard) {
+    if (nextIsRare || nextIsLastCard) {
       setRevealBusy(true);
+      if (nextIsRare) setRareCutIn(true);
+      const wait = nextIsRare ? (nextIsLastCard ? 950 : 780) : 620;
       revealTimerRef.current = window.setTimeout(() => {
+        if (nextIsRare) setRareCutIn(false);
         setRevealCount(prev => Math.min(prev + 1, results.length));
         setRevealBusy(false);
-        setManualRevealMode(false);
+        if (nextIsLastCard) setManualRevealMode(false);
         clearRevealTimer();
-      }, 700);
+      }, wait);
       return;
     }
     setRevealCount(prev => Math.min(prev + 1, results.length));
@@ -272,7 +260,7 @@ export default function WishPage() {
             <h2 style={{ margin: 0, fontSize: 20, color: "#fff5dd" }}>祈願結果</h2>
             {manualRevealMode && (
               <div style={{ fontSize: 13, color: "#ffe7b8" }}>
-                {revealBusy ? "最後の一枚..." : "カードをタップして順番にめくる"}
+                {revealBusy ? "演出中..." : "カードをタップして順番にめくる"}
               </div>
             )}
             <div style={{ width: "100%", display: "grid", gap: 10, gridTemplateColumns: resultColumns }}>
