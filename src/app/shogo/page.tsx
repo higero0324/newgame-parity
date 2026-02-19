@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -131,9 +131,6 @@ export default function ShogoPage() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  if (!ready) {
-    return <main style={{ padding: 24, textAlign: "center", color: "#666" }}>読み込み中...</main>;
-  }
 
   useEffect(() => {
     if (!playerSide) return;
@@ -162,6 +159,10 @@ export default function ShogoPage() {
       }, delay);
     }
   }, [current, winner, thinking, playerSide, shogoRound, shogoMatchWinner]);
+
+  if (!ready) {
+    return <main style={{ padding: 24, textAlign: "center", color: "#666" }}>読み込み中...</main>;
+  }
 
   const handleRoundWin = (roundWinner: Player, boardAfter: number[]) => {
     if (!playerSide) return;
@@ -195,8 +196,8 @@ export default function ShogoPage() {
       }
       setMsg(
         playerWonMatch
-          ? `正豪戦 勝利！ (最終 ${nextPlayerScore} - ${nextCpuScore})`
-          : `正豪戦 敗北... (最終 ${nextPlayerScore} - ${nextCpuScore})`,
+          ? `豁｣雎ｪ謌ｦ 蜍晏茜・・(譛邨・${nextPlayerScore} - ${nextCpuScore})`
+          : `豁｣雎ｪ謌ｦ 謨怜圏... (譛邨・${nextPlayerScore} - ${nextCpuScore})`,
       );
       return;
     }
@@ -257,8 +258,8 @@ export default function ShogoPage() {
   };
 
   const sideLabels = {
-    p1: "先手",
-    p2: "後手",
+    p1: "蜈域焔",
+    p2: "蠕梧焔",
   } satisfies Record<Player, string>;
 
   if (!playerSide) {
@@ -269,9 +270,9 @@ export default function ShogoPage() {
           <h1 style={shogoTitleStyle}>正豪戦</h1>
           <p style={shogoSubtitleStyle}>極級++</p>
           <div style={shogoDescStyle}>
-            CPUは上級相当。<br />
-            毎局ランダム2手配置から開戦。<br />
-            局ごとに先後交代、先に5点で勝利。
+            CPUは上級相当の強さ。<br />
+            毎局ランダムに2手置かれた状態から開始。<br />
+            先に5点獲得で勝利。
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, width: "100%" }}>
             {(Object.keys(sideLabels) as Player[]).map(side => (
@@ -300,7 +301,7 @@ export default function ShogoPage() {
               </button>
             ))}
           </div>
-          <Link href="/" style={shogoBackLinkStyle}>← ホームへ戻る</Link>
+          <Link href="/" style={shogoBackLinkStyle}>ホームへ戻る</Link>
         </section>
       </main>
     );
@@ -321,7 +322,7 @@ export default function ShogoPage() {
 
       <div style={shogoActionRowStyle}>
         <div style={shogoStatusStyle}>
-          {winner ? (winner === playerSide ? "あなたの勝ち！" : "CPUの勝ち！") : thinking ? "CPUが考え中..." : "あなたの手番"}
+          {winner ? (winner === playerSide ? "あなたの勝ち" : "CPUの勝ち") : thinking ? "CPUが考え中..." : "あなたの手番"}
         </div>
         {shogoRoundEnded && !shogoMatchWinner && <button onClick={startNextRound} style={shogoButtonStyle}>次局へ</button>}
         <button onClick={resetMatch} style={shogoButtonStyle}>再挑戦</button>
@@ -532,3 +533,4 @@ const shogoMessageStyle: React.CSSProperties = {
   background: "rgba(36, 11, 15, 0.86)",
   color: "#fff1d5",
 };
+
