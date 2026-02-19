@@ -179,7 +179,10 @@ export default function FriendProfilePage() {
 
   const displayName = profile?.display_name || "（表示名未設定）";
   const cardTemplate = parseTemplate(profile?.profile_card_template);
-  const isDarkCard = cardTemplate === "lacquer" || cardTemplate === "modern";
+  const isDarkCard =
+    cardTemplate === "lacquer" ||
+    cardTemplate === "modern" ||
+    cardTemplate === "gacha_template_kinran";
   const matchNames = profile?.match_names ?? {};
   const equippedTitles = useMemo(() => {
     const ids = Array.isArray(profile?.equipped_title_ids) ? profile?.equipped_title_ids : [];

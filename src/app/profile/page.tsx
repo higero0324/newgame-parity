@@ -292,7 +292,10 @@ export default function ProfilePage() {
     }
     return slots;
   }, [featuredRows]);
-  const isDarkCard = cardTemplate === "lacquer" || cardTemplate === "modern";
+  const isDarkCard =
+    cardTemplate === "lacquer" ||
+    cardTemplate === "modern" ||
+    cardTemplate === "gacha_template_kinran";
   const mutedTextColor = isDarkCard ? "rgba(255,245,230,0.85)" : "#555";
   const lightTextColor = isDarkCard ? "rgba(255,245,230,0.8)" : "#666";
   const editTextColor = isDarkCard ? "rgba(255,245,230,0.96)" : "#3f2b18";
