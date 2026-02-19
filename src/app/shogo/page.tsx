@@ -10,6 +10,7 @@ import { calculateAnimationDuration } from "@/lib/animationTiming";
 import { findShogoCpuMove } from "@/lib/cpuPlayer";
 import { supabase } from "@/lib/supabaseClient";
 import { recordShogoMatchForCurrentUser } from "@/lib/achievements";
+import { grantShogoWinXpForCurrentUser } from "@/lib/playerRank";
 
 type Snapshot = {
   board: number[];
@@ -326,7 +327,10 @@ export default function ShogoPage() {
       setShogoMatchWinner(playerWonMatch ? "player" : "cpu");
       if (!resultRecordedRef.current) {
         resultRecordedRef.current = true;
-        recordShogoMatchForCurrentUser(playerWonMatch).catch(() => {
+        Promise.all([
+          recordShogoMatchForCurrentUser(playerWonMatch),
+          grantShogoWinXpForCurrentUser(playerWonMatch),
+        ]).catch(() => {
           // ignore
         });
       }

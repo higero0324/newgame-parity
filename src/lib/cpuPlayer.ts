@@ -40,7 +40,8 @@ export function findShogoCpuMove(board: number[], player: Player): number {
   transpositionTable.clear();
 
   const emptyCount = legalMoves.length;
-  const maxDepth = emptyCount > 15 ? 4 : emptyCount > 10 ? 5 : 6;
+  const baseDepth = emptyCount > 15 ? 4 : emptyCount > 10 ? 5 : 6;
+  const maxDepth = emptyCount <= 8 ? baseDepth + 1 : baseDepth;
 
   let scoredAtLastDepth: Array<{ pos: number; score: number; shogoBonus: number }> = [];
   for (let depth = 2; depth <= maxDepth; depth += 1) {
@@ -68,7 +69,7 @@ export function findShogoCpuMove(board: number[], player: Player): number {
   const bestScore = Math.max(...source.map(x => x.score));
 
   // 「勝率がほぼ下がらない」近傍だけを得点志向で比較。
-  const scoreTolerance = 14;
+  const scoreTolerance = 6;
   const nearBest = source.filter(x => bestScore - x.score <= scoreTolerance);
   const pickFrom = nearBest.length > 0 ? nearBest : source;
 

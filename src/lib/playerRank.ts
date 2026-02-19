@@ -20,6 +20,7 @@ const ACHIEVEMENT_KISEKI_CLAIMED_KEY = "achievement_kiseki_claimed_title_ids";
 const ACHIEVEMENT_XP_CLAIMED_KEY = "achievement_xp_claimed_title_ids";
 const SHOGO_CONQUEROR_TITLE_ID = "shogo_conqueror";
 const SHOGO_CONQUEROR_KISEKI_REWARD = 1000;
+const SHOGO_WIN_XP_REWARD = 1500;
 
 export function getRequiredXpForNextRank(rank: number): number {
   const safe = Math.min(Math.max(Math.floor(rank), MIN_RANK), MAX_RANK);
@@ -45,6 +46,10 @@ export function getXpForCpuWin(level: CpuRankLevel): number {
   if (level === "medium") return 150;
   if (level === "hard") return 300;
   return 400;
+}
+
+export function getXpForShogoWin(): number {
+  return SHOGO_WIN_XP_REWARD;
 }
 
 function normalizeNonNegativeInt(value: unknown, fallback: number) {
@@ -119,6 +124,30 @@ export async function grantCpuWinXpForCurrentUser(level: CpuRankLevel, userWon: 
   if (error || !data.user) return { ok: false as const, reason: error?.message ?? "not logged in" };
 
   const gainedXp = getXpForCpuWin(level);
+  const applied = applyXpGain(normalizeState(data.user.user_metadata), gainedXp);
+  const { rank, xp, kiseki } = applied.state;
+  const { levelUps } = applied;
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    data: {
+      player_rank: rank,
+      player_xp: xp,
+      player_kiseki: kiseki,
+    },
+  });
+  if (updateError) return { ok: false as const, reason: updateError.message };
+  return { ok: true as const, gainedXp, levelUps, state: { rank, xp, kiseki } };
+}
+
+export async function grantShogoWinXpForCurrentUser(userWon: boolean) {
+  if (!userWon) {
+    return { ok: true as const, gainedXp: 0, levelUps: 0, state: null as PlayerRankState | null };
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return { ok: false as const, reason: error?.message ?? "not logged in" };
+
+  const gainedXp = SHOGO_WIN_XP_REWARD;
   const applied = applyXpGain(normalizeState(data.user.user_metadata), gainedXp);
   const { rank, xp, kiseki } = applied.state;
   const { levelUps } = applied;
