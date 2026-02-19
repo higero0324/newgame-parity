@@ -559,16 +559,9 @@ export default function ShogoPage() {
               {scoreReveal.winner === "player" ? "あなたの累計得点" : "CPUの累計得点"}
             </div>
             <div style={scoreRevealMarksStyle}>
-              <span style={scoreRevealGlyphRowBaseStyle}>
-                {splitShoPointUnits(scoreReveal.base).map((unit, i) => (
-                  <span key={`base-${i}`} style={scoreRevealGlyphWrapStyle}>
-                    <ShoGlyph value={unit} strokeColor="rgba(255,255,255,0.7)" />
-                  </span>
-                ))}
-              </span>
-              <span style={scoreRevealGlyphRowAddedStyle}>
-                {splitShoPointUnits(scoreReveal.addedShown).map((unit, i) => (
-                  <span key={`add-${i}`} style={scoreRevealGlyphWrapStyle}>
+              <span style={scoreRevealGlyphRowTotalStyle}>
+                {splitShoPointUnits(scoreReveal.base + scoreReveal.addedShown).map((unit, i) => (
+                  <span key={`total-${i}`} style={scoreRevealGlyphWrapStyle}>
                     <ShoGlyph value={unit} strokeColor="#ffffff" />
                   </span>
                 ))}
@@ -930,8 +923,8 @@ const scoreRevealOverlayStyle: React.CSSProperties = {
 };
 
 const scoreRevealCardStyle: React.CSSProperties = {
-  minWidth: "min(86vw, 420px)",
-  padding: "20px 22px",
+  minWidth: "min(92vw, 560px)",
+  padding: "24px 26px",
   borderRadius: 16,
   border: "1px solid rgba(248, 213, 142, 0.82)",
   background: "linear-gradient(160deg, rgba(44,12,16,0.94) 0%, rgba(88,20,28,0.88) 52%, rgba(24,8,11,0.92) 100%)",
@@ -949,35 +942,25 @@ const scoreRevealTitleStyle: React.CSSProperties = {
 };
 
 const scoreRevealMarksStyle: React.CSSProperties = {
-  minHeight: 72,
+  minHeight: 124,
   width: "100%",
   display: "grid",
-  gap: 6,
+  gap: 10,
 };
 
-const scoreRevealGlyphRowBaseStyle: React.CSSProperties = {
-  minHeight: 36,
+const scoreRevealGlyphRowTotalStyle: React.CSSProperties = {
+  minHeight: 96,
   display: "flex",
   flexWrap: "wrap",
-  gap: 4,
+  gap: 8,
   alignItems: "center",
   justifyContent: "center",
-  opacity: 0.86,
-};
-
-const scoreRevealGlyphRowAddedStyle: React.CSSProperties = {
-  minHeight: 36,
-  display: "flex",
-  flexWrap: "wrap",
-  gap: 4,
-  alignItems: "center",
-  justifyContent: "center",
-  filter: "drop-shadow(0 0 8px rgba(255, 237, 170, 0.92))",
+  filter: "drop-shadow(0 0 12px rgba(255, 237, 170, 0.96))",
 };
 
 const scoreRevealGlyphWrapStyle: React.CSSProperties = {
-  width: 42,
-  height: 42,
+  width: 102,
+  height: 102,
 };
 
 const scoreRevealSubStyle: React.CSSProperties = {
