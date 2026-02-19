@@ -60,12 +60,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const refresh = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (!error && data.session?.user) {
-        if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
-        setIsLoggedIn(true);
-        setIsGuestMode(false);
+    const refreshNotices = async () => {
+      try {
         const ach = await loadAchievementStateForCurrentUser();
         if (ach.ok) {
           const unlockedByAch = ach.unlockedTitleIds.includes(SETSUGEKKA_TITLE_ID);
@@ -82,8 +78,26 @@ export default function Home() {
                 ach.claimableXpTitleIds.length > 0),
           ),
         );
+      } catch {
+        setShogoUnlocked(false);
+        setAchievementNotice(false);
+      }
+
+      try {
         const presents = await loadPresentBoxForCurrentUser();
         setPresentNoticeCount(presents.ok ? presents.presents.length : 0);
+      } catch {
+        setPresentNoticeCount(0);
+      }
+    };
+
+    const refresh = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (!error && data.session?.user) {
+        if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
+        setIsLoggedIn(true);
+        setIsGuestMode(false);
+        await refreshNotices();
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {
@@ -106,26 +120,7 @@ export default function Home() {
         if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_MODE_KEY);
         setIsLoggedIn(true);
         setIsGuestMode(false);
-        Promise.all([loadAchievementStateForCurrentUser(), loadPresentBoxForCurrentUser()]).then(
-          ([ach, presents]) => {
-            if (ach.ok) {
-              const unlockedByAch = ach.unlockedTitleIds.includes(SETSUGEKKA_TITLE_ID);
-              const unlockedByDone = ach.claimableTitleIds.includes(SETSUGEKKA_TITLE_ID);
-              setShogoUnlocked(unlockedByAch || unlockedByDone);
-            } else {
-              setShogoUnlocked(false);
-            }
-            setAchievementNotice(
-              Boolean(
-                ach.ok &&
-                  (ach.claimableTitleIds.length > 0 ||
-                    ach.claimableKisekiTitleIds.length > 0 ||
-                    ach.claimableXpTitleIds.length > 0),
-              ),
-            );
-            setPresentNoticeCount(presents.ok ? presents.presents.length : 0);
-          },
-        );
+        refreshNotices();
       } else {
         const guestEnabled = typeof window !== "undefined" && window.localStorage.getItem(GUEST_MODE_KEY) === "1";
         if (!guestEnabled) {

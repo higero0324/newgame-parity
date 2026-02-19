@@ -387,8 +387,8 @@ export async function claimTitleForCurrentUser(titleId: string) {
     titleClaimedNow: !titleAlreadyClaimed,
     kisekiClaimedNow: rewards.kisekiClaimedNow,
     xpClaimedNow: rewards.xpClaimedNow,
-    kisekiReward: getAchievementKisekiReward(),
-    xpReward: getAchievementXpReward(),
+    kisekiReward: rewards.kisekiReward,
+    xpReward: rewards.xpReward,
     levelUps: rewards.levelUps,
   };
 }

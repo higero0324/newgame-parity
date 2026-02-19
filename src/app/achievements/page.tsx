@@ -11,6 +11,7 @@ import {
   type TitleDef,
   type TitleRarity,
 } from "@/lib/achievements";
+import { getAchievementKisekiReward } from "@/lib/playerRank";
 import kisekiIcon from "@/app/kiseki.png";
 
 type ClaimItem = {
@@ -198,7 +199,7 @@ export default function AchievementsPage() {
                     </span>
                     <span style={kisekiRewardChipStyle}>
                       <Image src={kisekiIcon} alt="季石" width={12} height={12} />
-                      +{achievementKisekiReward}
+                      +{getAchievementKisekiReward(item.title.id)}
                     </span>
                     <span style={xpRewardChipStyle}>EXP +{achievementXpReward}</span>
                   </div>

@@ -18,6 +18,8 @@ const ACHIEVEMENT_KISEKI_REWARD = 250;
 const ACHIEVEMENT_XP_REWARD = 500;
 const ACHIEVEMENT_KISEKI_CLAIMED_KEY = "achievement_kiseki_claimed_title_ids";
 const ACHIEVEMENT_XP_CLAIMED_KEY = "achievement_xp_claimed_title_ids";
+const SHOGO_CONQUEROR_TITLE_ID = "shogo_conqueror";
+const SHOGO_CONQUEROR_KISEKI_REWARD = 1000;
 
 export function getRequiredXpForNextRank(rank: number): number {
   const safe = Math.min(Math.max(Math.floor(rank), MIN_RANK), MAX_RANK);
@@ -29,7 +31,8 @@ export function getLevelUpKisekiReward(): number {
   return LEVEL_UP_KISEKI_REWARD;
 }
 
-export function getAchievementKisekiReward(): number {
+export function getAchievementKisekiReward(titleId?: string): number {
+  if (titleId === SHOGO_CONQUEROR_TITLE_ID) return SHOGO_CONQUEROR_KISEKI_REWARD;
   return ACHIEVEMENT_KISEKI_REWARD;
 }
 
@@ -142,7 +145,8 @@ export async function grantAchievementKisekiForCurrentUser(titleId: string) {
   }
 
   const nextClaimed = [...claimed, titleId];
-  const nextKiseki = state.kiseki + ACHIEVEMENT_KISEKI_REWARD;
+  const reward = getAchievementKisekiReward(titleId);
+  const nextKiseki = state.kiseki + reward;
   const { error: updateError } = await supabase.auth.updateUser({
     data: {
       player_rank: state.rank,
@@ -168,7 +172,8 @@ export async function grantAchievementRewardsForCurrentUser(titleId: string) {
 
   const nextKisekiClaimed = kisekiClaimedNow ? [...kisekiClaimed, titleId] : kisekiClaimed;
   const nextXpClaimed = xpClaimedNow ? [...xpClaimed, titleId] : xpClaimed;
-  const kisekiWithReward = baseState.kiseki + (kisekiClaimedNow ? ACHIEVEMENT_KISEKI_REWARD : 0);
+  const kisekiReward = getAchievementKisekiReward(titleId);
+  const kisekiWithReward = baseState.kiseki + (kisekiClaimedNow ? kisekiReward : 0);
   const xpApplied = applyXpGain(
     { rank: baseState.rank, xp: baseState.xp, kiseki: kisekiWithReward },
     xpClaimedNow ? ACHIEVEMENT_XP_REWARD : 0,
@@ -190,7 +195,7 @@ export async function grantAchievementRewardsForCurrentUser(titleId: string) {
     ok: true as const,
     kisekiClaimedNow,
     xpClaimedNow,
-    kisekiReward: ACHIEVEMENT_KISEKI_REWARD,
+    kisekiReward,
     xpReward: ACHIEVEMENT_XP_REWARD,
     levelUps: xpApplied.levelUps,
     state: nextState,
