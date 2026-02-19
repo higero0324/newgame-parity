@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useRef, useState } from "react";
 import Image from "next/image";
@@ -44,10 +44,12 @@ export default function WishPage() {
   const [showRates, setShowRates] = useState(false);
   const [opening, setOpening] = useState(false);
   const [rareCutIn, setRareCutIn] = useState(false);
+  const [openingRareGuaranteed, setOpeningRareGuaranteed] = useState(false);
   const [revealCount, setRevealCount] = useState(0);
   const [resultOverlayOpen, setResultOverlayOpen] = useState(false);
   const [manualRevealMode, setManualRevealMode] = useState(false);
   const [revealBusy, setRevealBusy] = useState(false);
+  const [revealRareCharge, setRevealRareCharge] = useState(false);
   const revealTimerRef = useRef<number | null>(null);
 
   const clearRevealTimer = () => {
@@ -63,7 +65,7 @@ export default function WishPage() {
     (async () => {
       const loaded = await loadPlayerRankStateForCurrentUser();
       if (!loaded.ok) {
-        setStatus(`読み込みに失敗しました。詳細: ${loaded.reason}`);
+        setStatus(`隱ｭ縺ｿ霎ｼ縺ｿ縺ｫ螟ｱ謨励＠縺ｾ縺励◆縲りｩｳ邏ｰ: ${loaded.reason}`);
         setLoading(false);
         return;
       }
@@ -99,7 +101,7 @@ export default function WishPage() {
   const draw = async (count: 1 | 10) => {
     if (drawing) return;
     const cost = getGachaCost(count);
-    const ok = window.confirm(`季石を${cost}個消費しますがよろしいですか？`);
+    const ok = window.confirm(`季石を${cost}個消費します。よろしいですか？`);
     if (!ok) return;
     clearRevealTimer();
     setResults([]);
@@ -107,10 +109,12 @@ export default function WishPage() {
     setResultOverlayOpen(false);
     setManualRevealMode(false);
     setRevealBusy(false);
+    setRevealRareCharge(false);
     setOpening(true);
     setRareCutIn(false);
+    setOpeningRareGuaranteed(false);
     setDrawing(true);
-    setStatus("祈願中...");
+    setStatus("逾磯｡倅ｸｭ...");
     const res = await pullGachaForCurrentUser(count);
     if (!res.ok) {
       setDrawing(false);
@@ -120,16 +124,25 @@ export default function WishPage() {
     }
     setKiseki(res.remainingKiseki);
     const pulled = res.pullResults;
+    const hasRare = pulled.some(p => p.item.tier === "rare");
+    setOpeningRareGuaranteed(hasRare);
+    if (hasRare) {
+      setRareCutIn(true);
+      await sleep(760);
+      setRareCutIn(false);
+    }
     await sleep(700);
     setOpening(false);
+    setOpeningRareGuaranteed(false);
     setResults(pulled);
     setResultOverlayOpen(true);
     setRevealCount(0);
     setManualRevealMode(true);
     setRareCutIn(false);
+    setRevealRareCharge(false);
 
     setDrawing(false);
-    setStatus(`祈願完了（消費 ${res.cost} 季石 / 返還 ${res.refundTotal} 季石）`);
+    setStatus(`祈願結果: 消費 ${res.cost} 季石 / 返還 ${res.refundTotal} 季石`);
   };
 
   const canSingle = !drawing && kiseki >= getGachaCost(1);
@@ -164,21 +177,22 @@ export default function WishPage() {
     if (revealCount >= results.length) return;
     const next = results[revealCount];
     const nextIsRare = next.item.tier === "rare";
-    const nextIsLastCard = revealCount === results.length - 1;
-    if (nextIsRare || nextIsLastCard) {
+    if (nextIsRare) {
       setRevealBusy(true);
-      if (nextIsRare) setRareCutIn(true);
-      const wait = nextIsRare ? (nextIsLastCard ? 950 : 780) : 620;
+      setRevealRareCharge(true);
+      const wait = 780;
       revealTimerRef.current = window.setTimeout(() => {
-        if (nextIsRare) setRareCutIn(false);
+        setRevealRareCharge(false);
         setRevealCount(prev => Math.min(prev + 1, results.length));
         setRevealBusy(false);
-        if (nextIsLastCard) setManualRevealMode(false);
+        if (revealCount + 1 >= results.length) setManualRevealMode(false);
         clearRevealTimer();
       }, wait);
       return;
     }
-    setRevealCount(prev => Math.min(prev + 1, results.length));
+    const nextCount = Math.min(revealCount + 1, results.length);
+    setRevealCount(nextCount);
+    if (nextCount >= results.length) setManualRevealMode(false);
   };
 
   return (
@@ -211,16 +225,14 @@ export default function WishPage() {
       </section>
 
       <section style={sectionStyle}>
-        <div style={{ fontSize: 12, color: "#6a5338", textAlign: "right" }}>1回: 250季石</div>
+        <div style={{ fontSize: 12, color: "#6a5338", textAlign: "right" }}>1蝗・ 250蟄｣遏ｳ</div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
           <button type="button" style={drawButtonStyle} onClick={() => draw(1)} disabled={!canSingle || loading}>
-            1回祈願
-          </button>
+            1蝗樒･磯｡・          </button>
           <button type="button" style={drawButtonStyle} onClick={() => draw(10)} disabled={!canTen || loading}>
-            10回祈願
-          </button>
+            10蝗樒･磯｡・          </button>
           <button type="button" style={detailButtonStyle} onClick={() => setShowRates(v => !v)}>
-            {showRates ? "詳細を閉じる" : "詳細"}
+            {showRates ? "隧ｳ邏ｰ繧帝哩縺倥ｋ" : "隧ｳ邏ｰ"}
           </button>
         </div>
 
@@ -254,13 +266,12 @@ export default function WishPage() {
       {resultOverlayOpen && results.length > 0 && (
         <div style={resultOverlayStyle}>
           <div style={resultOverlayInnerStyle}>
-            <button type="button" aria-label="祈願結果を閉じる" style={resultCloseButtonStyle} onClick={() => setResultOverlayOpen(false)}>
-              ×
-            </button>
-            <h2 style={{ margin: 0, fontSize: 20, color: "#fff5dd" }}>祈願結果</h2>
+            <button type="button" aria-label="逾磯｡倡ｵ先棡繧帝哩縺倥ｋ" style={resultCloseButtonStyle} onClick={() => setResultOverlayOpen(false)}>
+              ﾃ・            </button>
+            <h2 style={{ margin: 0, fontSize: 20, color: "#fff5dd" }}>逾磯｡倡ｵ先棡</h2>
             {manualRevealMode && (
               <div style={{ fontSize: 13, color: "#ffe7b8" }}>
-                {revealBusy ? "演出中..." : "カードをタップして順番にめくる"}
+                {revealBusy ? "ため中..." : "カードをタップして順番にめくる"}
               </div>
             )}
             <div style={{ width: "100%", display: "grid", gap: 10, gridTemplateColumns: resultColumns }}>
@@ -281,6 +292,7 @@ export default function WishPage() {
                     style={{
                       ...resultBackSlotStyle,
                       ...(manualRevealMode && i === revealCount && !revealBusy ? resultBackNextStyle : null),
+                      ...(manualRevealMode && i === revealCount && revealBusy && revealRareCharge ? resultBackRareChargeStyle : null),
                       ...(manualRevealMode && i !== revealCount ? resultBackLockedStyle : null),
                     }}
                     onClick={revealNextCard}
@@ -301,7 +313,7 @@ export default function WishPage() {
             <div style={openingPulseStyle} />
             <div style={kisekiCoreWrapStyle}>
               <div style={kisekiSpinHaloStyle} />
-              <Image src={kisekiIcon} alt="季石" width={44} height={44} style={kisekiCoreIconStyle} />
+              <Image src={kisekiIcon} alt="蟄｣遏ｳ" width={44} height={44} style={kisekiCoreIconStyle} />
               {KISEKI_PARTICLE_VECTORS.map((v, i) => (
                 <span
                   key={`${v.x}-${v.y}-${i}`}
@@ -316,8 +328,9 @@ export default function WishPage() {
                 />
               ))}
             </div>
-            <div style={{ fontSize: 28, fontWeight: 900 }}>祈願中...</div>
-            <div style={{ fontSize: 13, opacity: 0.92 }}>季石を捧げ、祈りを紡いでいます</div>
+            <div style={{ fontSize: 28, fontWeight: 900 }}>逾磯｡倅ｸｭ...</div>
+            {openingRareGuaranteed && <div style={openingRareGuaranteedStyle}>★★★確定</div>}
+            <div style={{ fontSize: 13, opacity: 0.92 }}>季石を捧げ、祈りを込めています...</div>
           </div>
         </div>
       )}
@@ -326,7 +339,7 @@ export default function WishPage() {
         <div style={rareOverlayStyle}>
           <div style={rareCardStyle}>
             <div style={{ fontSize: 12, letterSpacing: "0.08em", opacity: 0.92 }}>SPECIAL</div>
-            <div style={{ fontSize: 30, fontWeight: 900 }}>★★★ 出現</div>
+            <div style={{ fontSize: 30, fontWeight: 900 }}>笘・・笘・蜃ｺ迴ｾ</div>
           </div>
         </div>
       )}
@@ -356,6 +369,17 @@ export default function WishPage() {
             transform: translate(var(--dx), var(--dy)) scale(0.02);
           }
         }
+        @keyframes hisei-rare-card-charge {
+          0% {
+            transform: translateY(0) scale(1);
+          }
+          50% {
+            transform: translateY(-2px) scale(1.02);
+          }
+          100% {
+            transform: translateY(0) scale(1);
+          }
+        }
       `}</style>
     </main>
   );
@@ -377,7 +401,7 @@ function renderItemPreview(item: GachaItemDef) {
         <div style={sakuraFramePreviewWrapStyle}>
           <div style={sakuraFramePreviewGlowCircleStyle} />
           <div style={sakuraFramePreviewStyle}>
-            <Image src={sakuraIcon} alt="桜フレーム" fill sizes="40px" style={{ objectFit: "cover", transform: "scale(1.05)", opacity: 1 }} />
+            <Image src={sakuraIcon} alt="譯懊ヵ繝ｬ繝ｼ繝" fill sizes="40px" style={{ objectFit: "cover", transform: "scale(1.05)", opacity: 1 }} />
           </div>
         </div>
       );
@@ -643,6 +667,12 @@ const resultBackCoreStyle: React.CSSProperties = {
   boxShadow: "0 0 20px rgba(255, 218, 133, 0.22)",
 };
 
+const resultBackRareChargeStyle: React.CSSProperties = {
+  animation: "hisei-rare-card-charge 0.62s ease-in-out infinite",
+  boxShadow:
+    "inset 0 0 0 1px rgba(255, 243, 183, 0.72), 0 0 0 1px rgba(255, 223, 128, 0.55), 0 0 30px rgba(255, 206, 96, 0.55)",
+};
+
 const resultOverlayStyle: React.CSSProperties = {
   position: "fixed",
   inset: 0,
@@ -706,6 +736,18 @@ const openingCardStyle: React.CSSProperties = {
   background: "linear-gradient(180deg, rgba(116,76,31,0.96) 0%, rgba(73,45,16,0.96) 100%)",
   boxShadow: "0 18px 40px rgba(19, 10, 4, 0.45)",
   overflow: "hidden",
+};
+
+const openingRareGuaranteedStyle: React.CSSProperties = {
+  marginTop: 8,
+  display: "inline-block",
+  padding: "4px 10px",
+  borderRadius: 999,
+  border: "1px solid rgba(255, 219, 128, 0.78)",
+  background: "rgba(255, 214, 112, 0.16)",
+  color: "#fff2c9",
+  fontWeight: 900,
+  letterSpacing: "0.08em",
 };
 
 const openingPulseStyle: React.CSSProperties = {
@@ -881,3 +923,6 @@ function tinyTitleChipStyleFor(tier: GachaItemDef["tier"]): React.CSSProperties 
     borderColor: "#b27a47",
   };
 }
+
+
+
