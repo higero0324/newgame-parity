@@ -29,22 +29,22 @@ https://hisei.vercel.app/
 > 必要条件に合わせて、主要画面を掲載しています。
 
 ### 1. ホーム
-![ホーム画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/)
+![ホーム画面](<./スクリーンショット 2026-02-25 223458.png>)
 
 ### 2. 通常対戦
-![通常対戦画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/play)
+![通常対戦画面](<./スクリーンショット 2026-02-25 225332.png>)
 
 ### 3. CPU対戦
-![CPU対戦画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/cpu)
+![CPU対戦画面](<./スクリーンショット 2026-02-25 225351.png>)
 
 ### 4. プロフィール
-![プロフィール画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/profile)
+![プロフィール画面](<./スクリーンショット 2026-02-25 225416.png>)
 
 ### 5. フレンド
-![フレンド画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/friends)
+![フレンド画面](<./スクリーンショット 2026-02-25 225441.png>)
 
 ### 6. アチーブメント
-![アチーブメント画面](https://image.thum.io/get/width/1400/noanimate/https://hisei.vercel.app/achievements)
+![アチーブメント画面](<./スクリーンショット 2026-02-25 225459.png>)
 
 ## 技術スタック
 - Frontend: Next.js 16 (App Router), React 19, TypeScript
@@ -81,3 +81,4 @@ npm run dev
 ---
 熱中して遊べて、記録したくなる。  
 `一正 - HISEI` はその体験を目指して制作しました。
+
